@@ -202,6 +202,15 @@ export default function Links(): ReactElement {
                     Imprint
                   </Button>
                 </li>
+                <li>
+                  <Button
+                    to="/cookie/en"
+                    className={`${styles.link} ${styles.footerLink}`}
+                    style="text"
+                  >
+                    Cookie Policy
+                  </Button>
+                </li>
                 {appConfig?.privacyPreferenceCenter === 'true' && (
                   <li>
                     <Button
@@ -209,7 +218,7 @@ export default function Links(): ReactElement {
                       onClick={() => setShowPPC(true)}
                       className={`${styles.link} ${styles.footerLink}`}
                     >
-                      Cookie Settings
+                      {cookies?.optionalCookies ? 'Cookie Settings' : 'Cookies'}
                     </Button>
                   </li>
                 )}
