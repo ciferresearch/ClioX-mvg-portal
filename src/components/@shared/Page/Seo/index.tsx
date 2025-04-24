@@ -1,10 +1,8 @@
 import { ReactElement } from 'react'
 import Head from 'next/head'
-
 import { isBrowser } from '@utils/index'
 import { useMarketMetadata } from '@context/MarketMetadata'
 import { DatasetSchema } from './DatasetSchema'
-import Script from 'next/script'
 
 export default function Seo({
   title,
@@ -83,11 +81,6 @@ export default function Seo({
           {JSON.stringify(datasetSchema).replace(/</g, '\\u003c')}
         </script>
       )}
-      <Script
-        defer
-        data-domain="cliox.org"
-        src="https://plausible.io/js/script.js"
-      ></Script>
     </Head>
   )
 }
