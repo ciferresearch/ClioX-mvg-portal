@@ -123,5 +123,7 @@ module.exports = {
   allowedGaiaXRegistryDomains: [
     'https://registry.gaia-x.eu/v2206',
     'https://registry.lab.gaia-x.eu/v2206'
-  ]
+  ],
+
+  plausibleDataDomain: 'cliox.org'
 }
