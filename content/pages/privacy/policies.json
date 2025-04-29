@@ -1,7 +1,7 @@
 {
   "policies": [
     {
-      "policy": "en",
+      "policyLangTag": "en",
       "language": "English",
       "date": "2025-06-05",
       "params": {
@@ -9,8 +9,8 @@
         "languageHelp": "Language of the privacy policy",
         "updated": "Last updated on",
         "dateFormat": "MMMM dd, yyyy."
-      },
-      "slug": "/privacy"
+      }
     }
-  ]
+  ],
+  "slug": "/privacy"
 }
