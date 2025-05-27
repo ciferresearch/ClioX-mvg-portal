@@ -158,6 +158,10 @@
           "link": "/docs"
         }
       ]
+    },
+    {
+      "name": "Use Cases",
+      "link": "/usecases"
     }
   ],
   "announcement": "",

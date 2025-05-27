@@ -196,6 +196,128 @@
   .font-body {
     font-family: var(--font-family-body) !important;
   }
+
+  .font-base {
+    font-family: var(--font-family-base) !important;
+  }
+
+  /* Text colors */
+  .text-font-color-heading {
+    color: var(--font-color-heading);
+  }
+
+  .text-font-color-text {
+    color: var(--font-color-text);
+  }
+
+  .text-font-color-light {
+    color: var(--font-color-light);
+  }
+
+  .text-highlight {
+    color: var(--color-highlight);
+  }
+
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+
+  .text-brand-white {
+    color: var(--brand-white);
+  }
+
+  .text-brand-alert-green {
+    color: var(--brand-alert-green);
+  }
+
+  /* Background colors */
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .bg-background-content {
+    background-color: var(--background-content);
+  }
+
+  /* Border colors */
+  .border-border-color {
+    border-color: var(--border-color);
+  }
+
+  /* Font sizes */
+  .text-h1 {
+    font-size: var(--font-size-h1);
+  }
+
+  .text-h3 {
+    font-size: var(--font-size-h3);
+  }
+
+  .text-large {
+    font-size: var(--font-size-large);
+  }
+
+  .text-small {
+    font-size: var(--font-size-small);
+  }
+
+  /* Border radius */
+  .rounded-default {
+    border-radius: var(--border-radius);
+  }
+
+  /* Box shadows */
+  .shadow-box {
+    box-shadow: var(--box-template-box-shadow);
+  }
+
+  .shadow-box-hover {
+    box-shadow: var(--box-template-hover-box-shadow);
+  }
+
+  .hover\:shadow-box-hover:hover {
+    box-shadow: var(--box-template-hover-box-shadow);
+  }
+
+  .hover\:text-primary:hover {
+    color: var(--color-primary);
+  }
+
+  /* Font weights */
+  .font-bold {
+    font-weight: var(--font-weight-bold);
+  }
+
+  .font-base-weight {
+    font-weight: var(--font-weight-base);
+  }
+
+  /* Spacing utilities */
+  .spacer {
+    margin: var(--spacer);
+  }
+
+  .p-spacer {
+    padding: var(--spacer);
+  }
+
+  /* Additional text sizes */
+  .text-base {
+    font-size: var(--font-size-base);
+  }
+
+  .text-title {
+    font-size: var(--font-size-title);
+  }
+
+  /* Additional border radius */
+  .rounded-sm {
+    border-radius: var(--border-radius-sm);
+  }
 }
 
 /* Import other custom styles */
