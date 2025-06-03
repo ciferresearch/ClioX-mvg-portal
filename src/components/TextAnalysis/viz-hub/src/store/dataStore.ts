@@ -38,99 +38,6 @@ export interface WordCloudData {
   wordCloudData: WordCloud[]
 }
 
-// Helper functions to check and get data from localStorage
-const isDataAvailable = (dataType: string): boolean => {
-  if (typeof window === 'undefined') return false
-  return !!localStorage.getItem(dataType)
-}
-
-// Helper function to parse user data based on file type
-const parseUserData = (dataType: string): unknown => {
-  if (typeof window === 'undefined') return null
-
-  const data = localStorage.getItem(dataType)
-  const fileType = localStorage.getItem(`${dataType}FileType`)
-
-  if (!data) return null
-
-  try {
-    if (fileType?.includes('json')) {
-      return JSON.parse(data)
-    } else if (fileType?.includes('csv') || fileType?.includes('text')) {
-      return data // Return raw CSV/text data
-    } else {
-      console.error('Unsupported file type:', fileType)
-      return null
-    }
-  } catch (error) {
-    console.error(`Error parsing ${dataType}:`, error)
-    return null
-  }
-}
-
-// Generate document summary from text
-const generateDocumentSummaryFromText = (
-  text: string,
-  fileName: string
-): DocumentSummaryData => {
-  const words = text.split(/\s+/).filter((w) => w.length > 0)
-  const uniqueWords = new Set(words.map((w) => w.toLowerCase()))
-  const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0)
-
-  // Count word frequencies
-  const wordCounts: Record<string, number> = {}
-  words.forEach((word) => {
-    const cleanWord = word.toLowerCase().replace(/[^\w]/g, '')
-    if (cleanWord.length > 2) {
-      wordCounts[cleanWord] = (wordCounts[cleanWord] || 0) + 1
-    }
-  })
-
-  // Get most frequent words
-  const frequentWords = Object.entries(wordCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([word, count]) => ({ word, count }))
-
-  const today = new Date().toISOString().split('T')[0]
-
-  return {
-    totalDocuments: 1,
-    totalWords: words.length,
-    uniqueWords: uniqueWords.size,
-    vocabularyDensity: uniqueWords.size / words.length,
-    readabilityIndex: 8.5, // Mock value
-    wordsPerSentence:
-      sentences.length > 0 ? words.length / sentences.length : 0,
-    frequentWords,
-    created: `${today} from ${fileName}`
-  }
-}
-
-// Generate word cloud from text
-const generateWordCloudFromText = (text: string): WordCloudData => {
-  // Split text into words
-  const words = text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter((word) => word.length > 2)
-
-  // Count word frequencies
-  const wordCounts: Record<string, number> = {}
-  words.forEach((word) => {
-    wordCounts[word] = (wordCounts[word] || 0) + 1
-  })
-
-  // Convert to word cloud format
-  const wordCloudData = Object.entries(wordCounts)
-    .map(([value, count]) => ({ value, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 100)
-
-  return { wordCloudData }
-}
-
 interface DataStore {
   // Data status for each component
   dataStatus: DataStatus
@@ -163,18 +70,6 @@ interface DataStore {
   fetchDocumentSummary: (
     data: TextAnalysisUseCaseData[]
   ) => Promise<DocumentSummaryData>
-
-  // Save data functions
-  saveData: (
-    dataType: string,
-    data: string,
-    fileName: string,
-    fileType: string
-  ) => void
-
-  // Check if data is available
-  hasData: (dataType: string) => boolean
-  clearAllData: () => void
 }
 
 export const useDataStore = create<DataStore>((set, get) => ({
@@ -247,59 +142,6 @@ export const useDataStore = create<DataStore>((set, get) => ({
     })
   },
 
-  // Save data to localStorage
-  saveData: (
-    dataType: string,
-    data: string,
-    fileName: string,
-    fileType: string
-  ) => {
-    if (typeof window === 'undefined') return
-
-    localStorage.setItem(dataType, data)
-    localStorage.setItem(`${dataType}FileName`, fileName)
-    localStorage.setItem(`${dataType}FileType`, fileType)
-    localStorage.setItem(`${dataType}Timestamp`, Date.now().toString())
-
-    // Update data status
-    set((state) => ({
-      dataStatus: {
-        ...state.dataStatus,
-        [dataType]: true
-      }
-    }))
-  },
-
-  // Check if data is available
-  hasData: (dataType: string) => {
-    const state = get()
-    return state.dataStatus[dataType as keyof DataStatus] || false
-  },
-
-  // Clear all data
-  clearAllData: () => {
-    if (typeof window === 'undefined') return
-
-    // Clear all data from localStorage
-    Object.values(STORAGE_KEYS).forEach((key) => {
-      localStorage.removeItem(key)
-      localStorage.removeItem(`${key}FileName`)
-      localStorage.removeItem(`${key}FileType`)
-      localStorage.removeItem(`${key}Timestamp`)
-    })
-
-    // Reset data status
-    set({
-      dataStatus: {
-        wordCloudData: false,
-        dateDistributionData: false,
-        emailDistributionData: false,
-        sentimentData: false,
-        documentSummaryData: false
-      }
-    })
-  },
-
   // Data fetching functions for components
   fetchEmailDistribution: async (data: TextAnalysisUseCaseData[]) => {
     const emailDistributionData: EmailDistributionData[] = []
@@ -359,6 +201,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   },
 
   fetchSentimentData: async (data: TextAnalysisUseCaseData[]) => {
+    console.log('Starting fetchSentimentData with input:', data)
     const sentimentData: SentimentDataArray = []
 
     data.forEach((item) => {
@@ -386,42 +229,28 @@ export const useDataStore = create<DataStore>((set, get) => ({
     console.log('Starting fetchWordCloudData with input:', data)
     let wordCloudData: WordCloudData = { wordCloudData: [] }
 
-    data.forEach((item) => {
-      item.result.forEach((result) => {
-        console.log('Checking result:', result)
+    // Find the word cloud data in the results
+    for (const item of data) {
+      for (const result of item.result) {
         if (result.wordcloud) {
           console.log('Found wordcloud data:', result.wordcloud)
-          try {
-            // If wordcloud is a string, parse it as JSON
-            if (typeof result.wordcloud === 'string') {
-              console.log('Parsing string wordcloud data')
-              const parsed = JSON.parse(result.wordcloud)
-              console.log('Parsed wordcloud data:', parsed)
-              wordCloudData = {
-                wordCloudData: Array.isArray(parsed) ? parsed : []
-              }
-            } else {
-              // If wordcloud is already an array, use it directly
-              console.log('Using direct wordcloud data:', result.wordcloud)
-              wordCloudData = {
-                wordCloudData: Array.isArray(result.wordcloud)
-                  ? result.wordcloud
-                  : []
-              }
-            }
-            console.log('Final wordCloudData:', wordCloudData)
-          } catch (error) {
-            console.error('Error processing wordcloud data:', error)
+          wordCloudData = {
+            wordCloudData: Array.isArray(result.wordcloud)
+              ? result.wordcloud
+              : []
           }
+          return wordCloudData
         }
-      })
-    })
+      }
+    }
 
+    console.log('No valid wordcloud data found in input')
     return wordCloudData
   },
 
   fetchDocumentSummary: async (data: TextAnalysisUseCaseData[]) => {
-    let documentSummary: DocumentSummaryData | null = null
+    console.log('Starting fetchDocumentSummary with input:', data)
+    let documentSummary: DocumentSummaryData
 
     data.forEach((item) => {
       item.result.forEach((result) => {

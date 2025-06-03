@@ -2,6 +2,14 @@ import { create } from 'zustand'
 import { WordData, WordCloudOptions } from './types'
 import { ENGLISH_STOPWORDS, CUSTOM_COLORS } from './constants'
 import { Language } from './useStoplistManager'
+import { TextAnalysisUseCaseData } from '@/@context/UseCases/models/TextAnalysis.model'
+
+// Add type declaration for window object
+declare global {
+  interface Window {
+    __TEXT_ANALYSIS_DATA__?: TextAnalysisUseCaseData[]
+  }
+}
 
 // Define the store type
 interface WordCloudStore {
@@ -910,8 +918,8 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
         '../../../store/dataStore'
       ).then((module) => module.useDataStore.getState())
 
-      // Fetch data from the API
-      const data = await fetchWordCloudData([])
+      // Get the data from the component's props
+      const data = await fetchWordCloudData(window.__TEXT_ANALYSIS_DATA__ || [])
 
       // Calculate the minimum frequency in the dataset
       const minCount = Math.min(
