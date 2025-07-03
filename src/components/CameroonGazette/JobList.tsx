@@ -208,10 +208,13 @@ export default function JobList(props: {
                 category.values.every(
                   (value) =>
                     Array.isArray(value) &&
-                    value.length === 2 &&
+                    (value.length === 2 || value.length === 3) &&
                     typeof value[0] === 'string' &&
                     typeof value[1] === 'number' &&
-                    !isNaN(value[1])
+                    !isNaN(value[1]) &&
+                    (value.length === 2 ||
+                      (Array.isArray(value[2]) &&
+                        value[2].every((v) => typeof v === 'string')))
                 )
               )
             })
