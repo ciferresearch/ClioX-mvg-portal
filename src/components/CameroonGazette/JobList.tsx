@@ -178,7 +178,6 @@ export default function JobList(props: {
         ) {
           result.wordcloud = content
         } else if (filenameLower.includes('sentiment')) {
-          // Handle sentiment data
           try {
             let parsedContent
             if (typeof content === 'string') {
@@ -190,7 +189,6 @@ export default function JobList(props: {
               return result
             }
 
-            // Validate the structure
             if (!Array.isArray(parsedContent)) {
               console.warn(
                 'Sentiment data should be an array of sentiment categories'
@@ -198,12 +196,12 @@ export default function JobList(props: {
               return result
             }
 
-            // Validate each sentiment category
             const validSentimentData = parsedContent.every((category) => {
               return (
                 typeof category === 'object' &&
                 category !== null &&
                 typeof category.name === 'string' &&
+
                 Array.isArray(category.values) &&
                 category.values.every(
                   (value) =>

@@ -26,15 +26,12 @@ export interface DocumentSummary {
 
 export interface SentimentCategory {
   name: string
-  values: [string, number][]
+  values: [string, number, string[]?][]
 }
 
 export interface Sentiment extends Array<SentimentCategory> {}
 
-export interface SentimentData {
-  name: string
-  values: [string, number, string[]?][]
-}
+
 
 export interface WordCloud {
   value: string
