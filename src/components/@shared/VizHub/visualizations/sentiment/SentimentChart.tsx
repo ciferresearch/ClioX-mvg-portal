@@ -130,6 +130,9 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
     undefined
   > | null>(null)
   const { theme } = useTheme()
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+  const [chartWidth, setChartWidth] = useState<number | undefined>(undefined)
+  const chartContainerRef = useRef<HTMLDivElement>(null)
 
   const { fetchSentimentData } = useDataStore()
 
@@ -190,6 +193,19 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
       return () => window.removeEventListener('resize', handleResize)
     }
   }, [chartRef])
+
+  useEffect(() => {
+    if (chartContainerRef.current) {
+      setChartWidth(chartContainerRef.current.offsetWidth)
+    }
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        setChartWidth(chartContainerRef.current.offsetWidth)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const renderChart = useCallback(() => {
     if (!chartRef.current || !dateRange) return
@@ -609,6 +625,8 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
             .style('left', tooltipX)
             .style('top', `${event.offsetY - 28}px`)
         }
+
+        setHoveredDate(selectedDate)
       })
       .on('mouseout', () => {
         if (tooltipRef.current) tooltipRef.current.style('visibility', 'hidden')
@@ -798,7 +816,103 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
         </div>
       ) : (
         <>
-          <div ref={chartRef} className="w-full relative"></div>
+          <div ref={chartContainerRef} className="w-full">
+            <div ref={chartRef} className="w-full relative"></div>
+            {hoveredDate && (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold mb-2">
+                  Date {d3.timeFormat('%b %d, %Y')(hoveredDate)}
+                </h3>
+                <table
+                  style={chartWidth ? { width: chartWidth } : undefined}
+                  className="border-separate border-spacing-0 rounded-lg overflow-hidden shadow-md bg-white dark:bg-gray-900"
+                >
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-700">
+                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
+                        Sentiment
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
+                        Count
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
+                        Words
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sentimentData.map((series, idx) => {
+                      const tuple = series.values.find((v) => {
+                        const d = parseTime()(v[0])
+                        return (
+                          d &&
+                          hoveredDate &&
+                          d.getTime() === hoveredDate.getTime()
+                        )
+                      })
+                      // Color badge for sentiment
+                      const sentimentColors: Record<string, string> = {
+                        '-2': 'bg-blue-200 text-blue-800',
+                        '-1': 'bg-purple-200 text-purple-800',
+                        '0': 'bg-gray-200 text-gray-800',
+                        '+1': 'bg-orange-200 text-orange-800',
+                        '1': 'bg-orange-200 text-orange-800',
+                        '+2': 'bg-red-200 text-red-800',
+                        '2': 'bg-red-200 text-red-800'
+                      }
+                      return (
+                        <tr
+                          key={series.name}
+                          className={
+                            idx % 2 === 0
+                              ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition'
+                              : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition'
+                          }
+                        >
+                          <td className="px-3 py-2">
+                            <span
+                              className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
+                                sentimentColors[series.name] ||
+                                'bg-gray-200 text-gray-800'
+                              }`}
+                            >
+                              {series.name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 font-mono">
+                            {tuple ? tuple[1] : '-'}
+                          </td>
+                          <td className="px-3 py-2">
+                            {(() => {
+                              const t = tuple as
+                                | [string, number, string[]?]
+                                | undefined
+                              return t &&
+                                Array.isArray(t[2]) &&
+                                t[2].length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {t[2].map((word, i) => (
+                                    <span
+                                      key={i}
+                                      className="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-2 py-0.5 rounded-full"
+                                    >
+                                      {word}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )
+                            })()}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 mb-1 ml-1">
             Drag to select date range:
