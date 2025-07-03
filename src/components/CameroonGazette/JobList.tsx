@@ -201,7 +201,19 @@ export default function JobList(props: {
                 typeof category === 'object' &&
                 category !== null &&
                 typeof category.name === 'string' &&
-                Array.isArray(category.values)
+
+                Array.isArray(category.values) &&
+                category.values.every(
+                  (value) =>
+                    Array.isArray(value) &&
+                    (value.length === 2 || value.length === 3) &&
+                    typeof value[0] === 'string' &&
+                    typeof value[1] === 'number' &&
+                    !isNaN(value[1]) &&
+                    (value.length === 2 ||
+                      (Array.isArray(value[2]) &&
+                        value[2].every((v) => typeof v === 'string')))
+                )
               )
             })
 
