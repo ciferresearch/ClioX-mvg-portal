@@ -89,7 +89,7 @@ export default function Glossary({
     // Group by letter
     const sections: GlossarySection[] = []
     const groupedTerms = filteredTerms.reduce((acc, term) => {
-      const letter = term.letter
+      const { letter } = term
       if (!acc[letter]) {
         acc[letter] = []
       }
