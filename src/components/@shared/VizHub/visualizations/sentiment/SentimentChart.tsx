@@ -4,10 +4,11 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
 import { useDataStore } from '../../store/dataStore'
 import { useTheme } from '../../store/themeStore'
+import SentimentTable from './SentimentTable'
 
 interface SentimentData {
   name: string
-  values: [string, number][]
+  values: [string, number][] | [string, number, string[]][]
 }
 
 interface DateRange {
@@ -123,6 +124,9 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([])
   const [dateRange, setDateRange] = useState<DateRange | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null) // Persistent selected date
+  const [isTableVisible, setIsTableVisible] = useState(false) // Table visibility control
   const tooltipRef = useRef<d3.Selection<
     HTMLDivElement,
     unknown,
@@ -130,11 +134,13 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
     undefined
   > | null>(null)
   const { theme } = useTheme()
-  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
-  const [chartWidth, setChartWidth] = useState<number | undefined>(undefined)
   const chartContainerRef = useRef<HTMLDivElement>(null)
 
   const { fetchSentimentData } = useDataStore()
+
+  const handleToggleTableVisibility = () => {
+    setIsTableVisible(!isTableVisible)
+  }
 
   const parseTime = useCallback(
     () => d3.timeParse('%Y-%m-%dT%H:%M:%SZ') as (date: string) => Date | null,
@@ -193,19 +199,6 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
       return () => window.removeEventListener('resize', handleResize)
     }
   }, [chartRef])
-
-  useEffect(() => {
-    if (chartContainerRef.current) {
-      setChartWidth(chartContainerRef.current.offsetWidth)
-    }
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        setChartWidth(chartContainerRef.current.offsetWidth)
-      }
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   const renderChart = useCallback(() => {
     if (!chartRef.current || !dateRange) return
@@ -573,6 +566,7 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
         const selectedTimestamp = sortedTimestamps[closestIndex]
         const selectedDate = new Date(selectedTimestamp)
 
+        setHoveredDate(selectedDate)
         verticalLine.attr('x1', x(selectedDate)).attr('x2', x(selectedDate))
 
         const tooltipHeaderColor = theme === 'dark' ? '#d1d5db' : '#555' // gray-300 : dark gray
@@ -625,14 +619,56 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
             .style('left', tooltipX)
             .style('top', `${event.offsetY - 28}px`)
         }
+      })
+      .on('click', (event) => {
+        // Add click handler to select/pin a date
+        const [mouseX] = d3.pointer(event)
 
-        setHoveredDate(selectedDate)
+        if (sortedTimestamps.length === 0) return
+
+        const mouseDate = x.invert(mouseX).getTime()
+        let left = 0
+        let right = sortedTimestamps.length - 1
+        let closestIndex = 0
+
+        while (left <= right) {
+          const mid = Math.floor((left + right) / 2)
+          if (
+            Math.abs(sortedTimestamps[mid] - mouseDate) <
+            Math.abs(sortedTimestamps[closestIndex] - mouseDate)
+          ) {
+            closestIndex = mid
+          }
+
+          if (sortedTimestamps[mid] < mouseDate) {
+            left = mid + 1
+          } else {
+            right = mid - 1
+          }
+        }
+
+        const clickedTimestamp = sortedTimestamps[closestIndex]
+        const clickedDate = new Date(clickedTimestamp)
+
+        setSelectedDate(clickedDate)
+        setIsTableVisible(true)
       })
       .on('mouseout', () => {
         if (tooltipRef.current) tooltipRef.current.style('visibility', 'hidden')
         verticalLine.style('opacity', 0)
+        setHoveredDate(null)
       })
-  }, [chartRef, dateRange, sentimentData, formatDate, theme, parseTime])
+  }, [
+    chartRef,
+    dateRange,
+    sentimentData,
+    formatDate,
+    theme,
+    parseTime,
+    setHoveredDate,
+    setSelectedDate,
+    setIsTableVisible
+  ])
 
   const renderBrush = useCallback(() => {
     if (!brushRef.current || !dateRange) return
@@ -803,7 +839,7 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
   }, [renderChart, renderBrush])
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 w-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 w-full max-w-none">
       <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">
         Sentiment Analysis by Category
       </h2>
@@ -816,102 +852,19 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
         </div>
       ) : (
         <>
-          <div ref={chartContainerRef} className="w-full">
+          <div
+            ref={chartContainerRef}
+            className="w-full max-w-none flex flex-col"
+          >
             <div ref={chartRef} className="w-full relative"></div>
-            {hoveredDate && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold mb-2">
-                  Date {d3.timeFormat('%b %d, %Y')(hoveredDate)}
-                </h3>
-                <table
-                  style={chartWidth ? { width: chartWidth } : undefined}
-                  className="border-separate border-spacing-0 rounded-lg overflow-hidden shadow-md bg-white dark:bg-gray-900"
-                >
-                  <thead>
-                    <tr className="bg-gray-100 dark:bg-gray-700">
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
-                        Sentiment
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
-                        Count
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">
-                        Words
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sentimentData.map((series, idx) => {
-                      const tuple = series.values.find((v) => {
-                        const d = parseTime()(v[0])
-                        return (
-                          d &&
-                          hoveredDate &&
-                          d.getTime() === hoveredDate.getTime()
-                        )
-                      })
-                      // Color badge for sentiment
-                      const sentimentColors: Record<string, string> = {
-                        '-2': 'bg-blue-200 text-blue-800',
-                        '-1': 'bg-purple-200 text-purple-800',
-                        '0': 'bg-gray-200 text-gray-800',
-                        '+1': 'bg-orange-200 text-orange-800',
-                        '1': 'bg-orange-200 text-orange-800',
-                        '+2': 'bg-red-200 text-red-800',
-                        '2': 'bg-red-200 text-red-800'
-                      }
-                      return (
-                        <tr
-                          key={series.name}
-                          className={
-                            idx % 2 === 0
-                              ? 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition'
-                              : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition'
-                          }
-                        >
-                          <td className="px-3 py-2">
-                            <span
-                              className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                                sentimentColors[series.name] ||
-                                'bg-gray-200 text-gray-800'
-                              }`}
-                            >
-                              {series.name}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 font-mono">
-                            {tuple ? tuple[1] : '-'}
-                          </td>
-                          <td className="px-3 py-2">
-                            {(() => {
-                              const t = tuple as
-                                | [string, number, string[]?]
-                                | undefined
-                              return t &&
-                                Array.isArray(t[2]) &&
-                                t[2].length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {t[2].map((word, i) => (
-                                    <span
-                                      key={i}
-                                      className="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-2 py-0.5 rounded-full"
-                                    >
-                                      {word}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )
-                            })()}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+
+            <SentimentTable
+              sentimentData={sentimentData}
+              hoveredDate={hoveredDate}
+              selectedDate={selectedDate}
+              isTableVisible={isTableVisible}
+              onToggleVisibility={handleToggleTableVisibility}
+            />
           </div>
 
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 mb-1 ml-1">
@@ -919,6 +872,11 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
           </div>
 
           <div ref={brushRef} className="w-full h-[65px] relative mt-2"></div>
+
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">
+            💡 Tip: Click on the chart to pin a specific date for detailed
+            analysis
+          </div>
         </>
       )}
     </div>

@@ -7,7 +7,9 @@ import { SearchBarStatusProvider } from '@context/SearchBarStatus'
 import App from '../../src/components/App'
 import '@oceanprotocol/typographies/css/ocean-typo.css'
 import '../stylesGlobal/styles.css'
+import '@radix-ui/themes/styles.css'
 import Decimal from 'decimal.js'
+import { Theme } from '@radix-ui/themes'
 import MarketMetadataProvider from '@context/MarketMetadata'
 import { WagmiConfig } from 'wagmi'
 import { ConnectKitProvider } from 'connectkit'
@@ -22,32 +24,34 @@ function MyApp({ Component, pageProps }: AppProps): ReactElement {
 
   return (
     <>
-      <WagmiConfig client={wagmiClient}>
-        <ConnectKitProvider
-          options={{ initialChainId: 0 }}
-          customTheme={connectKitTheme}
-        >
-          <MarketMetadataProvider>
-            <UrqlProvider>
-              <UserPreferencesProvider>
-                <UseCasesProvider>
-                  <AutomationProvider>
-                    <ConsentProvider>
-                      <SearchBarStatusProvider>
-                        <FilterProvider>
-                          <App>
-                            <Component {...pageProps} />
-                          </App>
-                        </FilterProvider>
-                      </SearchBarStatusProvider>
-                    </ConsentProvider>
-                  </AutomationProvider>
-                </UseCasesProvider>
-              </UserPreferencesProvider>
-            </UrqlProvider>
-          </MarketMetadataProvider>
-        </ConnectKitProvider>
-      </WagmiConfig>
+      <Theme>
+        <WagmiConfig client={wagmiClient}>
+          <ConnectKitProvider
+            options={{ initialChainId: 0 }}
+            customTheme={connectKitTheme}
+          >
+            <MarketMetadataProvider>
+              <UrqlProvider>
+                <UserPreferencesProvider>
+                  <UseCasesProvider>
+                    <AutomationProvider>
+                      <ConsentProvider>
+                        <SearchBarStatusProvider>
+                          <FilterProvider>
+                            <App>
+                              <Component {...pageProps} />
+                            </App>
+                          </FilterProvider>
+                        </SearchBarStatusProvider>
+                      </ConsentProvider>
+                    </AutomationProvider>
+                  </UseCasesProvider>
+                </UserPreferencesProvider>
+              </UrqlProvider>
+            </MarketMetadataProvider>
+          </ConnectKitProvider>
+        </WagmiConfig>
+      </Theme>
       <Analytics />
     </>
   )
