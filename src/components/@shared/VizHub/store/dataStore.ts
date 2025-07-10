@@ -36,7 +36,7 @@ export interface EmailDistributionData {
 
 export interface SentimentData {
   name: string
-  values: [string, number][]
+  values: [string, number, string[]?][]
 }
 
 export interface DocumentSummaryData {

@@ -10,7 +10,7 @@ export interface DateDistributionData {
 
 export interface SentimentData {
   name: string
-  values: [string, number][]
+  values: [string, number, string[]?][]
 }
 
 export interface WordCloudData {

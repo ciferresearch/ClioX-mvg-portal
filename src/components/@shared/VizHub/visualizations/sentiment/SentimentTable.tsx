@@ -3,11 +3,7 @@
 import { useMemo } from 'react'
 import { Text, Badge } from '@radix-ui/themes'
 import { useTheme } from '../../store/themeStore'
-
-interface SentimentData {
-  name: string
-  values: [string, number][] | [string, number, string[]][]
-}
+import { type SentimentData } from '../../store/dataStore'
 
 interface SentimentTableProps {
   sentimentData: SentimentData[]
