@@ -33,13 +33,7 @@ const alphabet = [
   '#'
 ]
 
-interface GlossaryProps {
-  searchQuery?: string
-}
-
-export default function Glossary({
-  searchQuery = ''
-}: GlossaryProps): ReactElement {
+export default function Glossary(): ReactElement {
   const [localSearchQuery, setLocalSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [glossaryData, setGlossaryData] = useState<GlossaryTerm[]>([])
@@ -60,8 +54,8 @@ export default function Glossary({
     loadData()
   }, [])
 
-  // Use either the prop search query or local search query
-  const effectiveSearchQuery = searchQuery || localSearchQuery
+  // Use local search query
+  const effectiveSearchQuery = localSearchQuery
 
   // Group terms by letter and filter based on search
   const glossarySections: GlossarySection[] = useMemo(() => {
@@ -167,8 +161,8 @@ export default function Glossary({
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Local search bar - only show if not using global search */}
-      {!searchQuery && (
+      {/* Local search bar */}
+      {
         <div className="max-w-md mx-auto mb-6">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -183,7 +177,7 @@ export default function Glossary({
             />
           </div>
         </div>
-      )}
+      }
 
       {/* Alphabet Navigation */}
       <nav className="sticky top-0 bg-white z-10 border-b border-gray-200 py-3 mb-6">

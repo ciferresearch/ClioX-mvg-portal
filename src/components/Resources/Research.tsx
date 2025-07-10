@@ -10,10 +10,6 @@ import {
   getResearchGroups
 } from '@/utils/loadResearch'
 
-interface ResearchProps {
-  searchQuery?: string
-}
-
 interface CustomDropdownProps {
   label: string
   value: string
@@ -95,9 +91,7 @@ function CustomDropdown({
   )
 }
 
-export default function Research({
-  searchQuery = ''
-}: ResearchProps): ReactElement {
+export default function Research(): ReactElement {
   const [sortBy, setSortBy] = useState<ResearchSortBy>('date-desc')
   const [filterGroup, setFilterGroup] = useState<ResearchGroup>('all')
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
@@ -119,24 +113,10 @@ export default function Research({
     })
   }
 
-  // Process papers with search, sort, and filter
+  // Process papers with sort and filter
   const processedTopics = useMemo(() => {
     return researchTopics.map((topic) => {
       let papers = [...topic.papers]
-
-      // Apply search filter if query exists
-      if (searchQuery.trim()) {
-        const searchTerm = searchQuery.toLowerCase()
-        papers = papers.filter(
-          (paper) =>
-            paper.title.toLowerCase().includes(searchTerm) ||
-            paper.authors.some((author) =>
-              author.toLowerCase().includes(searchTerm)
-            ) ||
-            paper.abstract?.toLowerCase().includes(searchTerm) ||
-            paper.group.toLowerCase().includes(searchTerm)
-        )
-      }
 
       // Apply group filter
       papers = filterResearchPapers(papers, filterGroup)
@@ -149,7 +129,7 @@ export default function Research({
         papers
       }
     })
-  }, [researchTopics, sortBy, filterGroup, searchQuery])
+  }, [researchTopics, sortBy, filterGroup])
 
   return (
     <div className="space-y-6">
@@ -211,8 +191,8 @@ export default function Research({
                 <p className="text-gray-500 italic text-base">Coming soon...</p>
               ) : topic.papers.length === 0 ? (
                 <p className="text-gray-500 italic text-base">
-                  {searchQuery.trim() || filterGroup !== 'all'
-                    ? 'No papers match your search or filter criteria.'
+                  {filterGroup !== 'all'
+                    ? 'No papers match your filter criteria.'
                     : 'No papers available.'}
                 </p>
               ) : (
@@ -235,20 +215,6 @@ export default function Research({
           </div>
         ))}
       </div>
-
-      {/* Show message if no results found during search */}
-      {searchQuery.trim() &&
-        processedTopics.every((topic) => topic.papers.length === 0) && (
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-xl">
-              No research papers found matching &ldquo;{searchQuery}&rdquo;
-            </p>
-            <p className="text-gray-400 text-base mt-2">
-              Try using different keywords or clear your search to browse all
-              papers.
-            </p>
-          </div>
-        )}
     </div>
   )
 }
