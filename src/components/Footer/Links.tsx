@@ -223,7 +223,7 @@ export default function Links(): ReactElement {
               </h3>
               <p className={`${styles.subtitle} text-sm mb-2.5`}>
                 Bite-sized insights on Web3 tech to help you explore Clio-X with
-                confidence—delivered monthly.
+                confidence — delivered monthly.
               </p>
               <Link href="/coming-soon">
                 <button className="bg-[var(--color-primary)] hover:bg-[var(--color-highlight)] text-white font-bold py-2 px-5 rounded transition-colors cursor-pointer">
