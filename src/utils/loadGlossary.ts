@@ -83,6 +83,9 @@ export function generateGlossaryTermImage(term: string): string {
   // Truncate term if too long for display
   const displayTerm = term.length > 25 ? term.substring(0, 22) + '...' : term
 
+  // Get first character using destructuring to satisfy ESLint
+  const [firstChar] = term
+
   const svg = `
     <svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Background -->
@@ -90,7 +93,7 @@ export function generateGlossaryTermImage(term: string): string {
       
       <!-- Decorative large letter in background -->
       <text x="280" y="140" font-family="IBM Plex Sans, sans-serif" font-size="120" font-weight="700" fill="#e0d5c7" text-anchor="end">
-        ${term.charAt(0).toUpperCase()}
+        ${firstChar.toUpperCase()}
       </text>
       
       <!-- GLOSSARY label -->
