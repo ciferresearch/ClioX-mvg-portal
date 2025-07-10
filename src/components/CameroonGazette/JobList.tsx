@@ -201,7 +201,6 @@ export default function JobList(props: {
                 typeof category === 'object' &&
                 category !== null &&
                 typeof category.name === 'string' &&
-
                 Array.isArray(category.values) &&
                 category.values.every(
                   (value) =>
