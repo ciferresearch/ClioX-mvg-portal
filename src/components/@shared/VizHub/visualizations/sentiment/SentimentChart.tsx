@@ -2,14 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
-import { useDataStore } from '../../store/dataStore'
+import { useDataStore, type SentimentData } from '../../store/dataStore'
 import { useTheme } from '../../store/themeStore'
 import SentimentTable from './SentimentTable'
-
-interface SentimentData {
-  name: string
-  values: [string, number][] | [string, number, string[]][]
-}
 
 interface DateRange {
   start: Date
