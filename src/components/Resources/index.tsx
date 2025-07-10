@@ -258,7 +258,7 @@ export default function Resources({
             {filteredCards.map((card) => (
               <div
                 key={card.id}
-                className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col"
+                className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
               >
                 <img
                   src={card.image}
@@ -274,10 +274,10 @@ export default function Resources({
                   <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
                     {card.tag}
                   </div>
-                  <h3 className="text-xl font-bold mb-2.5 text-black">
+                  <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
                     {card.title}
                   </h3>
-                  <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed">
+                  <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
                     {card.description}
                   </p>
                   <a
@@ -320,7 +320,7 @@ export default function Resources({
               filteredCards.map((card) => (
                 <div
                   key={card.id}
-                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col"
+                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
                 >
                   <img
                     src={card.image}
@@ -336,10 +336,10 @@ export default function Resources({
                     <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
                       {card.tag}
                     </div>
-                    <h3 className="text-xl font-bold mb-2.5 text-black">
+                    <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
                       {card.title}
                     </h3>
-                    <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed">
+                    <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
                       {card.description}
                     </p>
                     <a
