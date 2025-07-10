@@ -7,7 +7,9 @@ import {
   searchGlossaryTerms,
   generateGlossaryTermImage
 } from '@/utils/loadGlossary'
+import { searchResearchPapers } from '@/utils/loadResearch'
 import Glossary from './Glossary'
+import Research from './Research'
 
 const tabs: Tab[] = [
   { id: 'articles', label: 'Resource Articles' },
@@ -129,7 +131,25 @@ export default function Resources({
         content: term.definition
       }))
 
-      return [...matchingCards, ...glossaryCards]
+      // Search research papers and convert to resource cards for display
+      const researchMatches = searchResearchPapers(searchQuery)
+      const researchCards: ResourceCard[] = researchMatches.map((paper) => ({
+        id: `research-${paper.id}`,
+        title: paper.title,
+        description:
+          paper.abstract?.substring(0, 150) +
+            (paper.abstract && paper.abstract.length > 150 ? '...' : '') ||
+          `Research paper by ${paper.authors.join(', ')} (${paper.year})`,
+        image:
+          'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjJlNWQ1Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2M4Nzk0ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjYwMCI+UkVTRUFSQ0g8L3RleHQ+Cjx0ZXh0IHg9IjE2MCIgeT0iOTAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2M4Nzk0ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9IjYwMCI+UEFQRVI8L3RleHQ+Cjwvc3ZnPg==',
+        link: paper.link,
+        tag: 'RESEARCH PAPER',
+        category: 'research',
+        content: paper.abstract || '',
+        tags: [paper.group, ...paper.authors]
+      }))
+
+      return [...matchingCards, ...glossaryCards, ...researchCards]
     }
 
     // Otherwise, filter by current tab
@@ -233,6 +253,10 @@ export default function Resources({
         {activeTab === 'glossary' ? (
           <div className="pb-16">
             <Glossary searchQuery={searchQuery} />
+          </div>
+        ) : activeTab === 'research' ? (
+          <div className="pb-16">
+            <Research searchQuery={searchQuery} />
           </div>
         ) : (
           /* Resource Cards Grid */

@@ -29,3 +29,39 @@ export interface GlossarySection {
   letter: string
   terms: GlossaryTerm[]
 }
+
+// Research types
+export interface ResearchPaper {
+  id: string
+  title: string
+  authors: string[]
+  year: number
+  link: string
+  group: string
+  topic: string
+  abstract?: string
+  doi?: string
+}
+
+export interface ResearchTopic {
+  id: string
+  title: string
+  papers: ResearchPaper[]
+  comingSoon?: boolean
+}
+
+export type ResearchSortBy =
+  | 'date-desc'
+  | 'date-asc'
+  | 'title-asc'
+  | 'title-desc'
+  | 'author-asc'
+  | 'author-desc'
+
+export type ResearchGroup =
+  | 'all'
+  | 'privacy'
+  | 'governance'
+  | 'education'
+  | 'presentations'
+  | 'public-relations'
