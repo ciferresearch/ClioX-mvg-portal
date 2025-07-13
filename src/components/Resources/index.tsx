@@ -20,7 +20,7 @@ const tabs: Tab[] = [
   { id: 'events', label: 'Events' },
   { id: 'guides', label: 'Guides' },
   { id: 'glossary', label: 'Glossary' },
-  { id: 'research', label: 'Research Papers' }
+  { id: 'research', label: 'Research' }
 ]
 
 interface ResourcesProps {
