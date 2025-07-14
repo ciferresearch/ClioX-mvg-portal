@@ -45,22 +45,41 @@ export const CHATBOT_VIZHUB_CONFIG = {
  * Mock data for development
  */
 export const MOCK_CHATBOT_COMPUTE_JOB = {
+  // Base ComputeJob properties from Ocean Protocol
   jobId: 'mock-chatbot-job-001',
   status: 70, // completed status
-  statusText: 'Job finished', // required by ComputeJobs table
-  algoDID: CHATBOT_ALGO_DIDS[32456],
-  inputDID: ['did:op:enron-dataset'],
-  results: [
-    { filename: 'knowledge_base.json', size: 2048 },
-    { filename: 'metadata.json', size: 512 },
-    { filename: 'domain_info.json', size: 256 }
-  ],
-  owner: '0x1234567890abcdef',
+  statusText: 'Job finished', // required by UI components
   dateCreated: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
   dateFinished: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
-  providerUrl: 'https://v4.provider.oceanprotocol.com', // required by ComputeJobs table
-  // Additional properties required by ComputeJobMetaData
-  assetName: 'Enron Email Dataset',
-  assetDtSymbol: 'ENRON-DT',
+  dateStarted: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
+  algoDID: CHATBOT_ALGO_DIDS[32456],
+  inputDID: ['did:op:enron-dataset'], // array of dataset DIDs
+  outputDID: 'did:op:chatbot-output-001', // output DID for published results
+  owner: '0x1234567890abcdef',
+  results: [
+    {
+      type: 'output',
+      filename: 'knowledge_base.json',
+      filesize: 2048,
+      index: 0
+    },
+    {
+      type: 'output',
+      filename: 'metadata.json',
+      filesize: 512,
+      index: 1
+    },
+    {
+      type: 'algorithmLog',
+      filename: 'algorithm.log',
+      filesize: 256,
+      index: 2
+    }
+  ],
+  // ComputeJobExtended properties
+  providerUrl: 'https://mock-provider.oceanprotocol.com',
+  // ComputeJobMetaData properties (added by the application)
+  assetName: 'Chatbot',
+  assetDtSymbol: 'CHATBOT',
   networkId: 32456
 }
