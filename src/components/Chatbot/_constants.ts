@@ -46,7 +46,8 @@ export const CHATBOT_VIZHUB_CONFIG = {
  */
 export const MOCK_CHATBOT_COMPUTE_JOB = {
   jobId: 'mock-chatbot-job-001',
-  status: 70,
+  status: 70, // completed status
+  statusText: 'Job finished', // required by ComputeJobs table
   algoDID: CHATBOT_ALGO_DIDS[32456],
   inputDID: ['did:op:enron-dataset'],
   results: [
@@ -57,6 +58,7 @@ export const MOCK_CHATBOT_COMPUTE_JOB = {
   owner: '0x1234567890abcdef',
   dateCreated: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
   dateFinished: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
+  providerUrl: 'https://v4.provider.oceanprotocol.com', // required by ComputeJobs table
   // Additional properties required by ComputeJobMetaData
   assetName: 'Enron Email Dataset',
   assetDtSymbol: 'ENRON-DT',
