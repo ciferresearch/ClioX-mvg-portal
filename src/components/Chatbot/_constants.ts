@@ -55,5 +55,10 @@ export const MOCK_CHATBOT_COMPUTE_JOB = {
     { filename: 'domain_info.json', size: 256 }
   ],
   owner: '0x1234567890abcdef',
-  created: new Date().toISOString()
+  dateCreated: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
+  dateFinished: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
+  // Additional properties required by ComputeJobMetaData
+  assetName: 'Enron Email Dataset',
+  assetDtSymbol: 'ENRON-DT',
+  networkId: 32456
 }
