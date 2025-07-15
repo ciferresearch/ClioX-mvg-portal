@@ -5,7 +5,10 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
  * TODO: Update with correct Chatbot algorithm DID when backend provides
  */
 export const CHATBOT_ALGO_DIDS = {
-  32456: 'did:op:placeholder-chatbot-algorithm'
+  32456:
+    'did:op:81d57f431deebbd2e74561eac4875da42276afa3cbcf910d27ee8b2425193b0f',
+  2456: 'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651',
+  100: 'did:op:aa8307d3ee38c3f200694479fbfad94b00c6d87293d0094d1ac46c9a4f7bed3c'
 }
 
 export const CHATBOT_USECASE_NAME = 'chatbot'
