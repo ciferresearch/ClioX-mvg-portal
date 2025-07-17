@@ -71,10 +71,6 @@ class ChatbotApiService {
       const allChunks = this.extractKnowledgeChunks(chatbotData)
       const domains = this.extractDomains(chatbotData)
 
-      console.log(
-        `📤 Uploading ${allChunks.length} knowledge chunks for session ${this.sessionId}`
-      )
-
       const response = await fetch(
         `${this.baseUrl}/api/v1/session/knowledge/upload`,
         {
@@ -106,10 +102,6 @@ class ChatbotApiService {
 
   async chat(message: string, config: any = {}): Promise<ChatResponse> {
     try {
-      console.log(
-        `💬 Sending chat message for session ${this.sessionId}: "${message}"`
-      )
-
       const requestBody = {
         session_id: this.sessionId,
         message: message,
@@ -119,12 +111,6 @@ class ChatbotApiService {
           model: config.model || undefined
         }
       }
-
-      console.log('📤 Request details:', {
-        url: `${this.baseUrl}/api/v1/session/chat`,
-        sessionId: this.sessionId,
-        requestBody: requestBody
-      })
 
       const response = await fetch(`${this.baseUrl}/api/v1/session/chat`, {
         method: 'POST',
@@ -138,12 +124,6 @@ class ChatbotApiService {
         body: JSON.stringify(requestBody)
       })
 
-      console.log(
-        '📥 Raw response status:',
-        response.status,
-        response.statusText
-      )
-
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ HTTP Error Response:', errorText)
@@ -153,21 +133,6 @@ class ChatbotApiService {
       }
 
       const jsonResponse = await response.json()
-
-      console.log(
-        '📥 Full API Response:',
-        JSON.stringify(jsonResponse, null, 2)
-      )
-      console.log('🔍 Response breakdown:', {
-        success: jsonResponse.success,
-        hasResponse: !!jsonResponse.response,
-        responseLength: jsonResponse.response?.length || 0,
-        responsePreview: jsonResponse.response?.substring(0, 100) + '...',
-        sources: jsonResponse.sources?.length || 0,
-        error: jsonResponse.error,
-        metadata: jsonResponse.metadata
-      })
-
       return jsonResponse
     } catch (error) {
       console.error('❌ Chat request failed:', error)
@@ -213,48 +178,14 @@ class ChatbotApiService {
   private extractKnowledgeChunks(
     chatbotData: ChatbotUseCaseData[]
   ): KnowledgeChunk[] {
-    console.log('🔍 extractKnowledgeChunks called with:', {
-      dataLength: chatbotData.length,
-      dataStructure: chatbotData.map((d) => ({
-        jobId: d.job?.jobId,
-        resultLength: d.result?.length || 0,
-        resultTypes: d.result?.map((r) => Object.keys(r)) || []
-      }))
-    })
-
     const chunks: KnowledgeChunk[] = []
-    chatbotData.forEach((data, dataIndex) => {
-      console.log(`🔍 Processing data[${dataIndex}]:`, {
-        jobId: data.job?.jobId,
-        resultLength: data.result?.length || 0
-      })
-
-      data.result.forEach((result, resultIndex) => {
-        console.log(`🔍 Processing result[${resultIndex}]:`, {
-          hasKnowledgeBase: !!result.knowledgeBase,
-          knowledgeBaseKeys: result.knowledgeBase
-            ? Object.keys(result.knowledgeBase)
-            : [],
-          chunksLength: result.knowledgeBase?.chunks?.length || 0,
-          chunksSample: result.knowledgeBase?.chunks?.slice(0, 1) || []
-        })
-
+    chatbotData.forEach((data) => {
+      data.result.forEach((result) => {
         if (result.knowledgeBase?.chunks) {
-          console.log(
-            `✅ Adding ${result.knowledgeBase.chunks.length} chunks from result[${resultIndex}]`
-          )
           chunks.push(...result.knowledgeBase.chunks)
-        } else {
-          console.log(`⚠️ No chunks found in result[${resultIndex}]:`, result)
         }
       })
     })
-
-    console.log('🔍 Final extracted chunks:', {
-      totalChunks: chunks.length,
-      chunksSample: chunks.slice(0, 2)
-    })
-
     return chunks
   }
 

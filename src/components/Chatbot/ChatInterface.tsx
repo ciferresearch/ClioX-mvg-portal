@@ -191,55 +191,6 @@ export default function ChatInterface(): ReactElement {
   const [backendError, setBackendError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Test function to verify backend connection
-  const testBackendConnection = async () => {
-    try {
-      console.log('🔍 Testing backend connection...')
-
-      // Test health endpoint
-      const health = await chatbotApi.healthCheck()
-      console.log('✅ Health check response:', health)
-
-      // Test knowledge status
-      const status = await chatbotApi.getKnowledgeStatus()
-      console.log('✅ Knowledge status response:', status)
-
-      // Add test message to chat
-      const testMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `🔍 **Backend Connection Test Results:**\n\n✅ **Health Status:** ${
-          health.status
-        }\n🦙 **Ollama Connected:** ${
-          health.ollama_connected
-        }\n�� **Available Models:** ${health.available_models?.join(
-          ', '
-        )}\n📊 **Active Sessions:** ${
-          health.active_sessions
-        }\n⏱️ **Uptime:** ${Math.round(
-          health.uptime_seconds
-        )}s\n🆔 **Session ID:** ${chatbotApi.getSessionId()}\n🌐 **API URL:** ${chatbotApi.getBaseUrl()}\n📚 **Knowledge Status:** ${
-          status.has_knowledge
-            ? `${status.chunk_count} chunks`
-            : 'No knowledge loaded'
-        }`,
-        timestamp: new Date()
-      }
-      setMessages((prev) => [...prev, testMessage])
-    } catch (error) {
-      console.error('❌ Backend test failed:', error)
-      const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `❌ **Backend Connection Test Failed:**\n\nError: ${
-          error.message
-        }\n\nPlease ensure the RAG backend is running on ${chatbotApi.getBaseUrl()}`,
-        timestamp: new Date()
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    }
-  }
-
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -257,8 +208,6 @@ export default function ChatInterface(): ReactElement {
         const status = await chatbotApi.getKnowledgeStatus()
         setKnowledgeStatus(status)
         setHasKnowledge(status.has_knowledge)
-
-        console.log('✅ Knowledge status:', status)
       } catch (error) {
         console.error('❌ Backend or knowledge check failed:', error)
         setBackendError(error.message)
@@ -303,24 +252,7 @@ export default function ChatInterface(): ReactElement {
         temperature: 0.7
       })
 
-      console.log('🔄 Frontend received API response:', {
-        success: apiResponse.success,
-        hasResponse: !!apiResponse.response,
-        responseContent: apiResponse.response,
-        responseType: typeof apiResponse.response,
-        responseLength: apiResponse.response?.length || 0,
-        sources: apiResponse.sources,
-        metadata: apiResponse.metadata,
-        error: apiResponse.error,
-        message: apiResponse.message
-      })
-
       if (apiResponse.success && apiResponse.response) {
-        console.log(
-          '✅ Creating assistant message with content:',
-          apiResponse.response
-        )
-
         // Always use the backend response - let the LLM handle all types of questions
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -333,38 +265,7 @@ export default function ChatInterface(): ReactElement {
           }
         }
 
-        console.log('📝 Assistant message object:', assistantMessage)
-        console.log(
-          '🔍 About to add message to state. Current messages count:',
-          messages.length
-        )
-
-        setMessages((prev) => {
-          const newMessages = [...prev, assistantMessage]
-          console.log(
-            '📊 Updated messages array:',
-            newMessages.map((m) => ({
-              id: m.id,
-              role: m.role,
-              contentPreview: m.content.substring(0, 50) + '...',
-              contentLength: m.content.length
-            }))
-          )
-          return newMessages
-        })
-
-        console.log(
-          `✅ Response generated in ${apiResponse.metadata?.processing_time_ms}ms`
-        )
-        console.log(
-          `📚 Used ${apiResponse.metadata?.chunks_retrieved} knowledge chunks`
-        )
-        console.log('🔍 Backend response details:', {
-          model_used: apiResponse.metadata?.model_used,
-          processing_time: apiResponse.metadata?.processing_time_ms,
-          chunks_retrieved: apiResponse.metadata?.chunks_retrieved,
-          sources_found: apiResponse.sources?.length || 0
-        })
+        setMessages((prev) => [...prev, assistantMessage])
       } else {
         console.error('❌ API response failed or empty:', {
           success: apiResponse.success,
@@ -409,7 +310,7 @@ export default function ChatInterface(): ReactElement {
   const getBackendStatusDisplay = () => {
     if (backendError) {
       return (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <span className="text-red-600">❌</span>
             <span className="text-red-700 text-sm font-medium">
@@ -427,7 +328,7 @@ export default function ChatInterface(): ReactElement {
     if (knowledgeStatus) {
       return (
         <div
-          className={`border rounded-lg p-3 mb-4 ${
+          className={`border rounded-lg p-3 ${
             hasKnowledge
               ? 'bg-green-50 border-green-200'
               : 'bg-yellow-50 border-yellow-200'
@@ -470,7 +371,7 @@ export default function ChatInterface(): ReactElement {
     }
 
     return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="flex items-center space-x-2">
           <span className="text-blue-600">🔄</span>
           <span className="text-blue-700 text-sm font-medium">
@@ -490,152 +391,13 @@ export default function ChatInterface(): ReactElement {
     >
       {/* Knowledge base info header */}
       <motion.div
-        className="relative p-6 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-b border-amber-100"
+        className="relative px-6 py-4 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-b border-amber-100"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-gray-800 text-lg">AI Assistant</h3>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={testBackendConnection}
-              className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs rounded-md transition-colors"
-              title="Test backend connection and show debug info"
-            >
-              🔍 Test Backend
-            </button>
-            <button
-              onClick={async () => {
-                // Quick verification by asking the backend a simple question
-                try {
-                  const response = await chatbotApi.chat(
-                    'Can you confirm you are the RAG backend?'
-                  )
-                  const testMessage: ChatMessage = {
-                    id: Date.now().toString(),
-                    role: 'assistant',
-                    content: `✅ **Backend Verification:** ${
-                      response.response
-                    }\n\n🔍 **Proof this is from backend:**\n- Processing time: ${
-                      response.metadata?.processing_time_ms
-                    }ms\n- Model: ${
-                      response.metadata?.model_used
-                    }\n- URL: ${chatbotApi.getBaseUrl()}`,
-                    timestamp: new Date(),
-                    metadata: {
-                      confidence: response.metadata?.chunks_retrieved
-                    }
-                  }
-                  setMessages((prev) => [...prev, testMessage])
-                } catch (error) {
-                  const errorMessage: ChatMessage = {
-                    id: Date.now().toString(),
-                    role: 'assistant',
-                    content: `❌ Backend verification failed: ${error.message}`,
-                    timestamp: new Date()
-                  }
-                  setMessages((prev) => [...prev, errorMessage])
-                }
-              }}
-              className="px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs rounded-md transition-colors"
-              title="Quick test by asking the backend a question"
-            >
-              💬 Test Chat
-            </button>
-            <button
-              onClick={() => {
-                console.log('🔧 Debug Info:', {
-                  sessionId: chatbotApi.getSessionId(),
-                  baseUrl: chatbotApi.getBaseUrl(),
-                  hasKnowledge,
-                  knowledgeStatus,
-                  currentMessages: messages.map((m) => ({
-                    id: m.id,
-                    role: m.role,
-                    contentLength: m.content.length,
-                    content: m.content
-                  })),
-                  backendError
-                })
-
-                // Also test the current session directly
-                fetch('http://localhost:8001/api/v1/session/knowledge/status', {
-                  headers: { 'X-Session-ID': chatbotApi.getSessionId() }
-                })
-                  .then((r) => r.json())
-                  .then((status) =>
-                    console.log('📊 Direct session status check:', status)
-                  )
-                  .catch((err) =>
-                    console.error('❌ Direct session check failed:', err)
-                  )
-
-                // Test direct chat call
-                fetch('http://localhost:8001/api/v1/session/chat', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-ID': chatbotApi.getSessionId()
-                  },
-                  body: JSON.stringify({
-                    session_id: chatbotApi.getSessionId(),
-                    message: 'test direct call',
-                    config: { max_tokens: 500, temperature: 0.7 }
-                  })
-                })
-                  .then((r) => r.json())
-                  .then((response) =>
-                    console.log('🧪 Direct API call result:', response)
-                  )
-                  .catch((err) =>
-                    console.error('❌ Direct API call failed:', err)
-                  )
-              }}
-              className="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs rounded-md transition-colors"
-              title="Dump debug information to console"
-            >
-              🐛 Debug
-            </button>
-            <button
-              onClick={() => {
-                if (
-                  confirm(
-                    'Clear all messages and reset session? This will help if there are caching issues.'
-                  )
-                ) {
-                  console.log(
-                    '🧹 Clearing frontend state and generating new session...'
-                  )
-
-                  // Clear messages
-                  setMessages([
-                    {
-                      id: '1',
-                      role: 'assistant',
-                      content: `Hello! 👋 I'm your AI assistant. I'm here to help answer questions and have conversations with you.\n\nHow can I help you today?`,
-                      timestamp: new Date()
-                    }
-                  ])
-
-                  // Reset states
-                  setHasKnowledge(false)
-                  setKnowledgeStatus(null)
-                  setBackendError(null)
-
-                  console.log(
-                    '✅ Frontend state cleared. New session will be created on next API call.'
-                  )
-                }
-              }}
-              className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-md transition-colors"
-              title="Clear frontend cache and reset session"
-            >
-              🧹 Reset
-            </button>
-          </div>
+        <div className="flex items-center mb-2">
+          <h3 className="font-bold text-gray-800 text-lg">AI Assistant</h3>
         </div>
 
         {/* Backend status indicator */}
@@ -646,7 +408,7 @@ export default function ChatInterface(): ReactElement {
       </motion.div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white relative">
+      <div className="flex-1 overflow-y-auto px-6 py-4 bg-gradient-to-b from-gray-50 to-white relative">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,_rgb(0,0,0)_1px,_transparent_0)] bg-[length:24px_24px]"></div>
 

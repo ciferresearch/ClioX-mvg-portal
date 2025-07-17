@@ -200,41 +200,16 @@ export default function JobList(props: {
       const response = await fetch(url)
       const fileContent = await response.text()
 
-      // 🔍 Debug: Examine actual file content from compute job result
-      console.log('🔍 Raw compute job result file content:')
-      console.log(
-        '📄 Content preview (first 500 chars):',
-        fileContent.substring(0, 500)
-      )
-      console.log('📏 Total content length:', fileContent.length)
-      console.log('🔤 Content type check:', typeof fileContent)
-
       let chatBotResults: ChatbotResult[] = []
       try {
         const parsedContent = JSON.parse(fileContent)
-        console.log('✅ JSON parse successful!')
-        console.log('🔍 Parsed content structure:', {
-          type: typeof parsedContent,
-          isArray: Array.isArray(parsedContent),
-          length: Array.isArray(parsedContent)
-            ? parsedContent.length
-            : 'not array',
-          keys:
-            typeof parsedContent === 'object'
-              ? Object.keys(parsedContent)
-              : 'not object',
-          firstItem:
-            Array.isArray(parsedContent) && parsedContent.length > 0
-              ? parsedContent[0]
-              : 'no first item'
-        })
 
-        // 🔄 Use actual Ocean Protocol compute job format directly
+        // Use actual Ocean Protocol compute job format directly
         const oceanProtocolData = Array.isArray(parsedContent)
           ? parsedContent
           : [parsedContent]
 
-        // 📋 Wrap in our expected structure for frontend consistency
+        // Wrap in our expected structure for frontend consistency
         chatBotResults = [
           {
             knowledgeBase: {
@@ -251,10 +226,8 @@ export default function JobList(props: {
             }
           }
         ]
-        console.log('📋 Prepared chatBotResults for backend:', chatBotResults)
       } catch (e) {
         console.error('❌ JSON parsing failed:', e)
-        console.log('🔍 Failed content sample:', fileContent.substring(0, 200))
         toast.error('❌ fail to parse json file')
         setIsUploadingKnowledge(false)
         return
@@ -270,21 +243,6 @@ export default function JobList(props: {
       setChatbotList(updatedList)
 
       // 2. Upload all knowledge to backend API
-      console.log(`📤 Uploading knowledge for job ${job.jobId} to backend...`)
-      console.log('🔍 Data being sent to API:', {
-        updatedListLength: updatedList.length,
-        updatedListStructure: updatedList.map((item) => ({
-          jobId: item.job.jobId,
-          resultLength: item.result.length,
-          resultStructure: item.result.map((r) => ({
-            hasKnowledgeBase: !!r.knowledgeBase,
-            chunksCount: r.knowledgeBase?.chunks?.length || 0,
-            hasDomainInfo: !!r.domainInfo,
-            domain: r.domainInfo?.domain
-          }))
-        }))
-      })
-
       const uploadResponse = await chatbotApi.uploadKnowledge(updatedList)
 
       if (uploadResponse.success) {
