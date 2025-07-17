@@ -1,4 +1,4 @@
-import { LoggerInstance } from '@oceanprotocol/lib'
+import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
@@ -9,9 +9,12 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import { CHATBOT_ALGO_DIDS, MOCK_CHATBOT_COMPUTE_JOB } from './_constants'
+import { CHATBOT_ALGO_DIDS, CHATBOT_RESULT_ZIP } from './_constants'
 import { ChatbotResult } from './_types'
 import { chatbotApi, ChatbotUseCaseData } from '../../services/chatbotApi'
+
+import { getAsset } from '../../@utils/aquarius'
+import { getComputeJobs } from '../../@utils/compute'
 
 export default function JobList(props: {
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
@@ -64,23 +67,64 @@ export default function JobList(props: {
   //   // This was auto-loading mock data - no longer needed with real API
   // }, [backendStatus, jobs.length])
 
+  // const fetchJobs = useCallback(async () => {
+  //   try {
+  //     setIsLoadingJobs(true)
+
+  // Show mock compute job for development/demo purposes (clearly labeled)
+  // const mockJobs = [
+  //   {
+  //     ...MOCK_CHATBOT_COMPUTE_JOB,
+  //     assetName: '🔧 Demo Job (Mock Data)', // Clear labeling
+  //     statusText: 'Demo Job - Click Add to test API integration'
+  //   }
+  // ]
+  // setJobs(mockJobs)
+  // setIsLoadingJobs(false)
+
+  // TODO: Replace with real Ocean Protocol compute jobs when ready
+
+  // Fetch computeJobs for all selected networks (UserPreferences)
+  //     const computeJobs = await getComputeJobs(
+  //       chainIds,
+  //       accountId,
+  //       null,
+  //       newCancelToken()
+  //     )
+  //     if (autoWallet) {
+  //       const autoComputeJobs = await getComputeJobs(
+  //         chainIds,
+  //         autoWallet?.address,
+  //         null,
+  //         newCancelToken()
+  //       )
+  //       autoComputeJobs.computeJobs.forEach((job) => {
+  //         computeJobs.computeJobs.push(job)
+  //       })
+  //     }
+
+  //     setJobs(
+  //       // Filter computeJobs for dids configured in _constants
+  //       computeJobs.computeJobs.filter(
+  //         (job) =>
+  //           chatbotAlgoDids.includes(job.algoDID) && job.status === 70
+  //       )
+  //     )
+  //     setIsLoadingJobs(!computeJobs.isLoaded)
+
+  //   } catch (error) {
+  //     LoggerInstance.error(error.message)
+  //     setIsLoadingJobs(false)
+  //   }
+  // }, [chainIds, chatbotAlgoDids, newCancelToken])
+
   const fetchJobs = useCallback(async () => {
+    if (!accountId) {
+      return
+    }
+
     try {
       setIsLoadingJobs(true)
-
-      // Show mock compute job for development/demo purposes (clearly labeled)
-      const mockJobs = [
-        {
-          ...MOCK_CHATBOT_COMPUTE_JOB,
-          assetName: '🔧 Demo Job (Mock Data)', // Clear labeling
-          statusText: 'Demo Job - Click Add to test API integration'
-        }
-      ]
-      setJobs(mockJobs)
-      setIsLoadingJobs(false)
-
-      // TODO: Replace with real Ocean Protocol compute jobs when ready
-      /*
       // Fetch computeJobs for all selected networks (UserPreferences)
       const computeJobs = await getComputeJobs(
         chainIds,
@@ -103,17 +147,26 @@ export default function JobList(props: {
       setJobs(
         // Filter computeJobs for dids configured in _constants
         computeJobs.computeJobs.filter(
-          (job) =>
-            chatbotAlgoDids.includes(job.algoDID) && job.status === 70
+          (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
+
+          // TODO: Uncomment this when the resultFileName is available
+          // job.results.filter((result) => result.filename === resultFileName)
+          // .length > 0
         )
       )
       setIsLoadingJobs(!computeJobs.isLoaded)
-      */
     } catch (error) {
       LoggerInstance.error(error.message)
       setIsLoadingJobs(false)
     }
-  }, [chainIds, chatbotAlgoDids, newCancelToken])
+  }, [
+    chainIds,
+    chatbotAlgoDids,
+    accountId,
+    autoWallet,
+    // resultFileName,
+    newCancelToken
+  ])
 
   useEffect(() => {
     fetchJobs()
@@ -130,73 +183,35 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // Create enhanced mock data for API testing
-      const mockChatbotResults: ChatbotResult[] = [
-        {
-          knowledgeBase: {
-            chunks: [
-              {
-                id: `demo_chunk_${job.jobId}_1`,
-                content: `This is demo knowledge chunk #1 from job ${job.jobId}. In a real scenario, this would contain actual extracted knowledge from your Ocean Protocol compute job results.`,
-                metadata: {
-                  source: `demo_result_${job.jobId}.json`,
-                  topic: 'demo_content',
-                  date: new Date().toISOString().split('T')[0],
-                  entities: ['Demo', 'Ocean Protocol', 'Compute Job'],
-                  category: 'demo',
-                  tags: ['demo', 'test', 'api-integration']
-                }
-              },
-              {
-                id: `demo_chunk_${job.jobId}_2`,
-                content: `Demo knowledge chunk #2 shows how the RAG system processes and searches through multiple pieces of information to answer user questions.`,
-                metadata: {
-                  source: `demo_analysis_${job.jobId}.txt`,
-                  topic: 'rag_explanation',
-                  date: new Date().toISOString().split('T')[0],
-                  entities: ['RAG', 'Knowledge Base', 'AI Assistant'],
-                  category: 'technical',
-                  tags: ['rag', 'search', 'ai']
-                }
-              },
-              {
-                id: `demo_chunk_${job.jobId}_3`,
-                content: `This demo chunk demonstrates how the system handles different types of content and metadata. Real compute jobs would provide domain-specific insights and analysis.`,
-                metadata: {
-                  source: `demo_metadata_${job.jobId}.md`,
-                  topic: 'system_demo',
-                  date: new Date().toISOString().split('T')[0],
-                  entities: [
-                    'Metadata',
-                    'Content Processing',
-                    'Ocean Protocol'
-                  ],
-                  category: 'demo',
-                  tags: ['demo', 'metadata', 'processing']
-                }
-              }
-            ]
-          },
-          domainInfo: {
-            domain: `demo-job-${job.jobId}`,
-            entities: [
-              'Demo Data',
-              'Ocean Protocol',
-              'Compute Jobs',
-              'RAG System',
-              'AI Assistant'
-            ],
-            timeRange: `Demo data created: ${
-              new Date().toISOString().split('T')[0]
-            }`,
-            description: `Demo knowledge base created from mock compute job ${job.jobId}. In production, this would contain real insights from your data analysis.`
-          }
-        }
-      ]
+      const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
+      const signerToUse =
+        job.owner.toLowerCase() === autoWallet?.address.toLowerCase()
+          ? autoWallet
+          : signer
+
+      const resultFile = job.results[0]
+      const url = await ProviderInstance.getComputeResultUrl(
+        datasetDDO.services[0].serviceEndpoint,
+        signerToUse,
+        job.jobId,
+        0
+      )
+
+      const response = await fetch(url)
+      const fileContent = await response.text()
+
+      let chatBotResults: ChatbotResult[] = []
+      try {
+        chatBotResults = JSON.parse(fileContent)
+      } catch (e) {
+        toast.error('❌ fail to parse json file')
+        setIsUploadingKnowledge(false)
+        return
+      }
 
       const newUseCaseData: ChatbotUseCaseData = {
         job,
-        result: mockChatbotResults
+        result: chatBotResults
       }
 
       // 1. Add to local state first for immediate UI update
@@ -215,35 +230,15 @@ export default function JobList(props: {
             -8
           )}`
         )
-        console.log('✅ Knowledge upload successful:', {
-          chunks: uploadResponse.chunks_processed,
-          domains: uploadResponse.domains,
-          sessionId: uploadResponse.session_id
-        })
       } else {
         throw new Error(uploadResponse.message || 'Upload failed')
       }
-
-      // TODO: Use real database when ready
-      // await createOrUpdateChatbot(newUseCaseData)
     } catch (error) {
       LoggerInstance.error('❌ Knowledge upload failed:', error)
-
-      // Remove from local state if API upload failed
       setChatbotList((prev) =>
         prev.filter((item) => item.job.jobId !== job.jobId)
       )
-
-      let errorMessage = 'Could not add compute result to chatbot'
-      if (error.message.includes('Cannot connect')) {
-        errorMessage =
-          'Cannot connect to chatbot backend. Please check if the server is running on port 8001.'
-      } else if (error.message.includes('Rate limit')) {
-        errorMessage =
-          'Rate limit exceeded. Please wait before adding more knowledge.'
-      }
-
-      toast.error(`❌ ${errorMessage}`)
+      toast.error('❌ Could not add compute result to chatbot')
     } finally {
       setIsUploadingKnowledge(false)
     }
