@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ChatbotResult, KnowledgeBase } from './_types'
-
-// Temporary interface until we create the proper model
-interface ChatbotUseCaseData {
-  id?: number
-  job: ComputeJobMetaData
-  result: ChatbotResult[]
-}
+import { ChatbotUseCaseData } from '../../services/chatbotApi'
 
 export interface DataLoadingState {
   knowledgeBase: KnowledgeBase | null
@@ -17,6 +11,7 @@ export interface DataLoadingState {
 /**
  * Custom hook for loading and transforming chatbot data from compute results
  * Converts ChatbotUseCaseData into KnowledgeBase format for the chat interface
+ * Note: This is for local UI state only - the actual knowledge is handled by the API
  */
 export function useDataLoader(
   chatbotData: ChatbotUseCaseData[] = []
@@ -42,7 +37,7 @@ export function useDataLoader(
           return
         }
 
-        // Aggregate data from all chatbot results
+        // Aggregate data from all chatbot results for local UI display
         const aggregatedKnowledgeBase: KnowledgeBase = {
           domains: {},
           allChunks: [],
@@ -64,7 +59,7 @@ export function useDataLoader(
                 ...result.knowledgeBase.chunks
               )
 
-              // Merge search index
+              // Merge search index if available (for UI purposes only)
               if (result.knowledgeBase.searchIndex) {
                 Object.entries(result.knowledgeBase.searchIndex).forEach(
                   ([term, chunkIds]) => {
@@ -98,10 +93,9 @@ export function useDataLoader(
                 ...new Set([...existingEntities, ...newEntities])
               ]
 
-              // Count chunks for this domain
+              // Update chunk count for this domain
               const domainChunks = aggregatedKnowledgeBase.allChunks.filter(
-                (chunk) =>
-                  chunk.metadata.source?.includes(domainName.split('-')[0])
+                (chunk) => chunk.metadata.source?.includes(domainName)
               )
               aggregatedKnowledgeBase.domains[domainName].chunkCount =
                 domainChunks.length
@@ -109,19 +103,33 @@ export function useDataLoader(
           }
         }
 
-        // Remove duplicate chunks (by ID)
-        const uniqueChunks = aggregatedKnowledgeBase.allChunks.filter(
-          (chunk, index, self) =>
-            index === self.findIndex((c) => c.id === chunk.id)
-        )
-        aggregatedKnowledgeBase.allChunks = uniqueChunks
-        aggregatedKnowledgeBase.totalChunks = uniqueChunks.length
+        // Update total chunk count
+        aggregatedKnowledgeBase.totalChunks =
+          aggregatedKnowledgeBase.allChunks.length
 
-        // Remove duplicate entries from search index
-        Object.keys(aggregatedKnowledgeBase.searchIndex).forEach((term) => {
-          aggregatedKnowledgeBase.searchIndex[term] = [
-            ...new Set(aggregatedKnowledgeBase.searchIndex[term])
-          ]
+        // Build search index for remaining terms (UI purposes only)
+        aggregatedKnowledgeBase.allChunks.forEach((chunk) => {
+          const content = chunk.content.toLowerCase()
+          const words = content.split(/\s+/)
+
+          words.forEach((word) => {
+            // Skip very short words and common words
+            if (word.length > 3) {
+              const cleanWord = word.replace(/[^\w]/g, '')
+              if (cleanWord.length > 3) {
+                if (!aggregatedKnowledgeBase.searchIndex[cleanWord]) {
+                  aggregatedKnowledgeBase.searchIndex[cleanWord] = []
+                }
+                if (
+                  !aggregatedKnowledgeBase.searchIndex[cleanWord].includes(
+                    chunk.id
+                  )
+                ) {
+                  aggregatedKnowledgeBase.searchIndex[cleanWord].push(chunk.id)
+                }
+              }
+            }
+          })
         })
 
         setState({
@@ -129,15 +137,12 @@ export function useDataLoader(
           isLoading: false,
           error: null
         })
-      } catch (err) {
-        console.error('Error transforming chatbot data:', err)
+      } catch (error) {
+        console.error('❌ Error transforming chatbot data:', error)
         setState({
           knowledgeBase: null,
           isLoading: false,
-          error:
-            err instanceof Error
-              ? err.message
-              : 'Unknown error occurred while processing chatbot data'
+          error: error.message || 'Failed to process knowledge base'
         })
       }
     }
@@ -149,59 +154,47 @@ export function useDataLoader(
 }
 
 /**
- * Helper function to search knowledge base for relevant chunks
+ * Legacy search function - kept for backward compatibility but not used with API
+ * The actual search is now handled by the backend RAG pipeline
  */
 export function searchKnowledgeBase(
   query: string,
   knowledgeBase: KnowledgeBase,
   maxResults: number = 3
-): Array<{ content: string; metadata: any; relevance: number }> {
-  if (!knowledgeBase || !query.trim()) {
+): Array<{
+  id: string
+  content: string
+  metadata: any
+  score?: number
+}> {
+  console.warn(
+    '⚠️ searchKnowledgeBase called - this is deprecated with API integration'
+  )
+
+  if (!knowledgeBase || !knowledgeBase.allChunks.length) {
     return []
   }
 
-  const searchTerms = query.toLowerCase().split(' ')
-  const results: Array<{ content: string; metadata: any; relevance: number }> =
-    []
+  // Simple keyword matching for backward compatibility
+  const queryTerms = query
+    .toLowerCase()
+    .split(' ')
+    .filter((term) => term.length > 2)
 
-  // Search through all chunks
-  knowledgeBase.allChunks.forEach((chunk) => {
-    let relevance = 0
-    const chunkContent = chunk.content.toLowerCase()
+  const scoredChunks = knowledgeBase.allChunks.map((chunk) => {
+    let score = 0
+    const content = chunk.content.toLowerCase()
 
-    // Check for exact matches in content
-    searchTerms.forEach((term) => {
-      const termCount = (chunkContent.match(new RegExp(term, 'g')) || []).length
-      relevance += termCount * 2
+    queryTerms.forEach((term) => {
+      const matches = (content.match(new RegExp(term, 'g')) || []).length
+      score += matches
     })
 
-    // Check for matches in metadata
-    const metadataStr = JSON.stringify(chunk.metadata).toLowerCase()
-    searchTerms.forEach((term) => {
-      if (metadataStr.includes(term)) {
-        relevance += 1
-      }
-    })
-
-    // Check search index for additional relevance
-    searchTerms.forEach((term) => {
-      if (
-        knowledgeBase.searchIndex[term] &&
-        knowledgeBase.searchIndex[term].includes(chunk.id)
-      ) {
-        relevance += 3
-      }
-    })
-
-    if (relevance > 0) {
-      results.push({
-        content: chunk.content,
-        metadata: chunk.metadata,
-        relevance
-      })
-    }
+    return { ...chunk, score }
   })
 
-  // Sort by relevance and return top results
-  return results.sort((a, b) => b.relevance - a.relevance).slice(0, maxResults)
+  return scoredChunks
+    .filter((chunk) => chunk.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxResults)
 }

@@ -45,44 +45,49 @@ export const CHATBOT_VIZHUB_CONFIG = {
 }
 
 /**
- * Mock data for development
+ * Mock data for development and API testing
+ *
+ * NOTE: This is demo data for testing the RAG chatbot API integration.
+ * In production, real Ocean Protocol compute jobs would be used instead.
  */
 export const MOCK_CHATBOT_COMPUTE_JOB = {
   // Base ComputeJob properties from Ocean Protocol
-  jobId: 'mock-chatbot-job-001',
+  jobId: 'demo-chatbot-job-001',
   status: 70, // completed status
-  statusText: 'Job finished', // required by UI components
+  statusText: 'Demo Job - Click Add to test API integration', // Clear demo labeling
   dateCreated: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
   dateFinished: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
   dateStarted: Math.floor(Date.now() / 1000).toString(), // Unix timestamp as string
   algoDID: CHATBOT_ALGO_DIDS[32456],
-  inputDID: ['did:op:enron-dataset'], // array of dataset DIDs
-  outputDID: 'did:op:chatbot-output-001', // output DID for published results
-  owner: '0x1234567890abcdef',
+  inputDID: ['did:op:demo-dataset'], // Demo dataset DID
+  outputDID: 'did:op:demo-chatbot-output-001', // Demo output DID
+  owner: '0x1234567890abcdef', // Demo wallet address
   results: [
     {
-      type: 'output',
-      filename: 'knowledge_base.json',
+      type: 'output' as const,
+      filename: 'demo_knowledge_base.json',
       filesize: 2048,
       index: 0
     },
     {
-      type: 'output',
-      filename: 'metadata.json',
+      type: 'output' as const,
+      filename: 'demo_metadata.json',
       filesize: 512,
       index: 1
     },
     {
-      type: 'algorithmLog',
-      filename: 'algorithm.log',
+      type: 'algorithmLog' as const,
+      filename: 'demo_algorithm.log',
       filesize: 256,
       index: 2
     }
   ],
   // ComputeJobExtended properties
-  providerUrl: 'https://mock-provider.oceanprotocol.com',
+  providerUrl: 'https://demo-provider.oceanprotocol.com', // Demo provider URL
+  // ComputeJobExtended properties
+  expireTimestamp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
   // ComputeJobMetaData properties (added by the application)
-  assetName: 'Chatbot',
-  assetDtSymbol: 'CHATBOT',
+  assetName: '🔧 Demo Job (Mock Data)', // Clear demo labeling
+  assetDtSymbol: 'DEMO-CHATBOT',
   networkId: 32456
 }

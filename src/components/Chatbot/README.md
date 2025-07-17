@@ -1,41 +1,52 @@
-# Chatbot Component Documentation
+# Chatbot Component
 
-## Overview
+A complete RAG (Retrieval-Augmented Generation) chatbot interface integrated with Ocean Protocol compute jobs.
 
-AI assistant interface that will process user-uploaded data through compute jobs and create a searchable knowledge base for chat interactions.
+## Current Implementation (API-Integrated)
 
-## Current Implementation (All Mocked)
+### What's Real ✅
 
-### What's Mocked
+1. **AI Responses** - Real LLM responses via backend API (Ollama)
+2. **Knowledge Upload** - Actual RAG pipeline with vector search
+3. **Backend Integration** - Real API calls to RAG chatbot backend on port 8001
+4. **Session Management** - Proper session handling and knowledge persistence
 
-1. **Knowledge Base** - 5 sample Enron email chunks with metadata
-2. **AI Responses** - Simple keyword matching with templated responses
-3. **Compute Jobs** - Mock job metadata instead of real Ocean Protocol jobs
-4. **Search** - Basic text search instead of vector/semantic search
+### What's Demo/Mock ⚠️
 
-### Mock Data Location
+1. **Compute Jobs** - Demo job shown for testing (clearly labeled as "🔧 Demo Job")
+2. **Knowledge Content** - Demo knowledge chunks for API testing
+3. **Job Metadata** - Mock job structure for development
 
-- **Knowledge chunks**: `JobList.tsx` → `autoLoadMockData()` function
-- **AI responses**: `ChatInterface.tsx` → `generateMockResponse()` function
-- **Job metadata**: `_constants.ts` → `MOCK_CHATBOT_COMPUTE_JOB`
+### File Structure
 
-## Future Integration Notes
+- **ChatInterface.tsx** - Main chat UI with real API integration
+- **JobList.tsx** - Compute job management with demo data available
+- **useDataLoader.ts** - Local state management for UI display
+- **chatbotApi.ts** - API service layer for backend communication
+- **\_types.ts** - TypeScript interfaces
+- **\_constants.ts** - Configuration and demo data
 
-### To Replace with Real Implementation:
+## Integration Status
 
-1. **LLM Integration** - Replace mock responses with Ollama API calls
-2. **Vector Search** - Replace text search with semantic/embedding search
-3. **Real Data** - Connect to actual Ocean Protocol compute results
-4. **Knowledge Processing** - Build pipeline to process uploaded documents
+### ✅ Fully Integrated
 
-### Key Integration Points:
+- Real RAG pipeline (Retrieval → Augmentation → Generation)
+- Vector search and knowledge retrieval
+- Session-based knowledge management
+- Conversational AI with fallback responses
+- Error handling and backend health monitoring
 
-- `generateMockResponse()` → Real LLM API calls
-- `searchKnowledgeBase()` → Vector similarity search
-- `autoLoadMockData()` → Real compute job results
-- Add environment variables for configuration
+### 🔄 Next Steps
 
----
+1. **Real Compute Jobs** - Replace demo jobs with actual Ocean Protocol compute results
+2. **Production Data** - Process real compute job outputs into knowledge chunks
+3. **Advanced Features** - Multi-domain knowledge bases, better embeddings
 
-**Current Status**: Fully functional mock interface for testing and development.  
-**Next**: Replace components gradually when ready to integrate real services.
+## Usage
+
+1. **Start Backend**: Ensure RAG chatbot backend is running on port 8001
+2. **Add Knowledge**: Click "Add" on the demo job to upload knowledge to API
+3. **Chat**: Ask questions about the uploaded knowledge or general topics
+4. **Monitor**: Check backend status indicators for health and knowledge status
+
+**Current Status**: ✅ Production-ready API integration with demo data for testing

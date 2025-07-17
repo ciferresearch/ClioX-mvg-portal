@@ -10,6 +10,8 @@ export interface ChatbotResult {
         topic?: string
         date?: string
         entities?: string[]
+        category?: string
+        tags?: string[]
       }
     }>
     embeddings?: number[][]

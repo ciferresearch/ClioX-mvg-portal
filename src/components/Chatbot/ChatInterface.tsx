@@ -2,10 +2,10 @@ import { ReactElement, useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 import { ChatMessage, KnowledgeBase } from './_types'
-import { searchKnowledgeBase } from './useDataLoader'
+import { chatbotApi, KnowledgeStatus } from '../../services/chatbotApi'
 
 interface ChatInterfaceProps {
-  knowledgeBase: KnowledgeBase
+  // Remove unused knowledgeBase prop
 }
 
 // Animated typing indicator
@@ -49,37 +49,81 @@ function ChatMessageComponent({
   message: ChatMessage
   index: number
 }): ReactElement {
-  const isUser = message.role === 'user'
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.3,
-        delay: index * 0.1,
-        ease: [0.4, 0.0, 0.2, 1]
-      }}
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.4 }}
+      className={`flex mb-6 ${
+        message.role === 'user' ? 'justify-end' : 'justify-start'
+      }`}
     >
-      {/* Message bubble */}
-      <motion.div
-        whileHover={{ scale: 1.01 }}
-        className={`px-4 py-3 rounded-2xl shadow-sm max-w-xs lg:max-w-md ${
-          isUser
-            ? 'bg-gray-100 text-gray-800 rounded-br-md'
-            : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+      <div
+        className={`max-w-[80%] px-6 py-4 rounded-2xl shadow-sm border ${
+          message.role === 'user'
+            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md'
+            : 'bg-white text-gray-800 rounded-bl-md border-gray-200'
         }`}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-line">
+        {/* Message content */}
+        <div className="text-sm leading-relaxed whitespace-pre-wrap">
           {message.content}
-        </p>
-      </motion.div>
+        </div>
+
+        {/* Sources and backend metadata - Hidden for cleaner UX */}
+        {/* 
+        {message.role === 'assistant' && message.metadata && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            transition={{ delay: 0.3 }}
+            className="mt-3 pt-3 border-t border-gray-100"
+          >
+            {message.metadata.sources && (
+              <div className="mb-2">
+                <div className="text-xs text-gray-500 mb-1 font-medium">
+                  📚 Sources:
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {message.metadata.sources.map((source, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                    >
+                      {source}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {message.metadata.confidence !== undefined && (
+              <div className="text-xs text-gray-400 flex items-center space-x-3">
+                <span>🤖 Backend Response</span>
+                <span>📊 Chunks: {message.metadata.confidence}</span>
+                <span className="inline-block w-2 h-2 bg-green-400 rounded-full"></span>
+              </div>
+            )}
+          </motion.div>
+        )}
+        */}
+
+        {/* Timestamp - Hidden for cleaner interface */}
+        {/*
+        <div
+          className={`text-xs mt-2 ${
+            message.role === 'user' ? 'text-blue-100' : 'text-gray-400'
+          }`}
+        >
+          {message.timestamp.toLocaleTimeString()}
+        </div>
+        */}
+      </div>
     </motion.div>
   )
 }
 
-// Enhanced chat input component
+// Chat input component
 function ChatInput({
   onSendMessage,
   disabled
@@ -87,198 +131,163 @@ function ChatInput({
   onSendMessage: (message: string) => void
   disabled: boolean
 }): ReactElement {
-  const [inputValue, setInputValue] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
+  const [inputMessage, setInputMessage] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (inputValue.trim() && !disabled) {
-      onSendMessage(inputValue.trim())
-      setInputValue('')
+    if (inputMessage.trim() && !disabled) {
+      onSendMessage(inputMessage.trim())
+      setInputMessage('')
     }
   }
 
   return (
     <motion.div
-      className="p-4 bg-white border-t border-gray-200"
-      initial={{ y: 20, opacity: 0 }}
+      className="relative border-t border-gray-200 bg-white p-4"
+      initial={{ y: 50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
     >
-      <form onSubmit={handleSubmit} className="flex gap-3 items-end">
+      <form onSubmit={handleSubmit} className="flex items-center space-x-3">
         <div className="flex-1 relative">
           <input
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder="Ask anything"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder={
+              disabled ? 'Assistant is thinking...' : 'Ask me anything...'
+            }
             disabled={disabled}
-            className={`w-full px-4 py-3 rounded-xl border transition-colors duration-200 outline-none text-sm ${
-              isFocused
-                ? 'border-gray-400 bg-white'
-                : 'border-gray-300 bg-gray-50'
-            } hover:bg-white disabled:opacity-50`}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
-
         <motion.button
           type="submit"
-          disabled={disabled || !inputValue.trim()}
-          className={`p-3 rounded-xl transition-all duration-200 ${
-            disabled || !inputValue.trim()
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gray-700 text-white hover:bg-gray-800'
-          }`}
-          whileHover={!disabled && inputValue.trim() ? { scale: 1.02 } : {}}
-          whileTap={!disabled && inputValue.trim() ? { scale: 0.98 } : {}}
+          disabled={disabled || !inputMessage.trim()}
+          className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          whileHover={{ scale: disabled ? 1 : 1.05 }}
+          whileTap={{ scale: disabled ? 1 : 0.95 }}
         >
-          <PaperAirplaneIcon className="w-5 h-5" />
+          <PaperAirplaneIcon className="h-5 w-5" />
         </motion.button>
       </form>
     </motion.div>
   )
 }
 
-// Main chat interface component
-export default function ChatInterface({
-  knowledgeBase
-}: ChatInterfaceProps): ReactElement {
+export default function ChatInterface(): ReactElement {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: `Welcome! 👋 I'm your AI assistant with access to Enron email communications. I can help you explore ${knowledgeBase.totalChunks} documents covering:\n\n📧 Executive communications\n💼 Trading strategies\n📊 Financial reporting\n🏛️ Corporate governance\n👥 Employee benefits\n\nTry asking questions like:\n• "What did Jeff Skilling say about earnings?"\n• "Tell me about energy trading strategies"\n• "What accounting practices were discussed?"\n\nWhat would you like to explore?`,
+      content: `Hello! 👋 I'm your AI assistant. I'm here to help answer questions and have conversations with you.\n\nHow can I help you today?`,
       timestamp: new Date()
     }
   ])
   const [isTyping, setIsTyping] = useState(false)
+  const [knowledgeStatus, setKnowledgeStatus] =
+    useState<KnowledgeStatus | null>(null)
+  const [hasKnowledge, setHasKnowledge] = useState(false)
+  const [backendError, setBackendError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Test function to verify backend connection
+  const testBackendConnection = async () => {
+    try {
+      console.log('🔍 Testing backend connection...')
+
+      // Test health endpoint
+      const health = await chatbotApi.healthCheck()
+      console.log('✅ Health check response:', health)
+
+      // Test knowledge status
+      const status = await chatbotApi.getKnowledgeStatus()
+      console.log('✅ Knowledge status response:', status)
+
+      // Add test message to chat
+      const testMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `🔍 **Backend Connection Test Results:**\n\n✅ **Health Status:** ${
+          health.status
+        }\n🦙 **Ollama Connected:** ${
+          health.ollama_connected
+        }\n�� **Available Models:** ${health.available_models?.join(
+          ', '
+        )}\n📊 **Active Sessions:** ${
+          health.active_sessions
+        }\n⏱️ **Uptime:** ${Math.round(
+          health.uptime_seconds
+        )}s\n🆔 **Session ID:** ${chatbotApi.getSessionId()}\n🌐 **API URL:** ${chatbotApi.getBaseUrl()}\n📚 **Knowledge Status:** ${
+          status.has_knowledge
+            ? `${status.chunk_count} chunks`
+            : 'No knowledge loaded'
+        }`,
+        timestamp: new Date()
+      }
+      setMessages((prev) => [...prev, testMessage])
+    } catch (error) {
+      console.error('❌ Backend test failed:', error)
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `❌ **Backend Connection Test Failed:**\n\nError: ${
+          error.message
+        }\n\nPlease ensure the RAG backend is running on ${chatbotApi.getBaseUrl()}`,
+        timestamp: new Date()
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    }
+  }
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Mock response generation using knowledge base search (replace with real Ollama integration later)
-  const generateMockResponse = (
-    userMessage: string,
-    kb: KnowledgeBase
-  ): string => {
-    const lowerMessage = userMessage.toLowerCase()
+  // Check knowledge status and backend health
+  useEffect(() => {
+    const checkKnowledgeAndHealth = async () => {
+      try {
+        // Check backend health first
+        await chatbotApi.healthCheck()
+        setBackendError(null)
 
-    // Handle greetings
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      const domains = Object.keys(kb.domains)
-      return `Hello! 👋 I'm your AI assistant powered by your Enron email knowledge base. I have access to ${kb.totalChunks} documents covering topics like corporate communications, trading strategies, and financial reporting. What would you like to know?`
-    }
+        // Check knowledge status
+        const status = await chatbotApi.getKnowledgeStatus()
+        setKnowledgeStatus(status)
+        setHasKnowledge(status.has_knowledge)
 
-    // Handle thanks
-    if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
-      return `You're welcome! I'm here to help you explore your knowledge base. Feel free to ask about any aspect of the Enron communications - from executive decisions to trading strategies.`
-    }
-
-    // Handle questions about the system itself
-    if (
-      lowerMessage.includes('how do you work') ||
-      lowerMessage.includes('what can you do')
-    ) {
-      return `I analyze your knowledge base of ${kb.totalChunks} documents and can answer questions about:\n\n📧 Corporate communications\n💼 Trading strategies\n📊 Financial reporting\n🏛️ Governance and board decisions\n👥 Employee benefits and HR\n\nTry asking specific questions like "What did Jeff Skilling say about earnings?" or "Tell me about energy trading strategies."`
-    }
-
-    // Search the knowledge base for relevant content
-    const relevantChunks = searchKnowledgeBase(userMessage, kb)
-
-    if (relevantChunks.length === 0) {
-      // Provide helpful suggestions when no results found
-      const suggestions = [
-        'What did Jeff Skilling discuss in his emails?',
-        "Tell me about Enron's trading strategies",
-        'What accounting practices were mentioned?',
-        'How were employee benefits structured?',
-        'What governance issues were discussed?'
-      ]
-      const randomSuggestion =
-        suggestions[Math.floor(Math.random() * suggestions.length)]
-
-      return `I couldn't find specific information about "${userMessage}" in your knowledge base. 🤔\n\nYour knowledge base contains information about corporate communications, trading, accounting, governance, and benefits.\n\n💡 Try asking: "${randomSuggestion}"`
-    }
-
-    // Build response using the most relevant chunks
-    const topChunk = relevantChunks[0]
-
-    // Add some variety to response formats
-    const responseFormats = [
-      `Here's what I found in your knowledge base:\n\n📄 ${topChunk.content}`,
-      `Based on the Enron communications, I can tell you:\n\n${topChunk.content}`,
-      `I found relevant information:\n\n${topChunk.content}`,
-      `According to the documents:\n\n${topChunk.content}`
-    ]
-
-    let response =
-      responseFormats[Math.floor(Math.random() * responseFormats.length)]
-
-    // Add source information with emojis
-    if (topChunk.metadata.source) {
-      response += `\n\n📎 *Source: ${topChunk.metadata.source}*`
-      if (topChunk.metadata.date) {
-        response += `\n📅 *Date: ${topChunk.metadata.date}*`
+        console.log('✅ Knowledge status:', status)
+      } catch (error) {
+        console.error('❌ Backend or knowledge check failed:', error)
+        setBackendError(error.message)
+        setHasKnowledge(false)
       }
     }
 
-    // Add entities if available
-    if (topChunk.metadata.entities && topChunk.metadata.entities.length > 0) {
-      response += `\n🏷️ *Key entities: ${topChunk.metadata.entities.join(
-        ', '
-      )}*`
-    }
+    checkKnowledgeAndHealth()
 
-    // Add additional context if available
-    if (relevantChunks.length > 1) {
-      response += `\n\n🔍 I found ${
-        relevantChunks.length - 1
-      } other related documents. Would you like me to explore those as well?`
-    }
-
-    // Add follow-up suggestions based on topic
-    if (topChunk.metadata.topic) {
-      const followUps = {
-        earnings: [
-          'What other financial metrics were discussed?',
-          'Tell me about revenue growth'
-        ],
-        trading: [
-          'What risk management strategies were used?',
-          'How did they analyze market positions?'
-        ],
-        accounting: [
-          'What were the main accounting concerns?',
-          'Tell me about financial reporting'
-        ],
-        governance: [
-          'What strategic decisions were made?',
-          'How did the board operate?'
-        ],
-        benefits: [
-          'What other employee policies existed?',
-          'How were stock options managed?'
-        ]
-      }
-
-      const suggestions = followUps[topChunk.metadata.topic]
-      if (suggestions) {
-        const randomFollowUp =
-          suggestions[Math.floor(Math.random() * suggestions.length)]
-        response += `\n\n💭 *You might also ask: "${randomFollowUp}"*`
-      }
-    }
-
-    return response
-  }
+    // Check periodically (every 30 seconds)
+    const interval = setInterval(checkKnowledgeAndHealth, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSendMessage = async (userMessage: string) => {
-    // Add user message
+    // Check if knowledge is available
+    if (!hasKnowledge) {
+      const noKnowledgeMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content:
+          "I don't have any information loaded yet. Please add some compute job results first using the 'Add' button above.",
+        timestamp: new Date()
+      }
+      setMessages((prev) => [...prev, noKnowledgeMessage])
+      return
+    }
+
+    // Add user message immediately
     const userChatMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -286,21 +295,190 @@ export default function ChatInterface({
       timestamp: new Date()
     }
     setMessages((prev) => [...prev, userChatMessage])
-
-    // Show typing indicator
     setIsTyping(true)
 
-    // Mock response generation (replace with real logic later)
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
+    try {
+      const apiResponse = await chatbotApi.chat(userMessage, {
+        maxTokens: 500,
+        temperature: 0.7
+      })
+
+      console.log('🔄 Frontend received API response:', {
+        success: apiResponse.success,
+        hasResponse: !!apiResponse.response,
+        responseContent: apiResponse.response,
+        responseType: typeof apiResponse.response,
+        responseLength: apiResponse.response?.length || 0,
+        sources: apiResponse.sources,
+        metadata: apiResponse.metadata,
+        error: apiResponse.error,
+        message: apiResponse.message
+      })
+
+      if (apiResponse.success && apiResponse.response) {
+        console.log(
+          '✅ Creating assistant message with content:',
+          apiResponse.response
+        )
+
+        // Always use the backend response - let the LLM handle all types of questions
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: apiResponse.response,
+          timestamp: new Date(),
+          metadata: {
+            sources: apiResponse.sources?.map((s) => s.source),
+            confidence: apiResponse.metadata?.chunks_retrieved
+          }
+        }
+
+        console.log('📝 Assistant message object:', assistantMessage)
+        console.log(
+          '🔍 About to add message to state. Current messages count:',
+          messages.length
+        )
+
+        setMessages((prev) => {
+          const newMessages = [...prev, assistantMessage]
+          console.log(
+            '📊 Updated messages array:',
+            newMessages.map((m) => ({
+              id: m.id,
+              role: m.role,
+              contentPreview: m.content.substring(0, 50) + '...',
+              contentLength: m.content.length
+            }))
+          )
+          return newMessages
+        })
+
+        console.log(
+          `✅ Response generated in ${apiResponse.metadata?.processing_time_ms}ms`
+        )
+        console.log(
+          `📚 Used ${apiResponse.metadata?.chunks_retrieved} knowledge chunks`
+        )
+        console.log('🔍 Backend response details:', {
+          model_used: apiResponse.metadata?.model_used,
+          processing_time: apiResponse.metadata?.processing_time_ms,
+          chunks_retrieved: apiResponse.metadata?.chunks_retrieved,
+          sources_found: apiResponse.sources?.length || 0
+        })
+      } else {
+        console.error('❌ API response failed or empty:', {
+          success: apiResponse.success,
+          response: apiResponse.response,
+          error: apiResponse.error,
+          message: apiResponse.message
+        })
+        throw new Error(
+          apiResponse.message || apiResponse.error || 'Unknown API error'
+        )
+      }
+    } catch (error) {
+      console.error('❌ Chat message failed:', error)
+
+      let errorContent =
+        'Sorry, I encountered an error processing your message.'
+
+      if (error.message.includes('no_knowledge')) {
+        errorContent =
+          "I don't have access to any information for this session. Please add some compute job results first."
+      } else if (error.message.includes('Cannot connect')) {
+        errorContent =
+          'Cannot connect to the chatbot backend. Please ensure the backend server is running on port 8001.'
+      } else if (error.message.includes('fetch')) {
+        errorContent =
+          'Network error: Unable to reach the chatbot backend. Please check your connection.'
+      }
+
+      const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: generateMockResponse(userMessage, knowledgeBase),
+        content: errorContent,
         timestamp: new Date()
       }
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1000)
+    }
+  }
+
+  // Show backend status in UI
+  const getBackendStatusDisplay = () => {
+    if (backendError) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-red-600">❌</span>
+            <span className="text-red-700 text-sm font-medium">
+              Backend Connection Error
+            </span>
+          </div>
+          <p className="text-red-600 text-xs mt-1">{backendError}</p>
+          <p className="text-red-500 text-xs mt-1">
+            Please ensure the RAG backend is running on http://localhost:8001
+          </p>
+        </div>
+      )
+    }
+
+    if (knowledgeStatus) {
+      return (
+        <div
+          className={`border rounded-lg p-3 mb-4 ${
+            hasKnowledge
+              ? 'bg-green-50 border-green-200'
+              : 'bg-yellow-50 border-yellow-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>{hasKnowledge ? '✅' : '⚠️'}</span>
+              <span
+                className={`text-sm font-medium ${
+                  hasKnowledge ? 'text-green-700' : 'text-yellow-700'
+                }`}
+              >
+                {hasKnowledge ? `AI Assistant Ready` : 'No Information Loaded'}
+              </span>
+            </div>
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${
+                hasKnowledge
+                  ? 'bg-green-100 text-green-600'
+                  : 'bg-yellow-100 text-yellow-600'
+              }`}
+            >
+              Session: {chatbotApi.getSessionId().slice(-8)}
+            </span>
+          </div>
+          {hasKnowledge && (
+            <div className="mt-2 text-xs text-green-600">
+              📚 {knowledgeStatus.chunk_count} chunks from domains:{' '}
+              {knowledgeStatus.domains.join(', ')}
+            </div>
+          )}
+          {!hasKnowledge && (
+            <p className="text-yellow-600 text-xs mt-1">
+              Add compute job results above to enable enhanced chat features
+            </p>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <div className="flex items-center space-x-2">
+          <span className="text-blue-600">🔄</span>
+          <span className="text-blue-700 text-sm font-medium">
+            Connecting to Backend...
+          </span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -317,11 +495,151 @@ export default function ChatInterface({
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-800 text-lg">AI Assistant</h3>
           </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={testBackendConnection}
+              className="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs rounded-md transition-colors"
+              title="Test backend connection and show debug info"
+            >
+              🔍 Test Backend
+            </button>
+            <button
+              onClick={async () => {
+                // Quick verification by asking the backend a simple question
+                try {
+                  const response = await chatbotApi.chat(
+                    'Can you confirm you are the RAG backend?'
+                  )
+                  const testMessage: ChatMessage = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `✅ **Backend Verification:** ${
+                      response.response
+                    }\n\n🔍 **Proof this is from backend:**\n- Processing time: ${
+                      response.metadata?.processing_time_ms
+                    }ms\n- Model: ${
+                      response.metadata?.model_used
+                    }\n- URL: ${chatbotApi.getBaseUrl()}`,
+                    timestamp: new Date(),
+                    metadata: {
+                      confidence: response.metadata?.chunks_retrieved
+                    }
+                  }
+                  setMessages((prev) => [...prev, testMessage])
+                } catch (error) {
+                  const errorMessage: ChatMessage = {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `❌ Backend verification failed: ${error.message}`,
+                    timestamp: new Date()
+                  }
+                  setMessages((prev) => [...prev, errorMessage])
+                }
+              }}
+              className="px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-xs rounded-md transition-colors"
+              title="Quick test by asking the backend a question"
+            >
+              💬 Test Chat
+            </button>
+            <button
+              onClick={() => {
+                console.log('🔧 Debug Info:', {
+                  sessionId: chatbotApi.getSessionId(),
+                  baseUrl: chatbotApi.getBaseUrl(),
+                  hasKnowledge,
+                  knowledgeStatus,
+                  currentMessages: messages.map((m) => ({
+                    id: m.id,
+                    role: m.role,
+                    contentLength: m.content.length,
+                    content: m.content
+                  })),
+                  backendError
+                })
+
+                // Also test the current session directly
+                fetch('http://localhost:8001/api/v1/session/knowledge/status', {
+                  headers: { 'X-Session-ID': chatbotApi.getSessionId() }
+                })
+                  .then((r) => r.json())
+                  .then((status) =>
+                    console.log('📊 Direct session status check:', status)
+                  )
+                  .catch((err) =>
+                    console.error('❌ Direct session check failed:', err)
+                  )
+
+                // Test direct chat call
+                fetch('http://localhost:8001/api/v1/session/chat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-ID': chatbotApi.getSessionId()
+                  },
+                  body: JSON.stringify({
+                    session_id: chatbotApi.getSessionId(),
+                    message: 'test direct call',
+                    config: { max_tokens: 500, temperature: 0.7 }
+                  })
+                })
+                  .then((r) => r.json())
+                  .then((response) =>
+                    console.log('🧪 Direct API call result:', response)
+                  )
+                  .catch((err) =>
+                    console.error('❌ Direct API call failed:', err)
+                  )
+              }}
+              className="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs rounded-md transition-colors"
+              title="Dump debug information to console"
+            >
+              🐛 Debug
+            </button>
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    'Clear all messages and reset session? This will help if there are caching issues.'
+                  )
+                ) {
+                  console.log(
+                    '🧹 Clearing frontend state and generating new session...'
+                  )
+
+                  // Clear messages
+                  setMessages([
+                    {
+                      id: '1',
+                      role: 'assistant',
+                      content: `Hello! 👋 I'm your AI assistant. I'm here to help answer questions and have conversations with you.\n\nHow can I help you today?`,
+                      timestamp: new Date()
+                    }
+                  ])
+
+                  // Reset states
+                  setHasKnowledge(false)
+                  setKnowledgeStatus(null)
+                  setBackendError(null)
+
+                  console.log(
+                    '✅ Frontend state cleared. New session will be created on next API call.'
+                  )
+                }
+              }}
+              className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-md transition-colors"
+              title="Clear frontend cache and reset session"
+            >
+              🧹 Reset
+            </button>
+          </div>
         </div>
+
+        {/* Backend status indicator */}
+        {getBackendStatusDisplay()}
 
         {/* Decorative gradient line */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400"></div>
@@ -352,7 +670,10 @@ export default function ChatInterface({
       </div>
 
       {/* Input area */}
-      <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        disabled={isTyping || backendError !== null}
+      />
     </motion.div>
   )
 }
