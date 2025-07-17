@@ -213,14 +213,48 @@ class ChatbotApiService {
   private extractKnowledgeChunks(
     chatbotData: ChatbotUseCaseData[]
   ): KnowledgeChunk[] {
+    console.log('🔍 extractKnowledgeChunks called with:', {
+      dataLength: chatbotData.length,
+      dataStructure: chatbotData.map((d) => ({
+        jobId: d.job?.jobId,
+        resultLength: d.result?.length || 0,
+        resultTypes: d.result?.map((r) => Object.keys(r)) || []
+      }))
+    })
+
     const chunks: KnowledgeChunk[] = []
-    chatbotData.forEach((data) => {
-      data.result.forEach((result) => {
+    chatbotData.forEach((data, dataIndex) => {
+      console.log(`🔍 Processing data[${dataIndex}]:`, {
+        jobId: data.job?.jobId,
+        resultLength: data.result?.length || 0
+      })
+
+      data.result.forEach((result, resultIndex) => {
+        console.log(`🔍 Processing result[${resultIndex}]:`, {
+          hasKnowledgeBase: !!result.knowledgeBase,
+          knowledgeBaseKeys: result.knowledgeBase
+            ? Object.keys(result.knowledgeBase)
+            : [],
+          chunksLength: result.knowledgeBase?.chunks?.length || 0,
+          chunksSample: result.knowledgeBase?.chunks?.slice(0, 1) || []
+        })
+
         if (result.knowledgeBase?.chunks) {
+          console.log(
+            `✅ Adding ${result.knowledgeBase.chunks.length} chunks from result[${resultIndex}]`
+          )
           chunks.push(...result.knowledgeBase.chunks)
+        } else {
+          console.log(`⚠️ No chunks found in result[${resultIndex}]:`, result)
         }
       })
     })
+
+    console.log('🔍 Final extracted chunks:', {
+      totalChunks: chunks.length,
+      chunksSample: chunks.slice(0, 2)
+    })
+
     return chunks
   }
 
