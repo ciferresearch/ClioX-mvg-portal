@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { motion } from 'motion/react'
 import Button from '../Home/common/Button'
 import Container from '@components/@shared/atoms/Container'
 import { getLandingPageContent } from '@utils/landingPageContent'
@@ -26,9 +27,18 @@ type Role = {
 }
 
 export default function ChooseRole() {
+  const [hoveredRole, setHoveredRole] = useState<number | null>(null)
   const [selectedRole, setSelectedRole] = useState<number | null>(null)
   const content = getLandingPageContent()
   const { chooseRole } = content
+
+  const handleMouseEnter = (index: number) => {
+    setHoveredRole(index)
+  }
+
+  const handleMouseLeave = () => {
+    setHoveredRole(null)
+  }
 
   const handleRoleClick = (index: number) => {
     setSelectedRole(selectedRole === index ? null : index)
@@ -51,16 +61,20 @@ export default function ChooseRole() {
             <div
               key={index}
               className="flex flex-col w-full mx-auto max-w-[340px] mb-10 md:mb-0"
+              onMouseEnter={() => handleMouseEnter(index)}
+              onMouseLeave={handleMouseLeave}
             >
-              <div
+              <motion.div
                 className={`flex flex-col items-center text-center h-auto min-h-[400px] w-full
                   cursor-pointer transition-all duration-300 p-6
                   border border-gray-200 shadow-sm rounded-2xl
                   ${
-                    selectedRole === index
-                      ? 'ring-1 ring-[#c8794d]'
+                    hoveredRole === index || selectedRole === index
+                      ? 'ring-1 ring-[#c8794d] shadow-lg'
                       : 'hover:shadow-md'
                   }`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => handleRoleClick(index)}
               >
                 <div className="flex flex-col h-full items-center">
@@ -87,16 +101,21 @@ export default function ChooseRole() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="mt-4 w-full mx-auto">
-                <div
-                  className={`space-y-3 transition-all duration-300 ease-out flex flex-col items-center
-                    ${
-                      selectedRole === index
-                        ? 'opacity-100 scale-100'
-                        : 'opacity-0 scale-95'
-                    }`}
+              <div className="mt-4 w-full mx-auto h-[120px] flex flex-col justify-start">
+                <motion.div
+                  className="space-y-3 flex flex-col items-center"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{
+                    opacity:
+                      hoveredRole === index || selectedRole === index ? 1 : 0,
+                    y: hoveredRole === index || selectedRole === index ? 0 : -20
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    ease: [0.25, 0.46, 0.45, 0.94]
+                  }}
                 >
                   <Link
                     href={role.primaryActionLink}
@@ -106,9 +125,9 @@ export default function ChooseRole() {
                       variant="primary"
                       size="lg"
                       className={`w-full max-w-[280px] bg-[#a47e5a] hover:bg-[#8e6c4c] border-0 rounded-xl font-medium text-white transform transition-all duration-200 ${
-                        selectedRole === index
-                          ? 'cursor-pointer'
-                          : 'cursor-default pointer-events-none'
+                        hoveredRole === index || selectedRole === index
+                          ? ''
+                          : 'pointer-events-none'
                       }`}
                     >
                       {role.primaryAction}
@@ -127,15 +146,15 @@ export default function ChooseRole() {
                       variant="secondary"
                       size="lg"
                       className={`w-full max-w-[280px] bg-[#efe6d5] hover:bg-[#e6dcc8] border-0 rounded-xl font-medium text-black transform transition-all duration-200 ${
-                        selectedRole === index
-                          ? 'cursor-pointer'
-                          : 'cursor-default pointer-events-none'
+                        hoveredRole === index || selectedRole === index
+                          ? ''
+                          : 'pointer-events-none'
                       }`}
                     >
                       {role.secondaryAction}
                     </Button>
                   </Link>
-                </div>
+                </motion.div>
               </div>
             </div>
           ))}
