@@ -1,16 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
-import {
-  MutableRefObject,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
-import { TextAnalysisUseCaseData } from '../../@context/UseCases/models/TextAnalysis.model'
+import { CameroonGazetteUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
 import { useUserPreferences } from '../../@context/UserPreferences'
 import { useCancelToken } from '../../@hooks/useCancelToken'
 import { getAsset } from '../../@utils/aquarius'
@@ -23,10 +17,12 @@ import {
   CAMEROON_GAZETTE_ALGO_DIDS,
   CAMEROON_GAZETTE_RESULT_ZIP
 } from './_constants'
-import { TextAnalysisResult } from './_types'
+import { CameroonGazetteResult } from './_types'
 
 export default function JobList(props: {
-  setTextAnalysisData: (textAnalysisData: TextAnalysisUseCaseData[]) => void
+  setTextAnalysisData: (
+    cameroonGazetteData: CameroonGazetteUseCaseData[]
+  ) => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
   const cameroonGazetteAlgoDids: string[] = Object.values(
@@ -47,20 +43,20 @@ export default function JobList(props: {
   const { setTextAnalysisData } = props
 
   const {
-    textAnalysisList,
-    clearTextAnalysis,
-    createOrUpdateTextAnalysis,
-    deleteTextAnalysis
+    cameroonGazetteList,
+    clearCameroonGazette,
+    createOrUpdateCameroonGazette,
+    deleteCameroonGazette
   } = useUseCases()
 
   useEffect(() => {
-    if (!textAnalysisList) {
+    if (!cameroonGazetteList) {
       setTextAnalysisData([])
       return
     }
 
-    setTextAnalysisData(textAnalysisList)
-  }, [textAnalysisList, setTextAnalysisData])
+    setTextAnalysisData(cameroonGazetteList)
+  }, [cameroonGazetteList, setTextAnalysisData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -118,7 +114,7 @@ export default function JobList(props: {
   }, [refetchJobs, chainIds])
 
   const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (textAnalysisList.find((row) => row.job.jobId === job.jobId)) {
+    if (cameroonGazetteList.find((row) => row.job.jobId === job.jobId)) {
       toast.info('This compute job result already is part of the map view.')
       return
     }
@@ -156,93 +152,95 @@ export default function JobList(props: {
         }
       }
 
-      const textAnalysisResults: TextAnalysisResult[] = results.map((file) => {
-        const { filename, content: fileContent } = file
-        const filenameLower = filename.toLowerCase()
-        let content = fileContent
+      const textAnalysisResults: CameroonGazetteResult[] = results.map(
+        (file) => {
+          const { filename, content: fileContent } = file
+          const filenameLower = filename.toLowerCase()
+          let content = fileContent
 
-        if (filenameLower.endsWith('.json')) {
-          try {
-            content = JSON.parse(fileContent)
-          } catch (error) {
-            console.error('Error parsing JSON content:', error)
-            return {}
+          if (filenameLower.endsWith('.json')) {
+            try {
+              content = JSON.parse(fileContent)
+            } catch (error) {
+              console.error('Error parsing JSON content:', error)
+              return {}
+            }
           }
-        }
 
-        const result: TextAnalysisResult = {}
+          const result: CameroonGazetteResult = {}
 
-        if (
-          filenameLower.includes('wordcloud') ||
-          filenameLower.includes('word_cloud')
-        ) {
-          result.wordcloud = content
-        } else if (filenameLower.includes('sentiment')) {
-          try {
-            let parsedContent
-            if (typeof content === 'string') {
-              parsedContent = JSON.parse(content)
-            } else if (typeof content === 'object' && content !== null) {
-              parsedContent = content
-            } else {
-              console.warn('Invalid sentiment content type:', typeof content)
-              return result
-            }
+          if (
+            filenameLower.includes('wordcloud') ||
+            filenameLower.includes('word_cloud')
+          ) {
+            result.wordcloud = content
+          } else if (filenameLower.includes('sentiment')) {
+            try {
+              let parsedContent
+              if (typeof content === 'string') {
+                parsedContent = JSON.parse(content)
+              } else if (typeof content === 'object' && content !== null) {
+                parsedContent = content
+              } else {
+                console.warn('Invalid sentiment content type:', typeof content)
+                return result
+              }
 
-            if (!Array.isArray(parsedContent)) {
-              console.warn(
-                'Sentiment data should be an array of sentiment categories'
-              )
-              return result
-            }
-
-            const validSentimentData = parsedContent.every((category) => {
-              return (
-                typeof category === 'object' &&
-                category !== null &&
-                typeof category.name === 'string' &&
-                Array.isArray(category.values) &&
-                category.values.every(
-                  (value) =>
-                    Array.isArray(value) &&
-                    (value.length === 2 || value.length === 3) &&
-                    typeof value[0] === 'string' &&
-                    typeof value[1] === 'number' &&
-                    !isNaN(value[1]) &&
-                    (value.length === 2 ||
-                      (Array.isArray(value[2]) &&
-                        value[2].every((v) => typeof v === 'string')))
+              if (!Array.isArray(parsedContent)) {
+                console.warn(
+                  'Sentiment data should be an array of sentiment categories'
                 )
-              )
-            })
+                return result
+              }
 
-            if (!validSentimentData) {
-              console.warn('Invalid sentiment data structure:', parsedContent)
+              const validSentimentData = parsedContent.every((category) => {
+                return (
+                  typeof category === 'object' &&
+                  category !== null &&
+                  typeof category.name === 'string' &&
+                  Array.isArray(category.values) &&
+                  category.values.every(
+                    (value) =>
+                      Array.isArray(value) &&
+                      (value.length === 2 || value.length === 3) &&
+                      typeof value[0] === 'string' &&
+                      typeof value[1] === 'number' &&
+                      !isNaN(value[1]) &&
+                      (value.length === 2 ||
+                        (Array.isArray(value[2]) &&
+                          value[2].every((v) => typeof v === 'string')))
+                  )
+                )
+              })
+
+              if (!validSentimentData) {
+                console.warn('Invalid sentiment data structure:', parsedContent)
+                return result
+              }
+
+              result.sentiment = parsedContent
+            } catch (error) {
+              console.error('Error processing sentiment data:', error)
               return result
             }
-
-            result.sentiment = parsedContent
-          } catch (error) {
-            console.error('Error processing sentiment data:', error)
-            return result
+          } else if (filenameLower.includes('date_distribution')) {
+            result.dataDistribution = content
+          } else if (filenameLower.includes('email_distribution')) {
+            result.emailDistribution = content
+          } else if (filenameLower.includes('document_summary')) {
+            result.documentSummary = content
           }
-        } else if (filenameLower.includes('date_distribution')) {
-          result.dataDistribution = content
-        } else if (filenameLower.includes('email_distribution')) {
-          result.emailDistribution = content
-        } else if (filenameLower.includes('document_summary')) {
-          result.documentSummary = content
+
+          return result
         }
+      )
 
-        return result
-      })
-
-      const newuseCaseData: TextAnalysisUseCaseData = {
+      const newuseCaseData: CameroonGazetteUseCaseData = {
         job,
         result: textAnalysisResults
       }
 
-      await createOrUpdateTextAnalysis(newuseCaseData)
+      await createOrUpdateCameroonGazette(newuseCaseData)
       toast.success('Added a new compute result')
     } catch (error) {
       LoggerInstance.error(error)
@@ -256,20 +254,20 @@ export default function JobList(props: {
     )
       return
 
-    const rowToDelete = textAnalysisList.find(
+    const rowToDelete = cameroonGazetteList.find(
       (row) => row.job.jobId === job.jobId
     )
     if (!rowToDelete) return
 
-    await deleteTextAnalysis(rowToDelete.id)
+    await deleteCameroonGazette(rowToDelete.id)
     toast.success(`Removed compute job result from visualization.`)
   }
 
   const clearData = async () => {
     if (!confirm('All data will be removed from your cache. Proceed?')) return
 
-    await clearTextAnalysis()
-    toast.success('Text Analysis data was cleared.')
+    await clearCameroonGazette()
+    toast.success('Cameroon Gazette data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
@@ -288,7 +286,7 @@ export default function JobList(props: {
       }
     }
 
-    const viewContainsResult = textAnalysisList.find(
+    const viewContainsResult = cameroonGazetteList.find(
       (row) => row.job.jobId === job.jobId
     )
 

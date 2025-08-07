@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { VizHubData } from '../@shared/VizHub/types'
-import { TextAnalysisUseCaseData } from '../../@context/UseCases/models/TextAnalysis.model'
+import { CameroonGazetteUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
 
 export interface DataLoadingState {
   data: VizHubData | null
@@ -19,7 +19,7 @@ export interface DataLoadingState {
  * - Document summary statistics
  */
 export function useDataLoader(
-  textAnalysisData: TextAnalysisUseCaseData[] = []
+  textAnalysisData: CameroonGazetteUseCaseData[] = []
 ): DataLoadingState {
   const [state, setState] = useState<DataLoadingState>({
     data: null,

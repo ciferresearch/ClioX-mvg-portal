@@ -2,14 +2,14 @@ import { ReactElement, useEffect } from 'react'
 import Page from '@shared/Page'
 import { useRouter } from 'next/router'
 import content from '../../../content/pages/cameroonGazette.json'
-import TextAnalysis from '../../components/CameroonGazette'
+import CameroonGazette from '../../components/CameroonGazette'
 import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
 import { useUseCases } from '../../@context/UseCases'
 
-export default function CameroonGazette(): ReactElement {
+export default function CameroonGazettePage(): ReactElement {
   const router = useRouter()
   const { clearAllData } = useDataStore()
-  const { clearTextAnalysis } = useUseCases()
+  const { clearCameroonGazette } = useUseCases()
 
   const { title, description } = content
 
@@ -18,14 +18,14 @@ export default function CameroonGazette(): ReactElement {
     return () => {
       // Clear VizHub localStorage data
       clearAllData()
-      // Clear IndexedDB TextAnalysis data
-      clearTextAnalysis()
+      // Clear IndexedDB Cameroon Gazette data
+      clearCameroonGazette()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Page title={title} description={description} uri={router.route}>
-      <TextAnalysis />
+      <CameroonGazette />
     </Page>
   )
 }

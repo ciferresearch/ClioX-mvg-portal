@@ -6,7 +6,7 @@ import TextAnalysis from '../../components/TextAnalysis'
 import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
 import { useUseCases } from '../../@context/UseCases'
 
-export default function PageRoadDamage(): ReactElement {
+export default function TextAnalysisPage(): ReactElement {
   const router = useRouter()
   const { clearAllData } = useDataStore()
   const { clearTextAnalysis } = useUseCases()
