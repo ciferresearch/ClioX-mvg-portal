@@ -1,6 +1,7 @@
 import { ReactElement, useEffect } from 'react'
-import Page from '@shared/Page'
 import { useRouter } from 'next/router'
+import { seedTextAnalysisFromSamples } from '../../dev/seedUseCases'
+import Page from '@shared/Page'
 import content from '../../../content/pages/textAnalysis.json'
 import TextAnalysis from '../../components/TextAnalysis'
 import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
@@ -15,11 +16,21 @@ export default function TextAnalysisPage(): ReactElement {
 
   // Clear both VizHub localStorage data and IndexedDB data when leaving the page
   useEffect(() => {
+    // dev seed
+    if (process.env.NEXT_PUBLIC_ENABLE_DEV_SEED === 'true') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('seed') === 'text') {
+        seedTextAnalysisFromSamples()
+      }
+    }
+
     return () => {
       // Clear VizHub localStorage data
-      clearAllData()
-      // Clear IndexedDB TextAnalysis data
-      clearTextAnalysis()
+      if (process.env.NEXT_PUBLIC_ENABLE_DEV_SEED !== 'true') {
+        clearAllData()
+        // Clear IndexedDB TextAnalysis data
+        clearTextAnalysis()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,6 +1,7 @@
 import { ReactElement, useEffect } from 'react'
-import Page from '@shared/Page'
 import { useRouter } from 'next/router'
+import { seedCameroonGazetteFromSamples } from '../../dev/seedUseCases'
+import Page from '@shared/Page'
 import content from '../../../content/pages/cameroonGazette.json'
 import CameroonGazette from '../../components/CameroonGazette'
 import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
@@ -15,11 +16,20 @@ export default function CameroonGazettePage(): ReactElement {
 
   // Clear both VizHub localStorage data and IndexedDB data when leaving the page
   useEffect(() => {
+    // dev seed
+    if (process.env.NEXT_PUBLIC_ENABLE_DEV_SEED === 'true') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('seed') === 'cameroon') {
+        seedCameroonGazetteFromSamples()
+      }
+    }
+
     return () => {
-      // Clear VizHub localStorage data
-      clearAllData()
-      // Clear IndexedDB Cameroon Gazette data
-      clearCameroonGazette()
+      // Clear VizHub localStorage data + IndexedDB only when not in dev seed mode
+      if (process.env.NEXT_PUBLIC_ENABLE_DEV_SEED !== 'true') {
+        clearAllData()
+        clearCameroonGazette()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
