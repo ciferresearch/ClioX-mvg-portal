@@ -470,12 +470,13 @@ export const FINANCIAL_REPORTS_VIZHUB_CONFIG = {
 
 ```typescript
 // ❌ Wrong - not passing customization
-<DataDistribution title="My Title" type="date" />
+<DataDistribution title="My Title" type="date" data={dateData} />
 
 // ✅ Correct - passing customization
 <DataDistribution
   title="My Title"
   type="date"
+  data={dateData}
   customization={customization.dateDistribution}
 />
 ```

@@ -11,7 +11,6 @@ interface DataDistributionProps {
   title: string
   description?: string
   type: 'email' | 'date'
-  skipLoading?: boolean
   customization?: {
     title?: string
     xAxisLabel?: string
@@ -19,8 +18,8 @@ interface DataDistributionProps {
     chartType?: 'bar' | 'line' | 'area'
     unit?: string
   }
-  // If provided, component will render from this CSV and skip fetching
-  csvText?: string
+  // Typed data passed from parent (props-only mode)
+  data?: { emails_per_day: number }[] | { time: string; count: number }[]
 }
 
 interface DataPoint {
@@ -38,9 +37,8 @@ const DataDistribution = ({
   title,
   description,
   type,
-  skipLoading = false,
   customization,
-  csvText
+  data: inputData
 }: DataDistributionProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const [data, setData] = useState<DataPoint[]>([])
@@ -50,33 +48,41 @@ const DataDistribution = ({
   const [chartType, setChartType] = useState<'date' | 'email'>(type)
   const { theme } = useTheme()
 
-  // In pure mode, data is provided via props; no store fallback
-
-  // Fetch data with retry functionality
-  const fetchDistributionData = useCallback(async () => {
+  // In pure mode, data is provided via props; convert to internal shape
+  const populateData = useCallback(() => {
     try {
       setLoading(true)
       setError(null)
-
-      const csv = csvText
-      if (!csv) throw new Error('No data provided for distribution chart')
       setChartType(type)
 
-      // Parse CSV data
-      const parsedData = d3.csvParse(csv)
-      setData(parsedData as unknown as DataPoint[])
+      if (!inputData || inputData.length === 0) {
+        setData([])
+        throw new Error('No data provided for distribution chart')
+      }
+
+      if (type === 'date') {
+        const parsed = (inputData as { time: string; count: number }[]).map(
+          (d) => ({ time: d.time, count: d.count })
+        )
+        setData(parsed as unknown as DataPoint[])
+      } else {
+        // email
+        const parsed = (inputData as { emails_per_day: number }[]).map((d) => ({
+          emails_per_day: d.emails_per_day
+        }))
+        setData(parsed as unknown as DataPoint[])
+      }
     } catch (err) {
       console.error('Error loading data:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
-  }, [type, csvText])
+  }, [inputData, type])
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchDistributionData()
-  }, [fetchDistributionData, skipLoading])
+    populateData()
+  }, [populateData])
 
   // Render chart when data is available or theme changes
   useEffect(() => {
@@ -100,7 +106,7 @@ const DataDistribution = ({
     const textColor = theme === 'dark' ? '#e5e7eb' : '#4b5563' // gray-200 : gray-600
     const titleColor = theme === 'dark' ? '#d1d5db' : '#374151' // gray-300 : gray-700
     const strokeColor = theme === 'dark' ? '#1f2937' : '#ffffff' // gray-800 : white
-    const gridColor = theme === 'dark' ? '#374151' : '#e5e7eb' // gray-700 : gray-200
+    // const gridColor = theme === 'dark' ? '#374151' : '#e5e7eb' // gray-700 : gray-200
     const axisColor = theme === 'dark' ? '#6b7280' : '#9ca3af' // gray-500 : gray-400
     const primaryColor = '#4F46E5' // Indigo color for both themes
     const pointColor = '#F59E0B' // Amber color for data points
@@ -184,7 +190,9 @@ const DataDistribution = ({
           d3
             .axisBottom(x)
             .ticks(6)
-            .tickFormat(d3.timeFormat('%b %Y') as any)
+            .tickFormat(
+              d3.timeFormat('%b %Y') as unknown as (d: Date) => string
+            )
         )
 
       xAxis
@@ -430,7 +438,15 @@ const DataDistribution = ({
         document.head.removeChild(style)
       }
     }
-  }, [data, chartType, type, theme])
+  }, [
+    data,
+    chartType,
+    type,
+    theme,
+    customization?.title,
+    customization?.xAxisLabel,
+    customization?.yAxisLabel
+  ])
 
   // Handle opening the modal
   const handleOpenModal = () => {
@@ -486,13 +502,13 @@ const DataDistribution = ({
           data.length > 0 && !loading && !error ? handleOpenModal : undefined
         }
       >
-        {loading && !skipLoading ? (
+        {loading ? (
           <ChartSkeleton
             type={chartType === 'date' ? 'line' : 'bar'}
             height={256}
           />
         ) : error ? (
-          <ChartError message={error} onRetry={fetchDistributionData} />
+          <ChartError message={error} onRetry={populateData} />
         ) : data.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No data available</p>
         ) : null}

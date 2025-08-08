@@ -12,15 +12,11 @@ import { useTheme } from '../../store/themeStore'
 import type { WordData } from './types'
 
 interface WordCloudProps {
-  skipLoading?: boolean
   // Optional: use provided words instead of fetching
   wordsOverride?: WordData[]
 }
 
-const WordCloud: React.FC<WordCloudProps> = ({
-  skipLoading = false,
-  wordsOverride
-}) => {
+const WordCloud: React.FC<WordCloudProps> = ({ wordsOverride }) => {
   // Get theme from context
   const { theme } = useTheme()
 
@@ -226,13 +222,7 @@ const WordCloud: React.FC<WordCloudProps> = ({
     shouldUpdateLayout
   ])
 
-  // Fetch data on initial load
-  useEffect(() => {
-    // If skipLoading is true, do not execute fetchData
-    if (!skipLoading) {
-      fetchData()
-    }
-  }, [fetchData, skipLoading])
+  // No internal fetch in props-only mode
 
   // Single unified effect to handle all word cloud updates
   useEffect(() => {

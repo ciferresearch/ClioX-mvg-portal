@@ -151,17 +151,7 @@ function VizHubInternal({
                       customization.emailDistribution?.unit || 'email counts'
                     } over time`}
                     type="email"
-                    skipLoading={true}
-                    csvText={
-                      data?.emailDistribution
-                        ? [
-                            'emails_per_day',
-                            ...data.emailDistribution.map((d) =>
-                              String(d.emails_per_day)
-                            )
-                          ].join('\n')
-                        : undefined
-                    }
+                    data={data?.emailDistribution}
                     customization={customization.emailDistribution}
                   />
                 </VisualizationWrapper>
@@ -183,17 +173,7 @@ function VizHubInternal({
                     }
                     description="Shows the distribution of items by date"
                     type="date"
-                    skipLoading={true}
-                    csvText={
-                      data?.dateDistribution
-                        ? [
-                            'time,count',
-                            ...data.dateDistribution.map(
-                              (d) => `${d.time},${d.count}`
-                            )
-                          ].join('\n')
-                        : undefined
-                    }
+                    data={data?.dateDistribution}
                     customization={customization.dateDistribution}
                   />
                 </VisualizationWrapper>
@@ -209,10 +189,7 @@ function VizHubInternal({
                 isAvailable={dataStatus.sentimentData}
                 title="Sentiment Analysis"
               >
-                <SentimentChart
-                  skipLoading={true}
-                  dataOverride={data?.sentiment}
-                />
+                <SentimentChart data={data?.sentiment} />
               </VisualizationWrapper>
             )}
 
@@ -229,7 +206,6 @@ function VizHubInternal({
                 title="Word Cloud"
               >
                 <WordCloud
-                  skipLoading={true}
                   wordsOverride={data?.wordCloud?.wordCloudData || []}
                 />
               </VisualizationWrapper>
@@ -244,10 +220,7 @@ function VizHubInternal({
                 isAvailable={dataStatus.documentSummaryData}
                 title="Document Summary"
               >
-                <DocumentSummary
-                  skipLoading={true}
-                  dataOverride={data?.documentSummary}
-                />
+                <DocumentSummary data={data?.documentSummary} />
               </VisualizationWrapper>
             )}
 

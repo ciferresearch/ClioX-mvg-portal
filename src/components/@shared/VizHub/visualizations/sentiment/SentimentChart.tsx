@@ -110,15 +110,10 @@ const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
 }
 
 interface SentimentChartProps {
-  skipLoading?: boolean
-  // If provided, the chart will render from this dataset and skip fetching
-  dataOverride?: SentimentData[]
+  data?: SentimentData[]
 }
 
-const SentimentChart = ({
-  skipLoading = false,
-  dataOverride
-}: SentimentChartProps) => {
+const SentimentChart = ({ data }: SentimentChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const brushRef = useRef<HTMLDivElement>(null)
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([])
@@ -155,20 +150,20 @@ const SentimentChart = ({
     const fetchData = async () => {
       try {
         setLoading(true)
-        const data: SentimentData[] = dataOverride || []
-        if (!dataOverride) {
+        const dataInput: SentimentData[] = data || []
+        if (!data) {
           throw new Error('No sentiment data provided')
         }
 
-        data.sort((a, b) => {
+        dataInput.sort((a, b) => {
           const aNum = parseInt(a.name.replace('+', ''))
           const bNum = parseInt(b.name.replace('+', ''))
           return aNum - bNum
         })
 
-        setSentimentData(data)
+        setSentimentData(dataInput)
 
-        const allDates = data
+        const allDates = dataInput
           .flatMap((d) => d.values.map((v) => parseTime()(v[0])))
           .filter((d): d is Date => d !== null)
 
@@ -185,7 +180,7 @@ const SentimentChart = ({
     }
 
     fetchData()
-  }, [parseTime, dataOverride])
+  }, [parseTime, data])
 
   useEffect(() => {
     if (!chartRef.current) return
@@ -847,7 +842,7 @@ const SentimentChart = ({
         Sentiment Analysis by Category
       </h2>
 
-      {loading && !skipLoading ? (
+      {loading ? (
         <div className="flex items-center justify-center h-[400px]">
           <p className="text-gray-500 dark:text-gray-400">
             Loading sentiment data...

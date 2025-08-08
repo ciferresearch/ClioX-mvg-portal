@@ -15,15 +15,11 @@ interface DocumentSummary {
 }
 
 interface DocumentSummaryProps {
-  skipLoading?: boolean
-  // Optional override to render from props instead of fetching
-  dataOverride?: DocumentSummary
+  // Data passed from parent (props-only mode)
+  data?: DocumentSummary
 }
 
-const DocumentSummary = ({
-  skipLoading = false,
-  dataOverride
-}: DocumentSummaryProps) => {
+const DocumentSummary = ({ data }: DocumentSummaryProps) => {
   const [summary, setSummary] = useState<DocumentSummary | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +29,7 @@ const DocumentSummary = ({
     setIsLoading(true)
     setError(null)
     try {
-      const data = dataOverride
       if (!data) throw new Error('No document summary data provided')
-
       setSummary(data)
     } catch (error) {
       console.error('Error fetching document summary:', error)
@@ -43,7 +37,7 @@ const DocumentSummary = ({
     } finally {
       setIsLoading(false)
     }
-  }, [dataOverride])
+  }, [data])
 
   useEffect(() => {
     fetchSummary()

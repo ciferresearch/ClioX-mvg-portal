@@ -14,7 +14,6 @@ src/components/viz-hub/
 ├── hooks/
 │   └── useVizHubData.ts          # Data injection and processing hook
 ├── store/
-│   ├── dataStore.ts              # Main data store (copied from original)
 │   └── themeStore.tsx            # Theme management store
 ├── types/
 │   └── index.ts                  # TypeScript type definitions
@@ -288,7 +287,7 @@ VizHub uses a sophisticated data management system:
 
 1. **Props-Only Data Flow:** Visualizations render purely from `props.data` (no localStorage injection)
 2. **Store Integration:** Zustand stores manage UI state and word cloud preferences
-3. **Compatibility:** Existing visualization components accept override props for data input
+3. **Compatibility:** Visualization components accept typed data props for input
 4. **Caching:** Intelligent caching prevents unnecessary re-renders
 5. **Persistence Policy:** localStorage is used ONLY for UI preferences of the Word Cloud (e.g., color scheme, font, min frequency, stop/whitelist), and these preferences are namespaced via `preferencesNamespace` to avoid cross-page leakage. All business/visualization data is sourced from component props and, at rest, is persisted in IndexedDB (Dexie) with separate object stores per use case (e.g., `textAnalysises`, `cameroonGazettes`).
 
@@ -348,32 +347,15 @@ import {
 function CustomDashboard() {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <SentimentChart skipLoading={true} />
-      <WordCloud skipLoading={false} />
-      <DataDistribution title="Email Volume" type="email" skipLoading={true} />
+      <SentimentChart data={sentiment} />
+      <WordCloud words={wordCloudData} />
+      <DataDistribution title="Email Volume" type="email" data={emailData} />
     </div>
   )
 }
 ```
 
-### Data Store Access
-
-```tsx
-import { useDataStore, STORAGE_KEYS } from './components/viz-hub'
-
-function DataManager() {
-  const { dataStatus, checkDataStatus, fetchSentimentData } = useDataStore()
-
-  const isDataAvailable = dataStatus[STORAGE_KEYS.SENTIMENT]
-
-  return (
-    <div>
-      {isDataAvailable ? 'Data Ready' : 'No Data'}
-      <button onClick={checkDataStatus}>Refresh</button>
-    </div>
-  )
-}
-```
+<!-- Legacy data store section removed: VizHub is props-only now -->
 
 ## 🐛 Troubleshooting
 
