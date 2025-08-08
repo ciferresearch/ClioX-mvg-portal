@@ -125,6 +125,8 @@ export interface VizHubProps {
   useCaseConfig: UseCaseConfig
   className?: string
   theme?: 'light' | 'dark'
+  /** Optional: namespace to isolate user preferences (e.g., stoplist/whitelist) */
+  preferencesNamespace?: string
 }
 
 // Default configuration

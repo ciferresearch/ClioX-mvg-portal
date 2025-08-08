@@ -21,6 +21,7 @@ export default function TextAnalysisViz(): ReactElement {
             data={data}
             config={TEXT_ANALYSIS_VIZHUB_CONFIG}
             useCaseConfig={TEXT_ANALYSIS_CONFIG}
+            preferencesNamespace="textAnalysis"
             theme="light"
           />
         </div>

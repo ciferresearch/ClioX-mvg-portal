@@ -4,12 +4,10 @@ import { seedCameroonGazetteFromSamples } from '../../dev/seedUseCases'
 import Page from '@shared/Page'
 import content from '../../../content/pages/cameroonGazette.json'
 import CameroonGazette from '../../components/CameroonGazette'
-import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
 import { useUseCases } from '../../@context/UseCases'
 
 export default function CameroonGazettePage(): ReactElement {
   const router = useRouter()
-  const { clearAllData } = useDataStore()
   const { clearCameroonGazette } = useUseCases()
 
   const { title, description } = content
@@ -25,9 +23,13 @@ export default function CameroonGazettePage(): ReactElement {
     }
 
     return () => {
-      // Clear VizHub localStorage data + IndexedDB only when not in dev seed mode
-      if (process.env.NEXT_PUBLIC_ENABLE_DEV_SEED !== 'true') {
-        clearAllData()
+      const shouldClearOnUnmount =
+        process.env.NEXT_PUBLIC_CLEAR_ON_UNMOUNT !== 'false'
+
+      if (
+        process.env.NEXT_PUBLIC_ENABLE_DEV_SEED !== 'true' &&
+        shouldClearOnUnmount
+      ) {
         clearCameroonGazette()
       }
     }

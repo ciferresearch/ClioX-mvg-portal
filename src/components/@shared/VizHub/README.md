@@ -30,7 +30,7 @@ src/components/viz-hub/
 │   │   ├── types.ts              # Word cloud types
 │   │   ├── constants.ts          # Configuration constants
 │   │   ├── useWordCloudVisualization.ts
-│   │   ├── useWordCloudData.ts
+
 │   │   ├── WordDetailPanel.tsx
 │   │   └── modals/               # Configuration modals
 │   └── summary/
@@ -43,10 +43,6 @@ src/components/viz-hub/
 │   │   ├── ChartSkeleton.tsx
 │   │   ├── FutureFeatures.tsx
 │   │   └── ...
-│   └── upload/                  # Upload-related components
-│       ├── MultiFileUpload.tsx
-│       ├── UploadModal.tsx
-│       └── UploadPage.tsx
 └── README.md                    # This documentation
 ```
 
@@ -290,10 +286,11 @@ function CustomThemedApp() {
 
 VizHub uses a sophisticated data management system:
 
-1. **External Data Injection:** Props data is injected into localStorage for compatibility
-2. **Store Integration:** Zustand stores manage component state and data flow
-3. **Backward Compatibility:** Existing visualization components work unchanged
+1. **Props-Only Data Flow:** Visualizations render purely from `props.data` (no localStorage injection)
+2. **Store Integration:** Zustand stores manage UI state and word cloud preferences
+3. **Compatibility:** Existing visualization components accept override props for data input
 4. **Caching:** Intelligent caching prevents unnecessary re-renders
+5. **Persistence Policy:** localStorage is used ONLY for UI preferences of the Word Cloud (e.g., color scheme, font, min frequency, stop/whitelist), and these preferences are namespaced via `preferencesNamespace` to avoid cross-page leakage. All business/visualization data is sourced from component props and, at rest, is persisted in IndexedDB (Dexie) with separate object stores per use case (e.g., `textAnalysises`, `cameroonGazettes`).
 
 ### Performance Optimizations
 

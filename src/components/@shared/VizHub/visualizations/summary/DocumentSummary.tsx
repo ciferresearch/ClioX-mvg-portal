@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import ChartError from '../../ui/common/ChartError'
-import { useDataStore } from '../../store/dataStore'
 
 interface DocumentSummary {
   totalDocuments: number
@@ -17,21 +16,26 @@ interface DocumentSummary {
 
 interface DocumentSummaryProps {
   skipLoading?: boolean
+  // Optional override to render from props instead of fetching
+  dataOverride?: DocumentSummary
 }
 
-const DocumentSummary = ({ skipLoading = false }: DocumentSummaryProps) => {
+const DocumentSummary = ({
+  skipLoading = false,
+  dataOverride
+}: DocumentSummaryProps) => {
   const [summary, setSummary] = useState<DocumentSummary | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const { fetchDocumentSummary } = useDataStore()
 
   // Define fetchSummary as a component method for reuse with error retry
   const fetchSummary = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await fetchDocumentSummary()
-      // console.log("Document summary data received:", data);
+      const data = dataOverride
+      if (!data) throw new Error('No document summary data provided')
+
       setSummary(data)
     } catch (error) {
       console.error('Error fetching document summary:', error)
@@ -39,7 +43,7 @@ const DocumentSummary = ({ skipLoading = false }: DocumentSummaryProps) => {
     } finally {
       setIsLoading(false)
     }
-  }, [fetchDocumentSummary])
+  }, [dataOverride])
 
   useEffect(() => {
     fetchSummary()

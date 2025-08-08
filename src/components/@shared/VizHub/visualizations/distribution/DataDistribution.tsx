@@ -5,7 +5,6 @@ import * as d3 from 'd3'
 import ChartModal from './ChartModal'
 import ChartSkeleton from '../../ui/common/ChartSkeleton'
 import ChartError from '../../ui/common/ChartError'
-import { useDataStore } from '../../store/dataStore'
 import { useTheme } from '../../store/themeStore'
 
 interface DataDistributionProps {
@@ -20,6 +19,8 @@ interface DataDistributionProps {
     chartType?: 'bar' | 'line' | 'area'
     unit?: string
   }
+  // If provided, component will render from this CSV and skip fetching
+  csvText?: string
 }
 
 interface DataPoint {
@@ -38,7 +39,8 @@ const DataDistribution = ({
   description,
   type,
   skipLoading = false,
-  customization
+  customization,
+  csvText
 }: DataDistributionProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const [data, setData] = useState<DataPoint[]>([])
@@ -48,8 +50,7 @@ const DataDistribution = ({
   const [chartType, setChartType] = useState<'date' | 'email'>(type)
   const { theme } = useTheme()
 
-  // Get data fetching functions from store
-  const { fetchEmailDistribution, fetchDateDistribution } = useDataStore()
+  // In pure mode, data is provided via props; no store fallback
 
   // Fetch data with retry functionality
   const fetchDistributionData = useCallback(async () => {
@@ -57,21 +58,12 @@ const DataDistribution = ({
       setLoading(true)
       setError(null)
 
-      let csvText
-      if (type === 'email') {
-        const emailData = await fetchEmailDistribution()
-        csvText = emailData
-        setChartType('email')
-      } else if (type === 'date') {
-        const dateData = await fetchDateDistribution()
-        csvText = dateData
-        setChartType('date')
-      } else {
-        throw new Error('Invalid distribution type specified')
-      }
+      const csv = csvText
+      if (!csv) throw new Error('No data provided for distribution chart')
+      setChartType(type)
 
       // Parse CSV data
-      const parsedData = d3.csvParse(csvText)
+      const parsedData = d3.csvParse(csv)
       setData(parsedData as unknown as DataPoint[])
     } catch (err) {
       console.error('Error loading data:', err)
@@ -79,7 +71,7 @@ const DataDistribution = ({
     } finally {
       setLoading(false)
     }
-  }, [type, fetchEmailDistribution, fetchDateDistribution])
+  }, [type, csvText])
 
   // Fetch data on component mount
   useEffect(() => {

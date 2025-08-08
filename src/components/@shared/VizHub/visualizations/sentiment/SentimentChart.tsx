@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
-import { useDataStore, type SentimentData } from '../../store/dataStore'
+import type { SentimentData } from '../../types'
 import { useTheme } from '../../store/themeStore'
 import SentimentTable from './SentimentTable'
 
@@ -111,9 +111,14 @@ const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
 
 interface SentimentChartProps {
   skipLoading?: boolean
+  // If provided, the chart will render from this dataset and skip fetching
+  dataOverride?: SentimentData[]
 }
 
-const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
+const SentimentChart = ({
+  skipLoading = false,
+  dataOverride
+}: SentimentChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const brushRef = useRef<HTMLDivElement>(null)
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([])
@@ -131,7 +136,7 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
   const { theme } = useTheme()
   const chartContainerRef = useRef<HTMLDivElement>(null)
 
-  const { fetchSentimentData } = useDataStore()
+  // Pure mode: no store fallback
 
   const handleToggleTableVisibility = () => {
     setIsTableVisible(!isTableVisible)
@@ -150,7 +155,10 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const data: SentimentData[] = await fetchSentimentData()
+        const data: SentimentData[] = dataOverride || []
+        if (!dataOverride) {
+          throw new Error('No sentiment data provided')
+        }
 
         data.sort((a, b) => {
           const aNum = parseInt(a.name.replace('+', ''))
@@ -177,7 +185,7 @@ const SentimentChart = ({ skipLoading = false }: SentimentChartProps) => {
     }
 
     fetchData()
-  }, [parseTime, fetchSentimentData])
+  }, [parseTime, dataOverride])
 
   useEffect(() => {
     if (!chartRef.current) return

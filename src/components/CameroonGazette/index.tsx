@@ -24,6 +24,7 @@ export default function CameroonGazetteViz(): ReactElement {
             data={data}
             config={CAMEROON_GAZETTE_VIZHUB_CONFIG}
             useCaseConfig={CAMEROON_GAZETTE_CONFIG}
+            preferencesNamespace="cameroonGazette"
             theme="light"
           />
         </div>

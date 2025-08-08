@@ -5,7 +5,7 @@ export { default as VizHub } from './VizHub'
 export { useVizHubData } from './hooks/useVizHubData'
 
 // Stores (if needed externally)
-export { useDataStore, STORAGE_KEYS } from './store/dataStore'
+// Legacy exports removed in pure mode
 export {
   useTheme,
   ThemeProvider,

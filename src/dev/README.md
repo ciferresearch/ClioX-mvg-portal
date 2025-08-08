@@ -49,6 +49,7 @@ await window.__dev.clear('cameroon')
 - Samples are split:
   - TextAnalysis: `public/samples/text/`
   - Cameroon: `public/samples/cameroon/`
+- Persistence policy: Business/visualization data for VizHub is stored in IndexedDB (Dexie) per object store. localStorage is reserved ONLY for UI preferences of the Word Cloud and is namespaced per page (`preferencesNamespace`) to prevent cross-page leakage.
 
 ## Cleanup (when Provider is back)
 

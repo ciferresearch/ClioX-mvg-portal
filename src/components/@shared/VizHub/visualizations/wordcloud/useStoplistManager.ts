@@ -53,12 +53,20 @@ interface UseStoplistManagerReturn {
   filterWords: <T extends { value: string }>(words: T[]) => T[]
 }
 
+let STORAGE_NAMESPACE = ''
+export const setStoplistStorageNamespace = (ns?: string) => {
+  STORAGE_NAMESPACE = ns || ''
+}
+
+const key = (base: string) =>
+  STORAGE_NAMESPACE ? `${base}.${STORAGE_NAMESPACE}` : base
+
 const STORAGE_KEYS = {
-  LANGUAGE: 'wordcloud_language',
-  CUSTOM_STOPLIST: 'wordcloud_custom_stoplist',
-  STOPLIST_ACTIVE: 'wordcloud_stoplist_active',
-  WHITELIST: 'wordcloud_whitelist',
-  WHITELIST_ACTIVE: 'wordcloud_whitelist_active'
+  LANGUAGE: 'vizhub.wordcloud.language',
+  CUSTOM_STOPLIST: 'vizhub.wordcloud.custom_stoplist',
+  STOPLIST_ACTIVE: 'vizhub.wordcloud.stoplist_active',
+  WHITELIST: 'vizhub.wordcloud.whitelist',
+  WHITELIST_ACTIVE: 'vizhub.wordcloud.whitelist_active'
 }
 
 export const useStoplistManager = (): UseStoplistManagerReturn => {
@@ -66,16 +74,18 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
   const [stoplist, setStoplist] = useState<StoplistManagerState>({
     selectedLanguage:
       (typeof window !== 'undefined'
-        ? (localStorage.getItem(STORAGE_KEYS.LANGUAGE) as Language)
+        ? (localStorage.getItem(key(STORAGE_KEYS.LANGUAGE)) as Language)
         : 'english') || 'english',
     currentStoplist: ENGLISH_STOPWORDS,
     customStoplist:
       typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_STOPLIST) || '[]')
+        ? JSON.parse(
+            localStorage.getItem(key(STORAGE_KEYS.CUSTOM_STOPLIST)) || '[]'
+          )
         : [],
     isActive:
       typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.STOPLIST_ACTIVE) !== 'false'
+        ? localStorage.getItem(key(STORAGE_KEYS.STOPLIST_ACTIVE)) !== 'false'
         : true,
     isLoading: false,
     error: null
@@ -84,11 +94,11 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
   const [whitelist, setWhitelist] = useState<WhitelistState>({
     whitelist:
       typeof window !== 'undefined'
-        ? JSON.parse(localStorage.getItem(STORAGE_KEYS.WHITELIST) || '[]')
+        ? JSON.parse(localStorage.getItem(key(STORAGE_KEYS.WHITELIST)) || '[]')
         : [],
     isActive:
       typeof window !== 'undefined'
-        ? localStorage.getItem(STORAGE_KEYS.WHITELIST_ACTIVE) === 'true'
+        ? localStorage.getItem(key(STORAGE_KEYS.WHITELIST_ACTIVE)) === 'true'
         : false
   })
 
@@ -142,7 +152,7 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
   const setLanguage = useCallback(
     async (language: Language): Promise<void> => {
       // Save to localStorage
-      localStorage.setItem(STORAGE_KEYS.LANGUAGE, language)
+      localStorage.setItem(key(STORAGE_KEYS.LANGUAGE), language)
 
       // Update state immediately with the pending change
       setStoplist((prev) => ({
@@ -169,7 +179,10 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
     setStoplist((prev) => {
       const newIsActive = !prev.isActive
       // Save to localStorage
-      localStorage.setItem(STORAGE_KEYS.STOPLIST_ACTIVE, String(newIsActive))
+      localStorage.setItem(
+        key(STORAGE_KEYS.STOPLIST_ACTIVE),
+        String(newIsActive)
+      )
       return { ...prev, isActive: newIsActive }
     })
   }, [])
@@ -179,7 +192,10 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
     setWhitelist((prev) => {
       const newIsActive = !prev.isActive
       // Save to localStorage
-      localStorage.setItem(STORAGE_KEYS.WHITELIST_ACTIVE, String(newIsActive))
+      localStorage.setItem(
+        key(STORAGE_KEYS.WHITELIST_ACTIVE),
+        String(newIsActive)
+      )
       return { ...prev, isActive: newIsActive }
     })
   }, [])
@@ -193,7 +209,7 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
 
     // Save to localStorage
     localStorage.setItem(
-      STORAGE_KEYS.CUSTOM_STOPLIST,
+      key(STORAGE_KEYS.CUSTOM_STOPLIST),
       JSON.stringify(normalizedWords)
     )
 
@@ -222,7 +238,7 @@ export const useStoplistManager = (): UseStoplistManagerReturn => {
 
     // Save to localStorage
     localStorage.setItem(
-      STORAGE_KEYS.WHITELIST,
+      key(STORAGE_KEYS.WHITELIST),
       JSON.stringify(normalizedWords)
     )
 
