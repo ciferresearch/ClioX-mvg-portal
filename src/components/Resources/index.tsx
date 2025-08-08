@@ -1,4 +1,5 @@
-import { ReactElement, useState, useMemo, useEffect } from 'react'
+import { ReactElement, useState, useMemo, useEffect, useRef } from 'react'
+import { motion } from 'motion/react'
 import { useRouter } from 'next/router'
 import SearchIcon from '@images/search.svg'
 import { ResourceCard, Tab } from './types'
@@ -37,6 +38,29 @@ export default function Resources({
   const [allResourceCards, setAllResourceCards] = useState<ResourceCard[]>([])
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Sliding underline state
+  const tabsContainerRef = useRef<HTMLDivElement | null>(null)
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [underlineStyle, setUnderlineStyle] = useState<{
+    left: number
+    width: number
+    top: number
+  }>({ left: 0, width: 0, top: 0 })
+
+  const updateUnderline = () => {
+    const activeEl = tabRefs.current[activeTab]
+    const containerEl = tabsContainerRef.current
+    if (!activeEl || !containerEl) return
+
+    const activeRect = activeEl.getBoundingClientRect()
+    const containerRect = containerEl.getBoundingClientRect()
+    const { left: activeLeft, width, bottom: activeBottom } = activeRect
+    const { left: containerLeft, top: containerTop } = containerRect
+    const left = activeLeft - containerLeft
+    const top = activeBottom - containerTop - 2 // just above container bottom
+    setUnderlineStyle({ left, width, top })
+  }
 
   const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -100,6 +124,23 @@ export default function Resources({
 
     loadResources()
   }, [activeTab, initialArticles])
+
+  // Recalculate underline when active tab or layout changes
+  useEffect(() => {
+    if (searchQuery.trim() !== '') return
+    // next tick to ensure layout
+    const id = window.setTimeout(updateUnderline, 0)
+    return () => window.clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, searchQuery])
+
+  useEffect(() => {
+    if (searchQuery.trim() !== '') return
+    const onResize = () => updateUnderline()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
 
   const filteredCards = useMemo(() => {
     // If there's a search query, search across all resources
@@ -234,20 +275,47 @@ export default function Resources({
 
         {/* Tabs - hide when searching */}
         {searchQuery.trim() === '' && (
-          <div className="flex flex-wrap justify-center gap-4 py-5 mb-10">
+          <div
+            ref={tabsContainerRef}
+            className="relative flex flex-wrap justify-center gap-4 py-5 mb-10"
+          >
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                ref={(el) => (tabRefs.current[tab.id] = el)}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center px-4 py-2.5 cursor-pointer font-semibold text-base h-12 border-b-2 transition-colors duration-200 ${
+                className={`flex items-center justify-center px-4 py-2.5 cursor-pointer font-semibold text-base h-12 transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'text-amber-700 border-amber-700'
-                    : 'text-black border-transparent hover:text-amber-700'
+                    ? 'text-amber-700'
+                    : 'text-black hover:text-amber-700'
                 }`}
               >
                 {tab.label}
               </button>
             ))}
+
+            {/* Sliding underline */}
+            <motion.span
+              aria-hidden
+              className="absolute bg-amber-700 block rounded"
+              initial={false}
+              animate={{
+                x: underlineStyle.left,
+                width: underlineStyle.width
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 380,
+                damping: 46,
+                mass: 0.7
+              }}
+              style={{
+                height: 2,
+                left: 0,
+                top: underlineStyle.top,
+                willChange: 'transform,width'
+              }}
+            />
           </div>
         )}
 
