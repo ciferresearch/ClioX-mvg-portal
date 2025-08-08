@@ -1,4 +1,11 @@
-import { ReactElement, useState, useMemo, useEffect, useRef } from 'react'
+import {
+  ReactElement,
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useLayoutEffect
+} from 'react'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/router'
 import SearchIcon from '@images/search.svg'
@@ -10,7 +17,7 @@ import {
 } from '@/utils/loadGlossary'
 import {
   searchResearchPapers,
-  generateResearchPaperImage
+  generateResearchImage
 } from '@/utils/loadResearch'
 import Glossary from './Glossary'
 import Research from './Research'
@@ -37,6 +44,7 @@ export default function Resources({
     useState<ResourceCard[]>(initialArticles)
   const [allResourceCards, setAllResourceCards] = useState<ResourceCard[]>([])
   const [loading, setLoading] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const router = useRouter()
 
   // Sliding underline state
@@ -47,6 +55,7 @@ export default function Resources({
     width: number
     top: number
   }>({ left: 0, width: 0, top: 0 })
+  const [underlineReady, setUnderlineReady] = useState(false)
 
   const updateUnderline = () => {
     const activeEl = tabRefs.current[activeTab]
@@ -126,11 +135,11 @@ export default function Resources({
   }, [activeTab, initialArticles])
 
   // Recalculate underline when active tab or layout changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (searchQuery.trim() !== '') return
-    // next tick to ensure layout
-    const id = window.setTimeout(updateUnderline, 0)
-    return () => window.clearTimeout(id)
+    // Measure synchronously before paint to avoid initial slide-in
+    updateUnderline()
+    setUnderlineReady(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, searchQuery])
 
@@ -184,9 +193,9 @@ export default function Resources({
           paper.abstract?.substring(0, 150) +
             (paper.abstract && paper.abstract.length > 150 ? '...' : '') ||
           `Research paper by ${paper.authors.join(', ')} (${paper.year})`,
-        image: generateResearchPaperImage(paper.title),
+        image: generateResearchImage(paper.title),
         link: paper.link,
-        tag: 'RESEARCH PAPER',
+        tag: 'RESEARCH',
         category: 'research',
         content: paper.abstract || '',
         tags: [paper.group, ...paper.authors]
@@ -267,8 +276,37 @@ export default function Resources({
             />
           </div>
           {searchResultsText && (
-            <div className="mt-3 text-sm text-gray-600">
-              {searchResultsText}
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <div className="text-sm text-gray-600">{searchResultsText}</div>
+              {searchQuery.trim() !== '' && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-500">View:</span>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`px-2 py-1 rounded-md border transition-colors ${
+                      viewMode === 'grid'
+                        ? 'border-amber-700 text-amber-700 bg-amber-50'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    aria-pressed={viewMode === 'grid'}
+                  >
+                    Grid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`px-2 py-1 rounded-md border transition-colors ${
+                      viewMode === 'list'
+                        ? 'border-amber-700 text-amber-700 bg-amber-50'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    aria-pressed={viewMode === 'list'}
+                  >
+                    List
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -295,80 +333,149 @@ export default function Resources({
             ))}
 
             {/* Sliding underline */}
-            <motion.span
-              aria-hidden
-              className="absolute bg-amber-700 block rounded"
-              initial={false}
-              animate={{
-                x: underlineStyle.left,
-                width: underlineStyle.width
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 380,
-                damping: 46,
-                mass: 0.7
-              }}
-              style={{
-                height: 2,
-                left: 0,
-                top: underlineStyle.top,
-                willChange: 'transform,width'
-              }}
-            />
+            {underlineReady ? (
+              <motion.span
+                aria-hidden
+                className="absolute bg-amber-700 block rounded"
+                initial={false}
+                animate={{
+                  x: underlineStyle.left,
+                  width: underlineStyle.width
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 380,
+                  damping: 46,
+                  mass: 0.7
+                }}
+                style={{
+                  height: 2,
+                  left: 0,
+                  top: underlineStyle.top,
+                  willChange: 'transform,width'
+                }}
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="absolute bg-amber-700 block rounded"
+                style={{
+                  height: 2,
+                  left: underlineStyle.left,
+                  width: underlineStyle.width,
+                  top: underlineStyle.top,
+                  visibility: 'hidden'
+                }}
+              />
+            )}
           </div>
         )}
 
         {/* Content Area */}
         {searchQuery.trim() !== '' ? (
-          /* Always show card grid when searching */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 pb-16">
-            {filteredCards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
-              >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-40 object-cover"
-                  onError={(e) => {
-                    // Fallback to a placeholder if image fails to load
-                    e.currentTarget.src =
-                      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
-                  }}
-                />
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
-                    {card.tag}
+          viewMode === 'grid' ? (
+            /* Grid view for search */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 pb-16">
+              {filteredCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
+                >
+                  <img
+                    src={card.image}
+                    alt={card.title}
+                    className="w-full h-40 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
+                    }}
+                  />
+                  <div className="p-5 flex flex-col flex-grow">
+                    <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
+                      {card.tag}
+                    </div>
+                    <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
+                      {card.title}
+                    </h3>
+                    <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
+                      {card.description}
+                    </p>
+                    <a
+                      href={card.link}
+                      className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
+                    >
+                      Read more →
+                    </a>
                   </div>
-                  <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
-                    {card.title}
-                  </h3>
-                  <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
-                    {card.description}
-                  </p>
-                  <a
-                    href={card.link}
-                    className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
-                  >
-                    Read more →
-                  </a>
                 </div>
-              </div>
-            ))}
-            {filteredCards.length === 0 && (
-              <div className="col-span-full text-center py-16">
-                <p className="text-gray-500 text-lg">
-                  No resources found matching your search.
-                </p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Try using different keywords or clear your search to browse
-                  all resources.
-                </p>
-              </div>
-            )}
-          </div>
+              ))}
+              {filteredCards.length === 0 && (
+                <div className="col-span-full text-center py-16">
+                  <p className="text-gray-500 text-lg">
+                    No resources found matching your search.
+                  </p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Try using different keywords or clear your search to browse
+                    all resources.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* List view for search */
+            <div className="mt-5 pb-16 space-y-4">
+              {filteredCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex">
+                    <div className="w-48 h-32 flex-shrink-0">
+                      <img
+                        src={card.image}
+                        alt={card.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
+                        }}
+                      />
+                    </div>
+                    <div className="p-5 flex flex-col gap-1 flex-1 min-w-0">
+                      <div className="text-xs font-semibold uppercase text-gray-600">
+                        {card.tag}
+                      </div>
+                      <h3 className="text-lg md:text-xl font-bold text-black truncate">
+                        {card.title}
+                      </h3>
+                      <p className="text-base text-gray-600 line-clamp-2">
+                        {card.description}
+                      </p>
+                      <div className="mt-2">
+                        <a
+                          href={card.link}
+                          className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
+                        >
+                          Read more →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredCards.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-gray-500 text-lg">
+                    No resources found matching your search.
+                  </p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Try using different keywords or clear your search to browse
+                    all resources.
+                  </p>
+                </div>
+              )}
+            </div>
+          )
         ) : activeTab === 'glossary' ? (
           <div className="pb-16">
             <Glossary />

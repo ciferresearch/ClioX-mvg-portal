@@ -198,9 +198,9 @@ function escapeXml(text: string): string {
 }
 
 /**
- * Generate a custom SVG image for a research paper
+ * Generate a custom SVG image for Research
  */
-export function generateResearchPaperImage(title: string): string {
+export function generateResearchImage(title: string): string {
   // Truncate title if too long for display
   const displayTitle =
     title.length > 35 ? title.substring(0, 32) + '...' : title
@@ -221,16 +221,16 @@ export function generateResearchPaperImage(title: string): string {
       </defs>
       <rect width="320" height="160" fill="url(#dots)"/>
       
-      <!-- RESEARCH PAPER label -->
+      <!-- RESEARCH label -->
       <text x="20" y="35" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="#8b7355" text-transform="uppercase" letter-spacing="1px">
-        RESEARCH PAPER
+        RESEARCH
       </text>
       
-      <!-- Paper title -->
+      <!-- Research title -->
       <text x="20" y="65" font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="600" fill="#4a3f36" text-anchor="start">
         ${safeTitle
           .split(' ')
-          .reduce((lines, word, index) => {
+          .reduce((lines, word) => {
             const currentLine = lines[lines.length - 1]
             if (currentLine && currentLine.length + word.length + 1 <= 30) {
               lines[lines.length - 1] = currentLine + ' ' + word
@@ -247,7 +247,7 @@ export function generateResearchPaperImage(title: string): string {
           .join('')}
       </text>
       
-      <!-- Paper icon decoration -->
+      <!-- Icon decoration -->
       <g transform="translate(230, 95)">
         <!-- Paper body -->
         <rect x="0" y="0" width="55" height="65" rx="4" fill="#e8ddd2" opacity="0.6"/>
@@ -267,8 +267,8 @@ export function generateResearchPaperImage(title: string): string {
   try {
     return `data:image/svg+xml;base64,${btoa(svg)}`
   } catch (error) {
-    console.error('Error generating research paper image:', error)
-    // Return a fallback image if generation fails
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmMmU1ZDUiLz48dGV4dCB4PSIxNjAiIHk9IjcwIiBmb250LWZhbWlseT0iSUJNIFBsZXggU2Fucywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzRhM2YzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UkVTRUFSQ0ggUEFQRVI8L3RleHQ+PC9zdmc+'
+    console.error('Error generating research image:', error)
+    // Return a generic fallback image if generation fails
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
   }
 }
