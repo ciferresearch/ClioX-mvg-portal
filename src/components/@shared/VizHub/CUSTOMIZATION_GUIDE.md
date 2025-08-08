@@ -23,24 +23,24 @@ export const MY_USE_CASE_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     sentiment: true,
-    emailDistribution: true,
-    dateDistribution: true,
+    histogram: true,
+    timeline: true,
     documentSummary: true,
     futureFeatures: false
   },
 
   // Chart customization
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'My Custom Timeline',
       xAxisLabel: 'Custom Date',
       yAxisLabel: 'Custom Count'
     },
-    emailDistribution: {
-      title: 'My Email Distribution',
-      xAxisLabel: 'Custom Emails per Day',
+    histogram: {
+      title: 'My Value Distribution',
+      xAxisLabel: 'Custom Values per Day',
       yAxisLabel: 'Custom Frequency',
-      unit: 'custom email units'
+      unit: 'custom units'
     }
   }
 }
@@ -74,8 +74,8 @@ const config = {
   components: {
     wordCloud: true, // Show word cloud
     sentiment: false, // Hide sentiment analysis
-    emailDistribution: true, // Show email distribution
-    dateDistribution: false, // Hide date distribution
+    histogram: true, // Show value distribution
+    timeline: false, // Hide timeline distribution
     documentSummary: true, // Show document summary
     futureFeatures: false // Hide future features placeholder
   }
@@ -119,7 +119,7 @@ Currently supported customization for `DataDistribution` component:
 const config = {
   customization: {
     // Date distribution chart
-    dateDistribution: {
+    timeline: {
       title: 'Publication Timeline', // Chart title
       xAxisLabel: 'Publication Date', // X-axis label
       yAxisLabel: 'Number of Publications', // Y-axis label
@@ -127,13 +127,13 @@ const config = {
       aggregation: 'month' // Optional: aggregation level
     },
 
-    // Email distribution chart
-    emailDistribution: {
-      title: 'Email Volume Distribution', // Chart title
-      xAxisLabel: 'Emails per Day', // X-axis label
+    // Value distribution chart
+    histogram: {
+      title: 'Value Volume Distribution', // Chart title
+      xAxisLabel: 'Values per Day', // X-axis label
       yAxisLabel: 'Frequency', // Y-axis label
       chartType: 'bar', // Optional: chart type
-      unit: 'email messages' // Used in descriptions
+      unit: 'data points' // Used in descriptions
     }
   }
 }
@@ -171,14 +171,14 @@ export const MY_NEW_USE_CASE_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     sentiment: true,
-    emailDistribution: false, // Not relevant for this use case
-    dateDistribution: true,
+    histogram: false, // Not relevant for this use case
+    timeline: true,
     documentSummary: true,
     futureFeatures: false
   },
 
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Research Paper Timeline',
       xAxisLabel: 'Publication Date',
       yAxisLabel: 'Papers Published'
@@ -245,8 +245,8 @@ To add customization support to the WordCloud component:
 interface VizHubConfig {
   customization?: {
     // Existing
-    emailDistribution?: { ... }
-    dateDistribution?: { ... }
+    histogram?: { ... }
+    timeline?: { ... }
 
     // NEW: Add WordCloud customization
     wordCloud?: {
@@ -370,9 +370,9 @@ export const LEGAL_DOCS_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     documentSummary: true,
-    dateDistribution: true,
+    timeline: true,
     sentiment: false, // Not relevant for legal docs
-    emailDistribution: false // Not relevant for legal docs
+    histogram: false // Not relevant for legal docs
   },
 
   customization: {
@@ -381,7 +381,7 @@ export const LEGAL_DOCS_VIZHUB_CONFIG = {
       maxWords: 200,
       colorScheme: 'categorical'
     },
-    dateDistribution: {
+    timeline: {
       title: 'Case Filing Timeline',
       xAxisLabel: 'Filing Date',
       yAxisLabel: 'Number of Cases'
@@ -402,8 +402,8 @@ export const MEDICAL_RESEARCH_VIZHUB_CONFIG = {
     wordCloud: true,
     sentiment: true,
     documentSummary: true,
-    dateDistribution: true,
-    emailDistribution: false
+    timeline: true,
+    histogram: false
   },
 
   customization: {
@@ -417,7 +417,7 @@ export const MEDICAL_RESEARCH_VIZHUB_CONFIG = {
       chartType: 'area',
       showLegend: true
     },
-    dateDistribution: {
+    timeline: {
       title: 'Publication Timeline',
       xAxisLabel: 'Publication Date',
       yAxisLabel: 'Research Papers'
@@ -434,17 +434,17 @@ export const FINANCIAL_REPORTS_VIZHUB_CONFIG = {
     wordCloud: true,
     sentiment: true,
     documentSummary: true,
-    dateDistribution: true,
-    emailDistribution: true
+    timeline: true,
+    histogram: true
   },
 
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Financial Report Timeline',
       xAxisLabel: 'Report Date',
       yAxisLabel: 'Number of Reports'
     },
-    emailDistribution: {
+    histogram: {
       title: 'Communication Volume',
       xAxisLabel: 'Communications per Day',
       yAxisLabel: 'Frequency',
@@ -470,14 +470,14 @@ export const FINANCIAL_REPORTS_VIZHUB_CONFIG = {
 
 ```typescript
 // ❌ Wrong - not passing customization
-<DataDistribution title="My Title" type="date" data={dateData} />
+<DataDistribution title="My Title" type="timeline" data={dateData} />
 
 // ✅ Correct - passing customization
 <DataDistribution
   title="My Title"
-  type="date"
+  type="timeline"
   data={dateData}
-  customization={customization.dateDistribution}
+  customization={customization.timeline}
 />
 ```
 
@@ -533,15 +533,15 @@ export const MY_USE_CASE_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     sentiment: false, // Not relevant for this use case
-    emailDistribution: true,
-    dateDistribution: true,
+    histogram: true,
+    timeline: true,
     documentSummary: true,
     futureFeatures: false
   },
 
   // Chart customization
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Document Timeline',
       xAxisLabel: 'Document Date',
       yAxisLabel: 'Document Count'

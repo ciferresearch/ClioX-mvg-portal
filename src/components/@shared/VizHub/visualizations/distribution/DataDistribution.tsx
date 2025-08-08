@@ -10,7 +10,7 @@ import { useTheme } from '../../store/themeStore'
 interface DataDistributionProps {
   title: string
   description?: string
-  type: 'email' | 'date'
+  type: 'histogram' | 'timeline'
   customization?: {
     title?: string
     xAxisLabel?: string
@@ -19,13 +19,13 @@ interface DataDistributionProps {
     unit?: string
   }
   // Typed data passed from parent (props-only mode)
-  data?: { emails_per_day: number }[] | { time: string; count: number }[]
+  data?: number[] | { time: string; count: number }[]
 }
 
 interface DataPoint {
   time?: string | Date
   count?: number
-  emails_per_day?: number
+  value?: number
 }
 
 interface FormattedDatePoint {
@@ -45,7 +45,7 @@ const DataDistribution = ({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [chartType, setChartType] = useState<'date' | 'email'>(type)
+  const [chartType, setChartType] = useState<'timeline' | 'histogram'>(type)
   const { theme } = useTheme()
 
   // In pure mode, data is provided via props; convert to internal shape
@@ -60,15 +60,15 @@ const DataDistribution = ({
         throw new Error('No data provided for distribution chart')
       }
 
-      if (type === 'date') {
+      if (type === 'timeline') {
         const parsed = (inputData as { time: string; count: number }[]).map(
           (d) => ({ time: d.time, count: d.count })
         )
         setData(parsed as unknown as DataPoint[])
       } else {
-        // email
-        const parsed = (inputData as { emails_per_day: number }[]).map((d) => ({
-          emails_per_day: d.emails_per_day
+        // histogram
+        const parsed = (inputData as number[]).map((value) => ({
+          value
         }))
         setData(parsed as unknown as DataPoint[])
       }
@@ -133,7 +133,7 @@ const DataDistribution = ({
       .attr('transform', `translate(${margin.left},${margin.top})`)
 
     // Create chart based on chart type
-    if (chartType === 'date') {
+    if (chartType === 'timeline') {
       // Date distribution chart - Bar chart
       const parseTime = d3.timeParse('%Y-%m-%d')
 
@@ -302,25 +302,25 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', -5)
-        .text(customization?.title || 'Email Count Over Time')
+        .text(customization?.title || 'Count Over Time')
         .style('fill', titleColor)
         .attr('class', 'text-xs font-semibold')
-    } else if (chartType === 'email') {
-      // Emails per day histogram
-      const getEmailValue = (d: DataPoint): number => {
-        if ('emails_per_day' in d) {
-          return +(d.emails_per_day ?? 0)
+    } else if (chartType === 'histogram') {
+      // Value distribution histogram
+      const getValue = (d: DataPoint): number => {
+        if ('value' in d) {
+          return +(d.value ?? 0)
         }
         const firstKey = Object.keys(d)[0]
         return +(d[firstKey as keyof DataPoint] ?? 0)
       }
 
-      const values = data.map(getEmailValue).filter((v) => !isNaN(v))
+      const values = data.map(getValue).filter((v) => !isNaN(v))
 
       if (values.length === 0) {
-        console.error('No valid email count values found')
+        console.error('No valid values found')
         container.innerHTML =
-          '<p class="text-red-500 dark:text-red-400 text-center">Error: Could not parse email count data</p>'
+          '<p class="text-red-500 dark:text-red-400 text-center">Error: Could not parse data values</p>'
         return
       }
 
@@ -404,7 +404,7 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', height + margin.bottom - 10)
-        .text(customization?.xAxisLabel || 'Emails per Day')
+        .text(customization?.xAxisLabel || 'Value')
         .style('fill', textColor)
         .attr('class', 'text-sm')
 
@@ -424,7 +424,7 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', -5)
-        .text(customization?.title || 'Distribution of Emails per Day')
+        .text(customization?.title || 'Value Distribution')
         .style('fill', titleColor)
         .attr('class', 'text-xs font-semibold')
     } else {
@@ -504,7 +504,7 @@ const DataDistribution = ({
       >
         {loading ? (
           <ChartSkeleton
-            type={chartType === 'date' ? 'line' : 'bar'}
+            type={chartType === 'timeline' ? 'line' : 'bar'}
             height={256}
           />
         ) : error ? (
@@ -520,7 +520,7 @@ const DataDistribution = ({
         onClose={handleCloseModal}
         title={title}
         chartData={
-          chartType === 'date'
+          chartType === 'timeline'
             ? data
                 .map((d) => {
                   const timeKey = 'time' in d ? 'time' : Object.keys(d)[0]
@@ -535,7 +535,7 @@ const DataDistribution = ({
                 })
                 .filter((d) => d.time !== null)
             : data.map((d) => ({
-                emails_per_day: d.emails_per_day ?? 0
+                value: d.value ?? 0
               }))
         }
         chartType={chartType}

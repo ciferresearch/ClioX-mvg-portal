@@ -54,7 +54,7 @@ import { VizHub } from './components/viz-hub'
 
 function App() {
   const sampleData = {
-    emailDistribution: [
+    histogram: [
       { time: '2024-01-01', count: 45 },
       { time: '2024-01-02', count: 52 }
     ],
@@ -76,11 +76,11 @@ function App() {
     <VizHub
       data={sampleData}
       config={{
-        showEmailDistribution: true,
+        histogram: true,
         showSentiment: true,
         showWordCloud: true,
         showDocumentSummary: true,
-        showDateDistribution: true,
+        timeline: true,
         showFutureFeatures: false
       }}
       theme="light"
@@ -94,8 +94,10 @@ function App() {
 
 ```tsx
 interface VizHubConfig {
-  showEmailDistribution?: boolean // Show email count distribution
-  showDateDistribution?: boolean // Show date-based distribution
+  // New naming
+  histogram?: boolean // Show value distribution histogram
+  timeline?: boolean // Show time-based distribution
+
   showSentiment?: boolean // Show sentiment analysis
   showWordCloud?: boolean // Show interactive word cloud
   showDocumentSummary?: boolean // Show document statistics
@@ -107,20 +109,22 @@ interface VizHubConfig {
 
 ```tsx
 interface VizHubData {
-  emailDistribution?: EmailDistributionData[]
-  dateDistribution?: DateDistributionData[]
+  // New naming
+  histogram?: HistogramData[]
+  timeline?: TimelineData[]
+
   sentiment?: SentimentData[]
   wordCloud?: WordCloudData
   documentSummary?: DocumentSummaryData
 }
 
-// Email distribution data format
-interface EmailDistributionData {
-  emails_per_day: number
+// Value distribution data format (histogram)
+interface HistogramData {
+  value: number
 }
 
-// Date distribution data format
-interface DateDistributionData {
+// Time-based distribution data format (timeline)
+interface TimelineData {
   time: string // Format: "YYYY-MM-DD"
   count: number
 }
@@ -205,7 +209,7 @@ git submodule update --remote
 
 2. **Data Distribution Charts**
 
-   - Email count distribution (histogram)
+   - Value distribution (histogram)
    - Date-based distribution (line chart with area)
    - Modal view for detailed exploration
    - Responsive design with theme support
@@ -349,7 +353,11 @@ function CustomDashboard() {
     <div className="grid grid-cols-2 gap-4">
       <SentimentChart data={sentiment} />
       <WordCloud words={wordCloudData} />
-      <DataDistribution title="Email Volume" type="email" data={emailData} />
+      <DataDistribution
+        title="Data Volume"
+        type="histogram"
+        data={histogramData}
+      />
     </div>
   )
 }

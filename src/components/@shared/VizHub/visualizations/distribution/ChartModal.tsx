@@ -10,19 +10,19 @@ type TimeDataPoint = {
   count: number
 }
 
-type EmailDataPoint = {
-  emails_per_day?: number
+type ValueDataPoint = {
+  value?: number
   [key: string]: number | undefined
 }
 
-type ChartData = TimeDataPoint[] | EmailDataPoint[]
+type ChartData = TimeDataPoint[] | ValueDataPoint[]
 
 interface ChartModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
   chartData: ChartData
-  chartType: 'date' | 'email'
+  chartType: 'timeline' | 'histogram'
   customization?: {
     title?: string
     xAxisLabel?: string
@@ -134,7 +134,7 @@ const ChartModal = ({
     // Update zoom level display
     setZoomLevel(initialScale)
 
-    if (chartType === 'date') {
+    if (chartType === 'timeline') {
       // Date distribution chart
       const formattedData = (chartData as TimeDataPoint[]).filter(
         (d) => d.time !== null
@@ -343,18 +343,18 @@ const ChartModal = ({
         .text(customization?.yAxisLabel || 'Count')
         .attr('class', 'text-sm')
         .style('fill', textColor)
-    } else if (chartType === 'email') {
+    } else if (chartType === 'histogram') {
       // Emails per day histogram
-      const getEmailValue = (d: EmailDataPoint): number => {
-        if ('emails_per_day' in d) {
-          return +d.emails_per_day!
+      const getValue = (d: ValueDataPoint): number => {
+        if ('value' in d) {
+          return +d.value!
         }
         const firstKey = Object.keys(d)[0]
         return +d[firstKey]!
       }
 
-      const values = (chartData as EmailDataPoint[])
-        .map(getEmailValue)
+      const values = (chartData as ValueDataPoint[])
+        .map(getValue)
         .filter((v) => !isNaN(v))
 
       if (values.length === 0) {
@@ -484,7 +484,7 @@ const ChartModal = ({
             const [mouseX, mouseY] = d3.pointer(event, container)
 
             tooltip
-              .html(`Emails: ${d.x0} - ${d.x1}<br>Count: ${d.length}`)
+              .html(`Values: ${d.x0} - ${d.x1}<br>Count: ${d.length}`)
               .style('left', mouseX + 10 + 'px')
               .style('top', mouseY - 25 + 'px')
               .style('opacity', 1)
@@ -502,7 +502,7 @@ const ChartModal = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', height + margin.bottom - 10)
-        .text(customization?.xAxisLabel || 'Emails per Day')
+        .text(customization?.xAxisLabel || 'Value')
         .attr('class', 'text-sm')
         .style('fill', textColor)
 

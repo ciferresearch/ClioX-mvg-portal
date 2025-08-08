@@ -33,22 +33,22 @@ export const CAMEROON_GAZETTE_CONFIG: UseCaseConfig = {
 export const CAMEROON_GAZETTE_VIZHUB_CONFIG = {
   // Component visibility - different from TextAnalysis
   components: {
-    dateDistribution: true,
+    timeline: true,
     documentSummary: true,
     wordCloud: true,
     sentiment: true,
-    emailDistribution: true,
+    histogram: true,
     futureFeatures: false
   },
 
   // Customization for gazette-specific terminology
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Gazette Publication Timeline',
       xAxisLabel: 'Publication Date',
       yAxisLabel: 'Number of Gazettes'
     },
-    emailDistribution: {
+    histogram: {
       title: 'Gazette Volume Distribution',
       xAxisLabel: 'Gazettes per Day',
       yAxisLabel: 'Publication Frequency',

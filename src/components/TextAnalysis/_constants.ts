@@ -34,20 +34,20 @@ export const TEXT_ANALYSIS_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     sentiment: true,
-    emailDistribution: true,
-    dateDistribution: true,
+    histogram: true,
+    timeline: true,
     documentSummary: true,
     futureFeatures: false
   },
 
   // Customization for distribution charts
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Email Count Over Time',
       xAxisLabel: 'Date',
       yAxisLabel: 'Count'
     },
-    emailDistribution: {
+    histogram: {
       title: 'Email Analysis Distribution',
       xAxisLabel: 'Emails per Day',
       yAxisLabel: 'Frequency',

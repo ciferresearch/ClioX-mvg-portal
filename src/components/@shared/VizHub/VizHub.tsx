@@ -30,14 +30,8 @@ function resolveComponentVisibility(config: VizHubConfig) {
   return {
     wordCloud: config.components?.wordCloud ?? config.showWordCloud ?? true,
     sentiment: config.components?.sentiment ?? config.showSentiment ?? true,
-    emailDistribution:
-      config.components?.emailDistribution ??
-      config.showEmailDistribution ??
-      true,
-    dateDistribution:
-      config.components?.dateDistribution ??
-      config.showDateDistribution ??
-      true,
+    histogram: config.components?.histogram ?? true,
+    timeline: config.components?.timeline ?? true,
     documentSummary:
       config.components?.documentSummary ?? config.showDocumentSummary ?? true,
     futureFeatures:
@@ -132,49 +126,44 @@ function VizHubInternal({
 
             {/* Distribution Charts Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Email Distribution */}
-              {componentVisibility.emailDistribution && (
+              {/* Value Distribution (Histogram) */}
+              {componentVisibility.histogram && (
                 <VisualizationWrapper
-                  isAvailable={dataStatus.emailDistributionData}
-                  title={
-                    customization.emailDistribution?.title ||
-                    'Email Distribution'
-                  }
+                  isAvailable={dataStatus.histogramData}
+                  title={customization.histogram?.title || 'Value Distribution'}
                   className=""
                 >
                   <DataDistribution
                     title={
-                      customization.emailDistribution?.title ||
-                      'Data Distribution on Email Counts'
+                      customization.histogram?.title || 'Value Distribution'
                     }
                     description={`Shows the distribution of ${
-                      customization.emailDistribution?.unit || 'email counts'
+                      customization.histogram?.unit || 'values'
                     } over time`}
-                    type="email"
-                    data={data?.emailDistribution}
-                    customization={customization.emailDistribution}
+                    type="histogram"
+                    data={data?.histogram?.map((item) => item.value)}
+                    customization={customization.histogram}
                   />
                 </VisualizationWrapper>
               )}
 
               {/* Date Distribution */}
-              {componentVisibility.dateDistribution && (
+              {componentVisibility.timeline && (
                 <VisualizationWrapper
-                  isAvailable={dataStatus.dateDistributionData}
+                  isAvailable={dataStatus.timelineData}
                   title={
-                    customization.dateDistribution?.title || 'Date Distribution'
+                    customization.timeline?.title || 'Timeline Distribution'
                   }
                   className=""
                 >
                   <DataDistribution
                     title={
-                      customization.dateDistribution?.title ||
-                      'Data Distribution on Date'
+                      customization.timeline?.title || 'Timeline Distribution'
                     }
-                    description="Shows the distribution of items by date"
-                    type="date"
-                    data={data?.dateDistribution}
-                    customization={customization.dateDistribution}
+                    description="Shows the distribution of items over time"
+                    type="timeline"
+                    data={data?.timeline}
+                    customization={customization.timeline}
                   />
                 </VisualizationWrapper>
               )}
@@ -187,7 +176,7 @@ function VizHubInternal({
             {componentVisibility.sentiment && (
               <VisualizationWrapper
                 isAvailable={dataStatus.sentimentData}
-                title="Sentiment Analysis"
+                title={customization.sentiment?.title || 'Sentiment Analysis'}
               >
                 <SentimentChart data={data?.sentiment} />
               </VisualizationWrapper>
@@ -203,7 +192,7 @@ function VizHubInternal({
             {componentVisibility.wordCloud && (
               <VisualizationWrapper
                 isAvailable={dataStatus.wordCloudData}
-                title="Word Cloud"
+                title={customization.wordCloud?.title || 'Word Cloud'}
               >
                 <WordCloud
                   wordsOverride={data?.wordCloud?.wordCloudData || []}
@@ -218,7 +207,9 @@ function VizHubInternal({
             {componentVisibility.documentSummary && (
               <VisualizationWrapper
                 isAvailable={dataStatus.documentSummaryData}
-                title="Document Summary"
+                title={
+                  customization.documentSummary?.title || 'Document Summary'
+                }
               >
                 <DocumentSummary data={data?.documentSummary} />
               </VisualizationWrapper>

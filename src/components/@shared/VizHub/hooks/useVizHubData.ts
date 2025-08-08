@@ -9,7 +9,7 @@ const convertToCSV = (data: any[], headers: string[]): string => {
   const csvRows = [headers.join(',')]
   data.forEach((row) => {
     const values = headers.map((header) => {
-      const value = row[header === 'emails_per_day' ? 'emails_per_day' : header]
+      const value = row[header === 'value' ? 'value' : header]
       return typeof value === 'string' ? value : String(value)
     })
     csvRows.push(values.join(','))
@@ -35,8 +35,8 @@ export function useVizHubData(
   const dataStatus = useMemo(() => {
     return {
       wordCloudData: !!externalData?.wordCloud,
-      dateDistributionData: !!externalData?.dateDistribution?.length,
-      emailDistributionData: !!externalData?.emailDistribution?.length,
+      timelineData: !!externalData?.timeline?.length,
+      histogramData: !!externalData?.histogram?.length,
       sentimentData: !!externalData?.sentiment?.length,
       documentSummaryData: !!externalData?.documentSummary
     }
