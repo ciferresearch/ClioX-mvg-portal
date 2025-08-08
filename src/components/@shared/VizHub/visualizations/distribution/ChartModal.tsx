@@ -57,6 +57,20 @@ const ChartModal = ({
   const [zoomLevel, setZoomLevel] = useState(1)
   const { theme } = useTheme()
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
   useEffect(() => {
     if (
       !isOpen ||
@@ -590,8 +604,14 @@ const ChartModal = ({
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-[1400px] h-[700px] flex flex-col overflow-hidden">
+        <div
+          className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={onClose}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-[1400px] h-[700px] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header - Made more compact */}
             <div className="flex justify-between items-center px-8 py-3 bg-gray-50 dark:bg-gray-700">
               <div className="flex items-center gap-4">
