@@ -10,9 +10,3 @@
   padding-bottom: calc(var(--spacer) / 2);
   border-bottom: 1px solid var(--border-color);
 }
-
-.legend {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
