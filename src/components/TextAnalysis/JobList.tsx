@@ -1,11 +1,5 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
-import {
-  MutableRefObject,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
@@ -19,7 +13,7 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import { TEXT_ANALYSIS_ALGO_DIDS, TEXT_ANALYSIS_RESULT_ZIP } from './_constants'
+import { TEXT_ANALYSIS_ALGO_DIDS } from './_constants'
 import { TextAnalysisResult } from './_types'
 
 export default function JobList(props: {
@@ -48,14 +42,28 @@ export default function JobList(props: {
     deleteTextAnalysis
   } = useUseCases()
 
+  const [activeJobId, setActiveJobId] = useState<string>(
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('textAnalysis.activeJobId') || ''
+      : ''
+  )
+
   useEffect(() => {
     if (!textAnalysisList) {
       setTextAnalysisData([])
       return
     }
 
-    setTextAnalysisData(textAnalysisList)
-  }, [textAnalysisList, setTextAnalysisData])
+    if (activeJobId) {
+      const row = textAnalysisList.find((r) => r.job.jobId === activeJobId)
+      if (row) {
+        setTextAnalysisData([row])
+        return
+      }
+    }
+
+    setTextAnalysisData([])
+  }, [textAnalysisList, activeJobId, setTextAnalysisData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -110,7 +118,7 @@ export default function JobList(props: {
 
   useEffect(() => {
     fetchJobs()
-  }, [refetchJobs, chainIds])
+  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
     if (textAnalysisList.find((row) => row.job.jobId === job.jobId)) {
@@ -229,10 +237,28 @@ export default function JobList(props: {
       }
 
       await createOrUpdateTextAnalysis(newuseCaseData)
+      setActiveJobId(job.jobId)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
+      }
+      setTextAnalysisData([newuseCaseData])
       toast.success('Added a new compute result')
     } catch (error) {
       LoggerInstance.error(error)
       toast.error('Could not add compute result')
+    }
+  }
+
+  const viewJobResult = (job: ComputeJobMetaData) => {
+    setActiveJobId(job.jobId)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
+    }
+    const row = textAnalysisList?.find((r) => r.job.jobId === job.jobId)
+    if (row) {
+      setTextAnalysisData([row])
+    } else {
+      setTextAnalysisData([])
     }
   }
 
@@ -248,6 +274,13 @@ export default function JobList(props: {
     if (!rowToDelete) return
 
     await deleteTextAnalysis(rowToDelete.id)
+    if (activeJobId === job.jobId) {
+      setActiveJobId('')
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('textAnalysis.activeJobId')
+      }
+      setTextAnalysisData([])
+    }
     toast.success(`Removed compute job result from visualization.`)
   }
 
@@ -255,14 +288,25 @@ export default function JobList(props: {
     if (!confirm('All data will be removed from your cache. Proceed?')) return
 
     await clearTextAnalysis()
+    setActiveJobId('')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('textAnalysis.activeJobId')
+    }
     toast.success('Text Analysis data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
     job: ComputeJobMetaData
   ) => {
-    const addAction = {
-      label: 'Add',
+    const isActive = activeJobId === job.jobId
+    const viewAction = {
+      label: isActive ? 'Viewing' : 'View',
+      onClick: () => {
+        if (!isActive) viewJobResult(job)
+      }
+    }
+    const cacheAndViewAction = {
+      label: 'Cache & View',
       onClick: () => {
         addComputeResultToUseCaseDB(job)
       }
@@ -280,10 +324,15 @@ export default function JobList(props: {
 
     const actionArray = []
 
-    if (viewContainsResult) {
+    if (!viewContainsResult) {
+      actionArray.push(cacheAndViewAction)
+    } else if (isActive) {
+      actionArray.push(viewAction)
       actionArray.push(deleteAction)
-      // actionArray.push(colorLegend)
-    } else actionArray.push(addAction)
+    } else {
+      actionArray.push(viewAction)
+      actionArray.push(deleteAction)
+    }
 
     return actionArray
   }
@@ -300,7 +349,12 @@ export default function JobList(props: {
         />
 
         <div className={styles.actions}>
-          <Button onClick={() => clearData()}>Clear Data</Button>
+          <Button
+            onClick={() => clearData()}
+            disabled={!textAnalysisList?.length}
+          >
+            Clear Data
+          </Button>
         </div>
       </Accordion>
     </div>
