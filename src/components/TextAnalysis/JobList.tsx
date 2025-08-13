@@ -35,12 +35,8 @@ export default function JobList(props: {
 
   const { setTextAnalysisData } = props
 
-  const {
-    textAnalysisList,
-    clearTextAnalysis,
-    createOrUpdateTextAnalysis,
-    deleteTextAnalysis
-  } = useUseCases()
+  const { textAnalysisList, clearTextAnalysis, createOrUpdateTextAnalysis } =
+    useUseCases()
 
   const [activeJobId, setActiveJobId] = useState<string>(
     typeof window !== 'undefined'
@@ -120,12 +116,13 @@ export default function JobList(props: {
     fetchJobs()
   }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (textAnalysisList.find((row) => row.job.jobId === job.jobId)) {
-      toast.info('This compute job result already is part of the map view.')
-      return
+  const addJobToView = async (job: ComputeJobMetaData) => {
+    // If there's already an active job, remove it first
+    if (activeJobId && activeJobId !== job.jobId) {
+      await clearTextAnalysis()
     }
 
+    // Always fetch fresh data from chain
     try {
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -251,46 +248,24 @@ export default function JobList(props: {
         sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
       }
       setTextAnalysisData([newuseCaseData])
-      toast.success('Added a new compute result')
+      toast.success('Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add compute result')
+      toast.error('Could not add to visualization')
     }
   }
 
-  const viewJobResult = (job: ComputeJobMetaData) => {
-    setActiveJobId(job.jobId)
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
-    }
-    const row = textAnalysisList?.find((r) => r.job.jobId === job.jobId)
-    if (row) {
-      setTextAnalysisData([row])
-    } else {
-      setTextAnalysisData([])
-    }
-  }
-
-  const deleteJobResultFromDB = async (job: ComputeJobMetaData) => {
-    if (
-      !confirm(`Are you sure you want to delete the result from visualization?`)
-    )
-      return
-
-    const rowToDelete = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
-    if (!rowToDelete) return
-
-    await deleteTextAnalysis(rowToDelete.id)
+  const removeJobFromView = async (job: ComputeJobMetaData) => {
     if (activeJobId === job.jobId) {
+      // Clear all data from indexedDB
+      await clearTextAnalysis()
       setActiveJobId('')
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('textAnalysis.activeJobId')
       }
       setTextAnalysisData([])
+      toast.success('Removed from visualization')
     }
-    toast.success(`Removed compute job result from visualization.`)
   }
 
   const clearData = async () => {
@@ -308,39 +283,27 @@ export default function JobList(props: {
     job: ComputeJobMetaData
   ) => {
     const isActive = activeJobId === job.jobId
-    const viewAction = {
-      label: isActive ? 'Viewing' : 'View',
+
+    const addAction = {
+      label: 'Add',
       onClick: () => {
-        if (!isActive) viewJobResult(job)
-      }
-    }
-    const cacheAndViewAction = {
-      label: 'Cache & View',
-      onClick: () => {
-        addComputeResultToUseCaseDB(job)
-      }
-    }
-    const deleteAction = {
-      label: 'Remove',
-      onClick: () => {
-        deleteJobResultFromDB(job)
+        addJobToView(job)
       }
     }
 
-    const viewContainsResult = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
+    const removeAction = {
+      label: 'Remove',
+      onClick: () => {
+        removeJobFromView(job)
+      }
+    }
 
     const actionArray = []
 
-    if (!viewContainsResult) {
-      actionArray.push(cacheAndViewAction)
-    } else if (isActive) {
-      actionArray.push(viewAction)
-      actionArray.push(deleteAction)
+    if (isActive) {
+      actionArray.push(removeAction)
     } else {
-      actionArray.push(viewAction)
-      actionArray.push(deleteAction)
+      actionArray.push(addAction)
     }
 
     return actionArray

@@ -13,10 +13,7 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import {
-  CAMEROON_GAZETTE_ALGO_DIDS,
-  CAMEROON_GAZETTE_RESULT_ZIP
-} from './_constants'
+import { CAMEROON_GAZETTE_ALGO_DIDS } from './_constants'
 import { CameroonGazetteResult } from './_types'
 
 export default function JobList(props: {
@@ -45,8 +42,7 @@ export default function JobList(props: {
   const {
     cameroonGazetteList,
     clearCameroonGazette,
-    createOrUpdateCameroonGazette,
-    deleteCameroonGazette
+    createOrUpdateCameroonGazette
   } = useUseCases()
 
   const [activeJobId, setActiveJobId] = useState<string>(
@@ -125,14 +121,15 @@ export default function JobList(props: {
 
   useEffect(() => {
     fetchJobs()
-  }, [refetchJobs, chainIds])
+  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (cameroonGazetteList.find((row) => row.job.jobId === job.jobId)) {
-      toast.info('This compute job result already is part of the map view.')
-      return
+  const addJobToView = async (job: ComputeJobMetaData) => {
+    // If there's already an active job, remove it first
+    if (activeJobId && activeJobId !== job.jobId) {
+      await clearCameroonGazette()
     }
 
+    // Always fetch fresh data from chain
     try {
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -260,46 +257,24 @@ export default function JobList(props: {
         sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
       }
       setCameroonGazetteData([newuseCaseData])
-      toast.success('Added a new compute result')
+      toast.success('Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add compute result')
+      toast.error('Could not add to visualization')
     }
   }
 
-  const viewJobResult = (job: ComputeJobMetaData) => {
-    setActiveJobId(job.jobId)
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
-    }
-    const row = cameroonGazetteList?.find((r) => r.job.jobId === job.jobId)
-    if (row) {
-      setCameroonGazetteData([row])
-    } else {
-      setCameroonGazetteData([])
-    }
-  }
-
-  const deleteJobResultFromDB = async (job: ComputeJobMetaData) => {
-    if (
-      !confirm(`Are you sure you want to delete the result from visualization?`)
-    )
-      return
-
-    const rowToDelete = cameroonGazetteList.find(
-      (row) => row.job.jobId === job.jobId
-    )
-    if (!rowToDelete) return
-
-    await deleteCameroonGazette(rowToDelete.id)
+  const removeJobFromView = async (job: ComputeJobMetaData) => {
     if (activeJobId === job.jobId) {
+      // Clear all data from indexedDB
+      await clearCameroonGazette()
       setActiveJobId('')
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('cameroonGazette.activeJobId')
       }
       setCameroonGazetteData([])
+      toast.success('Removed from visualization')
     }
-    toast.success(`Removed compute job result from visualization.`)
   }
 
   const clearData = async () => {
@@ -318,39 +293,27 @@ export default function JobList(props: {
     job: ComputeJobMetaData
   ) => {
     const isActive = activeJobId === job.jobId
-    const viewAction = {
-      label: isActive ? 'Viewing' : 'View',
+
+    const addAction = {
+      label: 'Add',
       onClick: () => {
-        if (!isActive) viewJobResult(job)
-      }
-    }
-    const cacheAndViewAction = {
-      label: 'Cache & View',
-      onClick: () => {
-        addComputeResultToUseCaseDB(job)
-      }
-    }
-    const deleteAction = {
-      label: 'Remove',
-      onClick: () => {
-        deleteJobResultFromDB(job)
+        addJobToView(job)
       }
     }
 
-    const viewContainsResult = cameroonGazetteList.find(
-      (row) => row.job.jobId === job.jobId
-    )
+    const removeAction = {
+      label: 'Remove',
+      onClick: () => {
+        removeJobFromView(job)
+      }
+    }
 
     const actionArray = []
 
-    if (!viewContainsResult) {
-      actionArray.push(cacheAndViewAction)
-    } else if (isActive) {
-      actionArray.push(viewAction)
-      actionArray.push(deleteAction)
+    if (isActive) {
+      actionArray.push(removeAction)
     } else {
-      actionArray.push(viewAction)
-      actionArray.push(deleteAction)
+      actionArray.push(addAction)
     }
 
     return actionArray
