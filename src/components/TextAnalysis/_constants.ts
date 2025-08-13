@@ -5,7 +5,7 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
  */
 export const TEXT_ANALYSIS_ALGO_DIDS = {
   32456:
-    'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651'
+    'did:op:b0f6cccf8a8c1094e3b29c537271f2dcf025249e8b9324ae93c6b79b20db723c'
 }
 
 export const TEXT_ANALYSIS_USECASE_NAME = 'textAnalysises'
