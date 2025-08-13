@@ -9,11 +9,11 @@ export interface DataLoadingState {
 }
 
 /**
- * Custom hook for loading and transforming text analysis data from local database
- * Converts TextAnalysisUseCaseData into VizHubData format for visualizations
+ * Custom hook for loading and transforming Cameroon Gazette data from local database
+ * Converts CameroonGazetteUseCaseData into VizHubData format for visualizations
  * Includes:
  * - Email distribution patterns
- * - Date-based communication trends
+ * - Date-based publication trends
  * - Sentiment analysis results
  * - Word frequency and cloud data
  * - Document summary statistics

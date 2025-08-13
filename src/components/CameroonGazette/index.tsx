@@ -17,7 +17,7 @@ export default function CameroonGazetteViz(): ReactElement {
 
   return (
     <div className="flex flex-col gap-6">
-      <JobList setTextAnalysisData={setCameroonGazetteData} />
+      <JobList setCameroonGazetteData={setCameroonGazetteData} />
       {data ? (
         <div className="bg-gray-50 rounded-lg shadow-sm">
           <VizHub
@@ -39,7 +39,7 @@ export default function CameroonGazetteViz(): ReactElement {
             <div className="text-gray-400 text-sm">
               {error
                 ? `Error: ${error}`
-                : 'Add some text analysis jobs to see visualizations here.'}
+                : 'Add some Cameroon Gazette jobs to see visualizations here.'}
             </div>
           </div>
         </div>

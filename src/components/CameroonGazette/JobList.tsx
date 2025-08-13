@@ -20,7 +20,7 @@ import {
 import { CameroonGazetteResult } from './_types'
 
 export default function JobList(props: {
-  setTextAnalysisData: (
+  setCameroonGazetteData: (
     cameroonGazetteData: CameroonGazetteUseCaseData[]
   ) => void
 }): ReactElement {
@@ -40,7 +40,7 @@ export default function JobList(props: {
   const [isLoadingJobs, setIsLoadingJobs] = useState(false)
   const newCancelToken = useCancelToken()
 
-  const { setTextAnalysisData } = props
+  const { setCameroonGazetteData } = props
 
   const {
     cameroonGazetteList,
@@ -49,14 +49,28 @@ export default function JobList(props: {
     deleteCameroonGazette
   } = useUseCases()
 
+  const [activeJobId, setActiveJobId] = useState<string>(
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('cameroonGazette.activeJobId') || ''
+      : ''
+  )
+
   useEffect(() => {
     if (!cameroonGazetteList) {
-      setTextAnalysisData([])
+      setCameroonGazetteData([])
       return
     }
 
-    setTextAnalysisData(cameroonGazetteList)
-  }, [cameroonGazetteList, setTextAnalysisData])
+    if (activeJobId) {
+      const row = cameroonGazetteList.find((r) => r.job.jobId === activeJobId)
+      if (row) {
+        setCameroonGazetteData([row])
+        return
+      }
+    }
+
+    setCameroonGazetteData([])
+  }, [cameroonGazetteList, activeJobId, setCameroonGazetteData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -241,10 +255,28 @@ export default function JobList(props: {
       }
 
       await createOrUpdateCameroonGazette(newuseCaseData)
+      setActiveJobId(job.jobId)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
+      }
+      setCameroonGazetteData([newuseCaseData])
       toast.success('Added a new compute result')
     } catch (error) {
       LoggerInstance.error(error)
       toast.error('Could not add compute result')
+    }
+  }
+
+  const viewJobResult = (job: ComputeJobMetaData) => {
+    setActiveJobId(job.jobId)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
+    }
+    const row = cameroonGazetteList?.find((r) => r.job.jobId === job.jobId)
+    if (row) {
+      setCameroonGazetteData([row])
+    } else {
+      setCameroonGazetteData([])
     }
   }
 
@@ -260,6 +292,13 @@ export default function JobList(props: {
     if (!rowToDelete) return
 
     await deleteCameroonGazette(rowToDelete.id)
+    if (activeJobId === job.jobId) {
+      setActiveJobId('')
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('cameroonGazette.activeJobId')
+      }
+      setCameroonGazetteData([])
+    }
     toast.success(`Removed compute job result from visualization.`)
   }
 
@@ -267,14 +306,26 @@ export default function JobList(props: {
     if (!confirm('All data will be removed from your cache. Proceed?')) return
 
     await clearCameroonGazette()
+    setActiveJobId('')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('cameroonGazette.activeJobId')
+    }
+    setCameroonGazetteData([])
     toast.success('Cameroon Gazette data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
     job: ComputeJobMetaData
   ) => {
-    const addAction = {
-      label: 'Add',
+    const isActive = activeJobId === job.jobId
+    const viewAction = {
+      label: isActive ? 'Viewing' : 'View',
+      onClick: () => {
+        if (!isActive) viewJobResult(job)
+      }
+    }
+    const cacheAndViewAction = {
+      label: 'Cache & View',
       onClick: () => {
         addComputeResultToUseCaseDB(job)
       }
@@ -292,10 +343,15 @@ export default function JobList(props: {
 
     const actionArray = []
 
-    if (viewContainsResult) {
+    if (!viewContainsResult) {
+      actionArray.push(cacheAndViewAction)
+    } else if (isActive) {
+      actionArray.push(viewAction)
       actionArray.push(deleteAction)
-      // actionArray.push(colorLegend)
-    } else actionArray.push(addAction)
+    } else {
+      actionArray.push(viewAction)
+      actionArray.push(deleteAction)
+    }
 
     return actionArray
   }
@@ -312,7 +368,12 @@ export default function JobList(props: {
         />
 
         <div className={styles.actions}>
-          <Button onClick={() => clearData()}>Clear Data</Button>
+          <Button
+            onClick={() => clearData()}
+            disabled={!cameroonGazetteList?.length}
+          >
+            Clear Data
+          </Button>
         </div>
       </Accordion>
     </div>
