@@ -83,14 +83,14 @@ export default function ComputeJobs({
     setActionsColumn({
       name: defaultActionsColumn.name,
       selector: (row) => (
-        <div className={styles.customActios}>
+        <div className="inline-flex items-center gap-2">
           {getActions(row).map((action, i) => (
             <Button
               key={`compute-job-action-${action.label}-${i}`}
               size="small"
               style="text"
               onClick={() => action.onClick(row)}
-              className={styles.customActionButton}
+              className="min-w-24 text-center whitespace-nowrap"
             >
               {action.label}
             </Button>

@@ -30,7 +30,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ title }) => (
       No data available to display.
     </p>
     <p className="text-gray-500 dark:text-gray-400 text-sm">
-      Click the &quot;Upload Data&quot; button in the header to get started.
+      Provide visualization data via the component `data` prop.
     </p>
   </div>
 )

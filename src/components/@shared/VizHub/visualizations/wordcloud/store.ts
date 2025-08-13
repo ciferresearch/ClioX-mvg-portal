@@ -96,21 +96,31 @@ interface WordCloudStore {
   getActiveWhitelist: () => string[]
   getWordColor: (word: string) => string
   fetchData: () => Promise<void>
+  // Reload namespaced preferences from localStorage
+  loadPreferencesFromStorage: () => void
 
   // Cache for filtering operations
   filterCacheKey: string
   lastFilterOperation: number
 }
 
-// Local storage keys
+// Local storage keys (with namespacing support)
+let PREFS_NAMESPACE = ''
+export const setWordCloudPrefsNamespace = (ns?: string) => {
+  PREFS_NAMESPACE = ns || ''
+}
+const key = (base: string) =>
+  PREFS_NAMESPACE ? `${base}.${PREFS_NAMESPACE}` : base
+
 const STORAGE_KEYS = {
-  LANGUAGE: 'wordcloud_language',
-  CUSTOM_STOPLIST: 'wordcloud_custom_stoplist',
-  STOPLIST_ACTIVE: 'wordcloud_stoplist_active',
-  WHITELIST: 'wordcloud_whitelist',
-  WHITELIST_ACTIVE: 'wordcloud_whitelist_active',
-  MIN_FREQUENCY: 'wordcloud_min_frequency',
-  MAX_WORDS: 'wordcloud_max_words' // Controls the maximum number of words displayed in the visualization
+  LANGUAGE: 'vizhub.wordcloud.language',
+  CUSTOM_STOPLIST: 'vizhub.wordcloud.custom_stoplist',
+  STOPLIST_ACTIVE: 'vizhub.wordcloud.stoplist_active',
+  WHITELIST: 'vizhub.wordcloud.whitelist',
+  WHITELIST_ACTIVE: 'vizhub.wordcloud.whitelist_active',
+  MIN_FREQUENCY: 'vizhub.wordcloud.min_frequency',
+  MAX_WORDS: 'vizhub.wordcloud.max_words', // Controls the maximum number of words displayed in the visualization
+  OPTIONS: 'vizhub.wordcloud.options'
 }
 
 // Helper function to safely parse JSON from localStorage
@@ -139,12 +149,12 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
   searchTerm: '',
   minFrequency:
     typeof window !== 'undefined'
-      ? Number(localStorage.getItem(STORAGE_KEYS.MIN_FREQUENCY) || 0)
+      ? Number(localStorage.getItem(key(STORAGE_KEYS.MIN_FREQUENCY)) || 0)
       : 0,
   // Default to 100 words and load from localStorage if available
   maxWords:
     typeof window !== 'undefined'
-      ? Number(localStorage.getItem(STORAGE_KEYS.MAX_WORDS) || 100)
+      ? Number(localStorage.getItem(key(STORAGE_KEYS.MAX_WORDS)) || 100)
       : 100,
   dimensions: { width: 800, height: 500 },
 
@@ -152,16 +162,30 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
   isPanelVisible: false,
   isWordSelectionAction: false,
 
-  options: {
-    fontFamily: 'Palatino',
-    colorSelection: 'random',
-    applyGlobally: true
-  },
-  tempOptions: {
-    fontFamily: 'Palatino',
-    colorSelection: 'random',
-    applyGlobally: true
-  },
+  options:
+    typeof window !== 'undefined'
+      ? safeJsonParse<WordCloudOptions>(key(STORAGE_KEYS.OPTIONS), {
+          fontFamily: 'Palatino',
+          colorSelection: 'random',
+          applyGlobally: true
+        })
+      : {
+          fontFamily: 'Palatino',
+          colorSelection: 'random',
+          applyGlobally: true
+        },
+  tempOptions:
+    typeof window !== 'undefined'
+      ? safeJsonParse<WordCloudOptions>(key(STORAGE_KEYS.OPTIONS), {
+          fontFamily: 'Palatino',
+          colorSelection: 'random',
+          applyGlobally: true
+        })
+      : {
+          fontFamily: 'Palatino',
+          colorSelection: 'random',
+          applyGlobally: true
+        },
 
   isOptionsModalOpen: false,
   isStopwordsModalOpen: false,
@@ -175,18 +199,21 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
   // Initialize stoplist/whitelist from localStorage
   selectedLanguage:
     (typeof window !== 'undefined'
-      ? (localStorage.getItem(STORAGE_KEYS.LANGUAGE) as Language)
+      ? (localStorage.getItem(key(STORAGE_KEYS.LANGUAGE)) as Language)
       : 'english') || 'english',
   stoplistActive:
     typeof window !== 'undefined'
-      ? localStorage.getItem(STORAGE_KEYS.STOPLIST_ACTIVE) !== 'false'
+      ? localStorage.getItem(key(STORAGE_KEYS.STOPLIST_ACTIVE)) !== 'false'
       : true,
   whitelistActive:
     typeof window !== 'undefined'
-      ? localStorage.getItem(STORAGE_KEYS.WHITELIST_ACTIVE) === 'true'
+      ? localStorage.getItem(key(STORAGE_KEYS.WHITELIST_ACTIVE)) === 'true'
       : false,
-  customStopwords: safeJsonParse<string[]>(STORAGE_KEYS.CUSTOM_STOPLIST, []),
-  customWhitelist: safeJsonParse<string[]>(STORAGE_KEYS.WHITELIST, []),
+  customStopwords: safeJsonParse<string[]>(
+    key(STORAGE_KEYS.CUSTOM_STOPLIST),
+    []
+  ),
+  customWhitelist: safeJsonParse<string[]>(key(STORAGE_KEYS.WHITELIST), []),
   autoDetectedStopwords: [],
 
   shouldUpdateLayout: false,
@@ -254,7 +281,10 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
 
     // Save to localStorage
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.MIN_FREQUENCY, minFrequency.toString())
+      localStorage.setItem(
+        key(STORAGE_KEYS.MIN_FREQUENCY),
+        minFrequency.toString()
+      )
     }
 
     setTimeout(() => {
@@ -270,7 +300,7 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
 
     // Save to localStorage
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.MAX_WORDS, maxWords.toString())
+      localStorage.setItem(key(STORAGE_KEYS.MAX_WORDS), maxWords.toString())
     }
 
     setTimeout(() => {
@@ -328,12 +358,74 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
       shouldUpdateLayout: requiresLayoutUpdate
     })
 
+    // Persist per-namespace options
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          key(STORAGE_KEYS.OPTIONS),
+          JSON.stringify({ ...tempOptions })
+        )
+      }
+    } catch {}
+
     // Handle filter updates if options changed
     if (optionsChanged) {
       setTimeout(() => {
         get().filterWords()
       }, 50)
     }
+  },
+  // Reload preferences for current namespace
+  loadPreferencesFromStorage: () => {
+    const storedOptions = safeJsonParse<WordCloudOptions>(
+      key(STORAGE_KEYS.OPTIONS),
+      get().options
+    )
+    const storedMin =
+      typeof window !== 'undefined'
+        ? Number(
+            localStorage.getItem(key(STORAGE_KEYS.MIN_FREQUENCY)) ||
+              get().minFrequency
+          )
+        : get().minFrequency
+    const storedMax =
+      typeof window !== 'undefined'
+        ? Number(
+            localStorage.getItem(key(STORAGE_KEYS.MAX_WORDS)) || get().maxWords
+          )
+        : get().maxWords
+    const storedLang =
+      (typeof window !== 'undefined'
+        ? (localStorage.getItem(key(STORAGE_KEYS.LANGUAGE)) as Language)
+        : (get().selectedLanguage as Language)) || get().selectedLanguage
+    const storedStop =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(key(STORAGE_KEYS.STOPLIST_ACTIVE)) !== 'false'
+        : get().stoplistActive
+    const storedWlActive =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(key(STORAGE_KEYS.WHITELIST_ACTIVE)) === 'true'
+        : get().whitelistActive
+    const storedStoplist = safeJsonParse<string[]>(
+      key(STORAGE_KEYS.CUSTOM_STOPLIST),
+      get().customStopwords
+    )
+    const storedWhitelist = safeJsonParse<string[]>(
+      key(STORAGE_KEYS.WHITELIST),
+      get().customWhitelist
+    )
+
+    set({
+      options: storedOptions,
+      tempOptions: storedOptions,
+      minFrequency: storedMin,
+      maxWords: storedMax,
+      selectedLanguage: storedLang,
+      stoplistActive: storedStop,
+      whitelistActive: storedWlActive,
+      customStopwords: storedStoplist,
+      customWhitelist: storedWhitelist
+    })
   },
   openStopwordsModal: () => {
     const { customStopwords, selectedLanguage, autoDetectedStopwords } = get()
@@ -420,11 +512,11 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
 
       // Save to localStorage
       localStorage.setItem(
-        STORAGE_KEYS.CUSTOM_STOPLIST,
+        key(STORAGE_KEYS.CUSTOM_STOPLIST),
         JSON.stringify(newStopwords)
       )
-      localStorage.setItem(STORAGE_KEYS.LANGUAGE, 'custom')
-      localStorage.setItem(STORAGE_KEYS.STOPLIST_ACTIVE, 'true')
+      localStorage.setItem(key(STORAGE_KEYS.LANGUAGE), 'custom')
+      localStorage.setItem(key(STORAGE_KEYS.STOPLIST_ACTIVE), 'true')
 
       // Save current search term to reapply it
       const currentSearchTerm = searchTerm
@@ -518,8 +610,11 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
       })
 
       // Save to localStorage
-      localStorage.setItem(STORAGE_KEYS.WHITELIST, JSON.stringify(newWhitelist))
-      localStorage.setItem(STORAGE_KEYS.WHITELIST_ACTIVE, 'true')
+      localStorage.setItem(
+        key(STORAGE_KEYS.WHITELIST),
+        JSON.stringify(newWhitelist)
+      )
+      localStorage.setItem(key(STORAGE_KEYS.WHITELIST_ACTIVE), 'true')
 
       // Save current search term to reapply it
       const currentSearchTerm = searchTerm
@@ -567,7 +662,7 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
     })
 
     // Save to localStorage
-    localStorage.setItem(STORAGE_KEYS.LANGUAGE, language)
+    localStorage.setItem(key(STORAGE_KEYS.LANGUAGE), language)
 
     // Update filters immediately without setTimeout
     get().filterWords()
@@ -598,7 +693,7 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
     })
 
     // Save to localStorage
-    localStorage.setItem(STORAGE_KEYS.STOPLIST_ACTIVE, String(newValue))
+    localStorage.setItem(key(STORAGE_KEYS.STOPLIST_ACTIVE), String(newValue))
 
     // Apply filtering immediately
     // This direct call ensures that filteredWords is updated right after state change
@@ -630,11 +725,11 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem(
-        STORAGE_KEYS.WHITELIST,
+        key(STORAGE_KEYS.WHITELIST),
         JSON.stringify(updatedWhitelist)
       )
       localStorage.setItem(
-        STORAGE_KEYS.WHITELIST_ACTIVE,
+        key(STORAGE_KEYS.WHITELIST_ACTIVE),
         String(newWhitelistActive)
       )
     }
@@ -891,18 +986,14 @@ export const useWordCloudStore = create<WordCloudStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      // Import the dataStore
-      const { fetchWordCloudData } = await import('../../store/dataStore').then(
-        (module) => module.useDataStore.getState()
-      )
-
-      // Fetch data from the API
-      const data = await fetchWordCloudData()
+      // In pure mode, fetchData should be triggered only when using legacy path.
+      // Keep no-op with empty data to avoid runtime errors.
+      const data = { wordCloudData: [] as WordData[] }
 
       // Calculate the minimum frequency in the dataset
-      const minCount = Math.min(
-        ...data.wordCloudData.map((w: WordData) => w.count)
-      )
+      const minCount = data.wordCloudData.length
+        ? Math.min(...data.wordCloudData.map((w: WordData) => w.count))
+        : 0
 
       // Get current min frequency
       const { minFrequency } = get()

@@ -2,28 +2,29 @@ import { ReactElement, useState } from 'react'
 import JobList from './JobList'
 import VizHub from '../@shared/VizHub/VizHub'
 import { useDataLoader } from './useDataLoader'
-import { TextAnalysisUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
+import { CameroonGazetteUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
 import {
   CAMEROON_GAZETTE_CONFIG,
   CAMEROON_GAZETTE_VIZHUB_CONFIG
 } from './_constants'
 
-export default function TextAnalysisViz(): ReactElement {
-  const [textAnalysisData, setTextAnalysisData] = useState<
-    TextAnalysisUseCaseData[]
+export default function CameroonGazetteViz(): ReactElement {
+  const [cameroonGazetteData, setCameroonGazetteData] = useState<
+    CameroonGazetteUseCaseData[]
   >([])
 
-  const { data, isLoading, error } = useDataLoader(textAnalysisData)
+  const { data, isLoading, error } = useDataLoader(cameroonGazetteData)
 
   return (
     <div className="flex flex-col gap-6">
-      <JobList setTextAnalysisData={setTextAnalysisData} />
+      <JobList setCameroonGazetteData={setCameroonGazetteData} />
       {data ? (
         <div className="bg-gray-50 rounded-lg shadow-sm">
           <VizHub
             data={data}
             config={CAMEROON_GAZETTE_VIZHUB_CONFIG}
             useCaseConfig={CAMEROON_GAZETTE_CONFIG}
+            preferencesNamespace="cameroonGazette"
             theme="light"
           />
         </div>
@@ -38,7 +39,7 @@ export default function TextAnalysisViz(): ReactElement {
             <div className="text-gray-400 text-sm">
               {error
                 ? `Error: ${error}`
-                : 'Add some text analysis jobs to see visualizations here.'}
+                : 'Add some Cameroon Gazette jobs to see visualizations here.'}
             </div>
           </div>
         </div>

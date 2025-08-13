@@ -1,11 +1,5 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
-import {
-  MutableRefObject,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
@@ -19,7 +13,7 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import { TEXT_ANALYSIS_ALGO_DIDS, TEXT_ANALYSIS_RESULT_ZIP } from './_constants'
+import { TEXT_ANALYSIS_ALGO_DIDS } from './_constants'
 import { TextAnalysisResult } from './_types'
 
 export default function JobList(props: {
@@ -41,12 +35,14 @@ export default function JobList(props: {
 
   const { setTextAnalysisData } = props
 
-  const {
-    textAnalysisList,
-    clearTextAnalysis,
-    createOrUpdateTextAnalysis,
-    deleteTextAnalysis
-  } = useUseCases()
+  const { textAnalysisList, clearTextAnalysis, createOrUpdateTextAnalysis } =
+    useUseCases()
+
+  const [activeJobId, setActiveJobId] = useState<string>(
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('textAnalysis.activeJobId') || ''
+      : ''
+  )
 
   useEffect(() => {
     if (!textAnalysisList) {
@@ -54,8 +50,16 @@ export default function JobList(props: {
       return
     }
 
-    setTextAnalysisData(textAnalysisList)
-  }, [textAnalysisList, setTextAnalysisData])
+    if (activeJobId) {
+      const row = textAnalysisList.find((r) => r.job.jobId === activeJobId)
+      if (row) {
+        setTextAnalysisData([row])
+        return
+      }
+    }
+
+    setTextAnalysisData([])
+  }, [textAnalysisList, activeJobId, setTextAnalysisData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -110,14 +114,15 @@ export default function JobList(props: {
 
   useEffect(() => {
     fetchJobs()
-  }, [refetchJobs, chainIds])
+  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (textAnalysisList.find((row) => row.job.jobId === job.jobId)) {
-      toast.info('This compute job result already is part of the map view.')
-      return
+  const addJobToView = async (job: ComputeJobMetaData) => {
+    // If there's already an active job, remove it first
+    if (activeJobId && activeJobId !== job.jobId) {
+      await clearTextAnalysis()
     }
 
+    // Always fetch fresh data from chain
     try {
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -173,7 +178,6 @@ export default function JobList(props: {
         ) {
           result.wordcloud = content
         } else if (filenameLower.includes('sentiment')) {
-          // Handle sentiment data (loose validation)
           try {
             let parsedContent
             if (typeof content === 'string') {
@@ -185,7 +189,6 @@ export default function JobList(props: {
               return result
             }
 
-            // Loose validation: only check array and required fields
             if (!Array.isArray(parsedContent)) {
               console.warn(
                 'Sentiment data should be an array of sentiment categories'
@@ -198,7 +201,18 @@ export default function JobList(props: {
                 typeof category === 'object' &&
                 category !== null &&
                 typeof category.name === 'string' &&
-                Array.isArray(category.values)
+                Array.isArray(category.values) &&
+                category.values.every(
+                  (value) =>
+                    Array.isArray(value) &&
+                    (value.length === 2 || value.length === 3) &&
+                    typeof value[0] === 'string' &&
+                    typeof value[1] === 'number' &&
+                    !isNaN(value[1]) &&
+                    (value.length === 2 ||
+                      (Array.isArray(value[2]) &&
+                        value[2].every((v) => typeof v === 'string')))
+                )
               )
             })
 
@@ -229,61 +243,68 @@ export default function JobList(props: {
       }
 
       await createOrUpdateTextAnalysis(newuseCaseData)
-      toast.success('Added a new compute result')
+      setActiveJobId(job.jobId)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
+      }
+      setTextAnalysisData([newuseCaseData])
+      toast.success('Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add compute result')
+      toast.error('Could not add to visualization')
     }
   }
 
-  const deleteJobResultFromDB = async (job: ComputeJobMetaData) => {
-    if (
-      !confirm(`Are you sure you want to delete the result from visualization?`)
-    )
-      return
-
-    const rowToDelete = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
-    if (!rowToDelete) return
-
-    await deleteTextAnalysis(rowToDelete.id)
-    toast.success(`Removed compute job result from visualization.`)
+  const removeJobFromView = async (job: ComputeJobMetaData) => {
+    if (activeJobId === job.jobId) {
+      // Clear all data from indexedDB
+      await clearTextAnalysis()
+      setActiveJobId('')
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('textAnalysis.activeJobId')
+      }
+      setTextAnalysisData([])
+      toast.success('Removed from visualization')
+    }
   }
 
   const clearData = async () => {
     if (!confirm('All data will be removed from your cache. Proceed?')) return
 
     await clearTextAnalysis()
+    setActiveJobId('')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('textAnalysis.activeJobId')
+    }
     toast.success('Text Analysis data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
     job: ComputeJobMetaData
   ) => {
+    const isActive = activeJobId === job.jobId
+
     const addAction = {
       label: 'Add',
       onClick: () => {
-        addComputeResultToUseCaseDB(job)
-      }
-    }
-    const deleteAction = {
-      label: 'Remove',
-      onClick: () => {
-        deleteJobResultFromDB(job)
+        addJobToView(job)
       }
     }
 
-    const viewContainsResult = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
+    const removeAction = {
+      label: 'Remove',
+      onClick: () => {
+        removeJobFromView(job)
+      }
+    }
 
     const actionArray = []
 
-    if (viewContainsResult) {
-      actionArray.push(deleteAction)
-      // actionArray.push(colorLegend)
-    } else actionArray.push(addAction)
+    if (isActive) {
+      actionArray.push(removeAction)
+    } else {
+      actionArray.push(addAction)
+    }
 
     return actionArray
   }
@@ -300,7 +321,12 @@ export default function JobList(props: {
         />
 
         <div className={styles.actions}>
-          <Button onClick={() => clearData()}>Clear Data</Button>
+          <Button
+            onClick={() => clearData()}
+            disabled={!textAnalysisList?.length}
+          >
+            Clear Data
+          </Button>
         </div>
       </Accordion>
     </div>

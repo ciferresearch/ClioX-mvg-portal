@@ -10,19 +10,19 @@ type TimeDataPoint = {
   count: number
 }
 
-type EmailDataPoint = {
-  emails_per_day?: number
+type ValueDataPoint = {
+  value?: number
   [key: string]: number | undefined
 }
 
-type ChartData = TimeDataPoint[] | EmailDataPoint[]
+type ChartData = TimeDataPoint[] | ValueDataPoint[]
 
 interface ChartModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
   chartData: ChartData
-  chartType: 'date' | 'email'
+  chartType: 'timeline' | 'histogram'
   customization?: {
     title?: string
     xAxisLabel?: string
@@ -56,6 +56,20 @@ const ChartModal = ({
   const marginRef = useRef<MarginType | null>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   const { theme } = useTheme()
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
 
   useEffect(() => {
     if (
@@ -134,7 +148,7 @@ const ChartModal = ({
     // Update zoom level display
     setZoomLevel(initialScale)
 
-    if (chartType === 'date') {
+    if (chartType === 'timeline') {
       // Date distribution chart
       const formattedData = (chartData as TimeDataPoint[]).filter(
         (d) => d.time !== null
@@ -343,18 +357,18 @@ const ChartModal = ({
         .text(customization?.yAxisLabel || 'Count')
         .attr('class', 'text-sm')
         .style('fill', textColor)
-    } else if (chartType === 'email') {
+    } else if (chartType === 'histogram') {
       // Emails per day histogram
-      const getEmailValue = (d: EmailDataPoint): number => {
-        if ('emails_per_day' in d) {
-          return +d.emails_per_day!
+      const getValue = (d: ValueDataPoint): number => {
+        if ('value' in d) {
+          return +d.value!
         }
         const firstKey = Object.keys(d)[0]
         return +d[firstKey]!
       }
 
-      const values = (chartData as EmailDataPoint[])
-        .map(getEmailValue)
+      const values = (chartData as ValueDataPoint[])
+        .map(getValue)
         .filter((v) => !isNaN(v))
 
       if (values.length === 0) {
@@ -484,7 +498,7 @@ const ChartModal = ({
             const [mouseX, mouseY] = d3.pointer(event, container)
 
             tooltip
-              .html(`Emails: ${d.x0} - ${d.x1}<br>Count: ${d.length}`)
+              .html(`Values: ${d.x0} - ${d.x1}<br>Count: ${d.length}`)
               .style('left', mouseX + 10 + 'px')
               .style('top', mouseY - 25 + 'px')
               .style('opacity', 1)
@@ -502,7 +516,7 @@ const ChartModal = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', height + margin.bottom - 10)
-        .text(customization?.xAxisLabel || 'Emails per Day')
+        .text(customization?.xAxisLabel || 'Value')
         .attr('class', 'text-sm')
         .style('fill', textColor)
 
@@ -590,8 +604,14 @@ const ChartModal = ({
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-[1400px] h-[700px] flex flex-col overflow-hidden">
+        <div
+          className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={onClose}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-[1400px] h-[700px] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header - Made more compact */}
             <div className="flex justify-between items-center px-8 py-3 bg-gray-50 dark:bg-gray-700">
               <div className="flex items-center gap-4">

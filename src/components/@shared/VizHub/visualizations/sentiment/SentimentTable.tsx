@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { Text, Badge } from '@radix-ui/themes'
 import { useTheme } from '../../store/themeStore'
-import { type SentimentData } from '../../store/dataStore'
+import { type SentimentData } from '../../types'
 
 interface SentimentTableProps {
   sentimentData: SentimentData[]

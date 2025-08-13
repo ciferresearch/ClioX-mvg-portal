@@ -1,17 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import SentimentChart from './visualizations/sentiment/SentimentChart'
 import DataDistribution from './visualizations/distribution/DataDistribution'
 import WordCloud from './visualizations/wordcloud'
 import DocumentSummary from './visualizations/summary/DocumentSummary'
 import VisualizationWrapper from './ui/common/VisualizationWrapper'
-import LoadingIndicator from './ui/common/LoadingIndicator'
+// import LoadingIndicator from './ui/common/LoadingIndicator'
 import FutureFeatures from './ui/common/FutureFeatures'
-import { STORAGE_KEYS, useDataStore } from './store/dataStore'
 import { useVizHubData } from './hooks/useVizHubData'
 import { VizHubThemeProvider } from './store/themeStore'
-import type { VizHubProps, VizHubConfig } from './types'
+import type {
+  VizHubProps,
+  VizHubConfig,
+  UseCaseConfig,
+  VizHubExtension
+} from './types'
+import {
+  setWordCloudPrefsNamespace,
+  useWordCloudStore
+} from './visualizations/wordcloud/store'
+import { setStoplistStorageNamespace } from './visualizations/wordcloud/useStoplistManager'
 
 /**
  * Helper function to resolve component visibility with backward compatibility
@@ -21,14 +30,8 @@ function resolveComponentVisibility(config: VizHubConfig) {
   return {
     wordCloud: config.components?.wordCloud ?? config.showWordCloud ?? true,
     sentiment: config.components?.sentiment ?? config.showSentiment ?? true,
-    emailDistribution:
-      config.components?.emailDistribution ??
-      config.showEmailDistribution ??
-      true,
-    dateDistribution:
-      config.components?.dateDistribution ??
-      config.showDateDistribution ??
-      true,
+    histogram: config.components?.histogram ?? true,
+    timeline: config.components?.timeline ?? true,
     documentSummary:
       config.components?.documentSummary ?? config.showDocumentSummary ?? true,
     futureFeatures:
@@ -40,9 +43,9 @@ function resolveComponentVisibility(config: VizHubConfig) {
  * Helper function to render extensions at a specific position
  */
 function renderExtensions(
-  extensions: any[] = [],
-  position: string,
-  useCaseConfig: any
+  extensions: VizHubExtension[] = [],
+  position: VizHubExtension['position'],
+  useCaseConfig: UseCaseConfig
 ) {
   return extensions
     .filter((ext) => ext.position === position)
@@ -66,19 +69,26 @@ function VizHubInternal({
   config,
   useCaseConfig,
   className = '',
-  theme = 'light'
+  theme = 'light',
+  preferencesNamespace
 }: VizHubProps) {
+  // Namespace preferences for word cloud
+  useMemo(() => {
+    setWordCloudPrefsNamespace(preferencesNamespace)
+    setStoplistStorageNamespace(preferencesNamespace)
+  }, [preferencesNamespace])
+
+  // Reload namespaced preferences when namespace changes
+  const { loadPreferencesFromStorage } = useWordCloudStore()
+  useEffect(() => {
+    loadPreferencesFromStorage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferencesNamespace])
   const {
     dataStatus,
-    processingStatus,
-    statusMessage,
     config: effectiveConfig,
-    hasAnyData,
-    dataSourceInfo
+    hasAnyData
   } = useVizHubData(data, config, useCaseConfig)
-
-  // Get the clearAllData function from the data store
-  const { clearAllData } = useDataStore()
 
   // Resolve component visibility with backward compatibility
   const componentVisibility = resolveComponentVisibility(effectiveConfig)
@@ -89,36 +99,9 @@ function VizHubInternal({
   // Get extensions
   const extensions = effectiveConfig.extensions || []
 
-  // Force clear data when component unmounts
-  useEffect(() => {
-    return () => {
-      // Clear all data when VizHub component is unmounted
-      clearAllData()
-    }
-  }, [clearAllData])
+  // No localStorage data side-effects in pure mode
 
-  // Show loading state if processing
-  if (processingStatus === 'not_ready') {
-    return (
-      <div className={`vizhub-container ${className}`}>
-        <LoadingIndicator />
-      </div>
-    )
-  }
-
-  // Show error state if there's an error
-  if (processingStatus === 'error') {
-    return (
-      <div className={`vizhub-container ${className}`}>
-        <div className="text-center py-12">
-          <div className="text-red-500 text-lg mb-2">Error Loading Data</div>
-          <div className="text-gray-600 dark:text-gray-400">
-            {statusMessage}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Pure mode: no internal loading/error states here
 
   // Show empty state if no data is available
   if (!hasAnyData) {
@@ -127,7 +110,7 @@ function VizHubInternal({
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-2">No Data Available</div>
           <div className="text-gray-400 text-sm">
-            Please provide data through the data prop or upload data
+            Please provide data via the data prop
           </div>
         </div>
       </div>
@@ -139,61 +122,48 @@ function VizHubInternal({
       <div className="p-6">
         <div className="w-full">
           <main>
-            {/* Debug info (only in development)
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-600 dark:text-blue-400">
-                Data source:{' '}
-                {dataSourceInfo.usingExternalData
-                  ? 'External Props'
-                  : 'localStorage'}
-              </div>
-            )} */}
+            {/* Debug info removed: pure props mode */}
 
             {/* Distribution Charts Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Email Distribution */}
-              {componentVisibility.emailDistribution && (
+              {/* Value Distribution (Histogram) */}
+              {componentVisibility.histogram && (
                 <VisualizationWrapper
-                  isAvailable={dataStatus[STORAGE_KEYS.EMAIL_DISTRIBUTION]}
-                  title={
-                    customization.emailDistribution?.title ||
-                    'Email Distribution'
-                  }
+                  isAvailable={dataStatus.histogramData}
+                  title={customization.histogram?.title || 'Value Distribution'}
                   className=""
                 >
                   <DataDistribution
                     title={
-                      customization.emailDistribution?.title ||
-                      'Data Distribution on Email Counts'
+                      customization.histogram?.title || 'Value Distribution'
                     }
                     description={`Shows the distribution of ${
-                      customization.emailDistribution?.unit || 'email counts'
+                      customization.histogram?.unit || 'values'
                     } over time`}
-                    type="email"
-                    skipLoading={true}
-                    customization={customization.emailDistribution}
+                    type="histogram"
+                    data={data?.histogram?.map((item) => item.value)}
+                    customization={customization.histogram}
                   />
                 </VisualizationWrapper>
               )}
 
               {/* Date Distribution */}
-              {componentVisibility.dateDistribution && (
+              {componentVisibility.timeline && (
                 <VisualizationWrapper
-                  isAvailable={dataStatus[STORAGE_KEYS.DATE_DISTRIBUTION]}
+                  isAvailable={dataStatus.timelineData}
                   title={
-                    customization.dateDistribution?.title || 'Date Distribution'
+                    customization.timeline?.title || 'Timeline Distribution'
                   }
                   className=""
                 >
                   <DataDistribution
                     title={
-                      customization.dateDistribution?.title ||
-                      'Data Distribution on Date'
+                      customization.timeline?.title || 'Timeline Distribution'
                     }
-                    description="Shows the distribution of items by date"
-                    type="date"
-                    skipLoading={true}
-                    customization={customization.dateDistribution}
+                    description="Shows the distribution of items over time"
+                    type="timeline"
+                    data={data?.timeline}
+                    customization={customization.timeline}
                   />
                 </VisualizationWrapper>
               )}
@@ -205,10 +175,10 @@ function VizHubInternal({
             {/* Sentiment Analysis */}
             {componentVisibility.sentiment && (
               <VisualizationWrapper
-                isAvailable={dataStatus[STORAGE_KEYS.SENTIMENT]}
-                title="Sentiment Analysis"
+                isAvailable={dataStatus.sentimentData}
+                title={customization.sentiment?.title || 'Sentiment Analysis'}
               >
-                <SentimentChart skipLoading={true} />
+                <SentimentChart data={data?.sentiment} />
               </VisualizationWrapper>
             )}
 
@@ -221,10 +191,12 @@ function VizHubInternal({
             {/* Word Cloud */}
             {componentVisibility.wordCloud && (
               <VisualizationWrapper
-                isAvailable={dataStatus[STORAGE_KEYS.WORD_CLOUD]}
-                title="Word Cloud"
+                isAvailable={dataStatus.wordCloudData}
+                title={customization.wordCloud?.title || 'Word Cloud'}
               >
-                <WordCloud />
+                <WordCloud
+                  wordsOverride={data?.wordCloud?.wordCloudData || []}
+                />
               </VisualizationWrapper>
             )}
 
@@ -234,10 +206,12 @@ function VizHubInternal({
             {/* Document Summary */}
             {componentVisibility.documentSummary && (
               <VisualizationWrapper
-                isAvailable={dataStatus[STORAGE_KEYS.DOCUMENT_SUMMARY]}
-                title="Document Summary"
+                isAvailable={dataStatus.documentSummaryData}
+                title={
+                  customization.documentSummary?.title || 'Document Summary'
+                }
               >
-                <DocumentSummary skipLoading={true} />
+                <DocumentSummary data={data?.documentSummary} />
               </VisualizationWrapper>
             )}
 

@@ -230,9 +230,9 @@ export const useWordCloudVisualization = ({
         (!shouldUpdateLayoutRef.current &&
           timeSinceLastRender < RENDER_THROTTLE_MS)
       ) {
-        console.log(
-          `Skipping duplicate render request #${currentRenderCount} - too similar to previous render`
-        )
+        // console.log(
+        //   `Skipping duplicate render request #${currentRenderCount} - too similar to previous render`
+        // )
         renderInProgressRef.current = false
         return
       }

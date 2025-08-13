@@ -14,7 +14,6 @@ src/components/viz-hub/
 ├── hooks/
 │   └── useVizHubData.ts          # Data injection and processing hook
 ├── store/
-│   ├── dataStore.ts              # Main data store (copied from original)
 │   └── themeStore.tsx            # Theme management store
 ├── types/
 │   └── index.ts                  # TypeScript type definitions
@@ -30,7 +29,7 @@ src/components/viz-hub/
 │   │   ├── types.ts              # Word cloud types
 │   │   ├── constants.ts          # Configuration constants
 │   │   ├── useWordCloudVisualization.ts
-│   │   ├── useWordCloudData.ts
+
 │   │   ├── WordDetailPanel.tsx
 │   │   └── modals/               # Configuration modals
 │   └── summary/
@@ -43,10 +42,6 @@ src/components/viz-hub/
 │   │   ├── ChartSkeleton.tsx
 │   │   ├── FutureFeatures.tsx
 │   │   └── ...
-│   └── upload/                  # Upload-related components
-│       ├── MultiFileUpload.tsx
-│       ├── UploadModal.tsx
-│       └── UploadPage.tsx
 └── README.md                    # This documentation
 ```
 
@@ -59,7 +54,7 @@ import { VizHub } from './components/viz-hub'
 
 function App() {
   const sampleData = {
-    emailDistribution: [
+    histogram: [
       { time: '2024-01-01', count: 45 },
       { time: '2024-01-02', count: 52 }
     ],
@@ -81,11 +76,11 @@ function App() {
     <VizHub
       data={sampleData}
       config={{
-        showEmailDistribution: true,
+        histogram: true,
         showSentiment: true,
         showWordCloud: true,
         showDocumentSummary: true,
-        showDateDistribution: true,
+        timeline: true,
         showFutureFeatures: false
       }}
       theme="light"
@@ -99,8 +94,10 @@ function App() {
 
 ```tsx
 interface VizHubConfig {
-  showEmailDistribution?: boolean // Show email count distribution
-  showDateDistribution?: boolean // Show date-based distribution
+  // New naming
+  histogram?: boolean // Show value distribution histogram
+  timeline?: boolean // Show time-based distribution
+
   showSentiment?: boolean // Show sentiment analysis
   showWordCloud?: boolean // Show interactive word cloud
   showDocumentSummary?: boolean // Show document statistics
@@ -112,20 +109,22 @@ interface VizHubConfig {
 
 ```tsx
 interface VizHubData {
-  emailDistribution?: EmailDistributionData[]
-  dateDistribution?: DateDistributionData[]
+  // New naming
+  histogram?: HistogramData[]
+  timeline?: TimelineData[]
+
   sentiment?: SentimentData[]
   wordCloud?: WordCloudData
   documentSummary?: DocumentSummaryData
 }
 
-// Email distribution data format
-interface EmailDistributionData {
-  emails_per_day: number
+// Value distribution data format (histogram)
+interface HistogramData {
+  value: number
 }
 
-// Date distribution data format
-interface DateDistributionData {
+// Time-based distribution data format (timeline)
+interface TimelineData {
   time: string // Format: "YYYY-MM-DD"
   count: number
 }
@@ -210,7 +209,7 @@ git submodule update --remote
 
 2. **Data Distribution Charts**
 
-   - Email count distribution (histogram)
+   - Value distribution (histogram)
    - Date-based distribution (line chart with area)
    - Modal view for detailed exploration
    - Responsive design with theme support
@@ -290,10 +289,11 @@ function CustomThemedApp() {
 
 VizHub uses a sophisticated data management system:
 
-1. **External Data Injection:** Props data is injected into localStorage for compatibility
-2. **Store Integration:** Zustand stores manage component state and data flow
-3. **Backward Compatibility:** Existing visualization components work unchanged
+1. **Props-Only Data Flow:** Visualizations render purely from `props.data` (no localStorage injection)
+2. **Store Integration:** Zustand stores manage UI state and word cloud preferences
+3. **Compatibility:** Visualization components accept typed data props for input
 4. **Caching:** Intelligent caching prevents unnecessary re-renders
+5. **Persistence Policy:** localStorage is used ONLY for UI preferences of the Word Cloud (e.g., color scheme, font, min frequency, stop/whitelist), and these preferences are namespaced via `preferencesNamespace` to avoid cross-page leakage. All business/visualization data is sourced from component props and, at rest, is persisted in IndexedDB (Dexie) with separate object stores per use case (e.g., `textAnalysises`, `cameroonGazettes`).
 
 ### Performance Optimizations
 
@@ -351,32 +351,19 @@ import {
 function CustomDashboard() {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <SentimentChart skipLoading={true} />
-      <WordCloud skipLoading={false} />
-      <DataDistribution title="Email Volume" type="email" skipLoading={true} />
+      <SentimentChart data={sentiment} />
+      <WordCloud words={wordCloudData} />
+      <DataDistribution
+        title="Data Volume"
+        type="histogram"
+        data={histogramData}
+      />
     </div>
   )
 }
 ```
 
-### Data Store Access
-
-```tsx
-import { useDataStore, STORAGE_KEYS } from './components/viz-hub'
-
-function DataManager() {
-  const { dataStatus, checkDataStatus, fetchSentimentData } = useDataStore()
-
-  const isDataAvailable = dataStatus[STORAGE_KEYS.SENTIMENT]
-
-  return (
-    <div>
-      {isDataAvailable ? 'Data Ready' : 'No Data'}
-      <button onClick={checkDataStatus}>Refresh</button>
-    </div>
-  )
-}
-```
+<!-- Legacy data store section removed: VizHub is props-only now -->
 
 ## 🐛 Troubleshooting
 

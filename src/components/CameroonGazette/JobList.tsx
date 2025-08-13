@@ -1,16 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
-import {
-  MutableRefObject,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState
-} from 'react'
+import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
-import { TextAnalysisUseCaseData } from '../../@context/UseCases/models/TextAnalysis.model'
+import { CameroonGazetteUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
 import { useUserPreferences } from '../../@context/UserPreferences'
 import { useCancelToken } from '../../@hooks/useCancelToken'
 import { getAsset } from '../../@utils/aquarius'
@@ -19,14 +13,13 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import {
-  CAMEROON_GAZETTE_ALGO_DIDS,
-  CAMEROON_GAZETTE_RESULT_ZIP
-} from './_constants'
-import { TextAnalysisResult } from './_types'
+import { CAMEROON_GAZETTE_ALGO_DIDS } from './_constants'
+import { CameroonGazetteResult } from './_types'
 
 export default function JobList(props: {
-  setTextAnalysisData: (textAnalysisData: TextAnalysisUseCaseData[]) => void
+  setCameroonGazetteData: (
+    cameroonGazetteData: CameroonGazetteUseCaseData[]
+  ) => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
   const cameroonGazetteAlgoDids: string[] = Object.values(
@@ -44,23 +37,36 @@ export default function JobList(props: {
   const [isLoadingJobs, setIsLoadingJobs] = useState(false)
   const newCancelToken = useCancelToken()
 
-  const { setTextAnalysisData } = props
+  const { setCameroonGazetteData } = props
 
   const {
-    textAnalysisList,
-    clearTextAnalysis,
-    createOrUpdateTextAnalysis,
-    deleteTextAnalysis
+    cameroonGazetteList,
+    clearCameroonGazette,
+    createOrUpdateCameroonGazette
   } = useUseCases()
 
+  const [activeJobId, setActiveJobId] = useState<string>(
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('cameroonGazette.activeJobId') || ''
+      : ''
+  )
+
   useEffect(() => {
-    if (!textAnalysisList) {
-      setTextAnalysisData([])
+    if (!cameroonGazetteList) {
+      setCameroonGazetteData([])
       return
     }
 
-    setTextAnalysisData(textAnalysisList)
-  }, [textAnalysisList, setTextAnalysisData])
+    if (activeJobId) {
+      const row = cameroonGazetteList.find((r) => r.job.jobId === activeJobId)
+      if (row) {
+        setCameroonGazetteData([row])
+        return
+      }
+    }
+
+    setCameroonGazetteData([])
+  }, [cameroonGazetteList, activeJobId, setCameroonGazetteData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -115,14 +121,15 @@ export default function JobList(props: {
 
   useEffect(() => {
     fetchJobs()
-  }, [refetchJobs, chainIds])
+  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (textAnalysisList.find((row) => row.job.jobId === job.jobId)) {
-      toast.info('This compute job result already is part of the map view.')
-      return
+  const addJobToView = async (job: ComputeJobMetaData) => {
+    // If there's already an active job, remove it first
+    if (activeJobId && activeJobId !== job.jobId) {
+      await clearCameroonGazette()
     }
 
+    // Always fetch fresh data from chain
     try {
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -156,148 +163,158 @@ export default function JobList(props: {
         }
       }
 
-      const textAnalysisResults: TextAnalysisResult[] = results.map((file) => {
-        const { filename, content: fileContent } = file
-        const filenameLower = filename.toLowerCase()
-        let content = fileContent
+      const textAnalysisResults: CameroonGazetteResult[] = results.map(
+        (file) => {
+          const { filename, content: fileContent } = file
+          const filenameLower = filename.toLowerCase()
+          let content = fileContent
 
-        if (filenameLower.endsWith('.json')) {
-          try {
-            content = JSON.parse(fileContent)
-          } catch (error) {
-            console.error('Error parsing JSON content:', error)
-            return {}
+          if (filenameLower.endsWith('.json')) {
+            try {
+              content = JSON.parse(fileContent)
+            } catch (error) {
+              console.error('Error parsing JSON content:', error)
+              return {}
+            }
           }
-        }
 
-        const result: TextAnalysisResult = {}
+          const result: CameroonGazetteResult = {}
 
-        if (
-          filenameLower.includes('wordcloud') ||
-          filenameLower.includes('word_cloud')
-        ) {
-          result.wordcloud = content
-        } else if (filenameLower.includes('sentiment')) {
-          try {
-            let parsedContent
-            if (typeof content === 'string') {
-              parsedContent = JSON.parse(content)
-            } else if (typeof content === 'object' && content !== null) {
-              parsedContent = content
-            } else {
-              console.warn('Invalid sentiment content type:', typeof content)
-              return result
-            }
+          if (
+            filenameLower.includes('wordcloud') ||
+            filenameLower.includes('word_cloud')
+          ) {
+            result.wordcloud = content
+          } else if (filenameLower.includes('sentiment')) {
+            try {
+              let parsedContent
+              if (typeof content === 'string') {
+                parsedContent = JSON.parse(content)
+              } else if (typeof content === 'object' && content !== null) {
+                parsedContent = content
+              } else {
+                console.warn('Invalid sentiment content type:', typeof content)
+                return result
+              }
 
-            if (!Array.isArray(parsedContent)) {
-              console.warn(
-                'Sentiment data should be an array of sentiment categories'
-              )
-              return result
-            }
-
-            const validSentimentData = parsedContent.every((category) => {
-              return (
-                typeof category === 'object' &&
-                category !== null &&
-                typeof category.name === 'string' &&
-                Array.isArray(category.values) &&
-                category.values.every(
-                  (value) =>
-                    Array.isArray(value) &&
-                    (value.length === 2 || value.length === 3) &&
-                    typeof value[0] === 'string' &&
-                    typeof value[1] === 'number' &&
-                    !isNaN(value[1]) &&
-                    (value.length === 2 ||
-                      (Array.isArray(value[2]) &&
-                        value[2].every((v) => typeof v === 'string')))
+              if (!Array.isArray(parsedContent)) {
+                console.warn(
+                  'Sentiment data should be an array of sentiment categories'
                 )
-              )
-            })
+                return result
+              }
 
-            if (!validSentimentData) {
-              console.warn('Invalid sentiment data structure:', parsedContent)
+              const validSentimentData = parsedContent.every((category) => {
+                return (
+                  typeof category === 'object' &&
+                  category !== null &&
+                  typeof category.name === 'string' &&
+                  Array.isArray(category.values) &&
+                  category.values.every(
+                    (value) =>
+                      Array.isArray(value) &&
+                      (value.length === 2 || value.length === 3) &&
+                      typeof value[0] === 'string' &&
+                      typeof value[1] === 'number' &&
+                      !isNaN(value[1]) &&
+                      (value.length === 2 ||
+                        (Array.isArray(value[2]) &&
+                          value[2].every((v) => typeof v === 'string')))
+                  )
+                )
+              })
+
+              if (!validSentimentData) {
+                console.warn('Invalid sentiment data structure:', parsedContent)
+                return result
+              }
+
+              result.sentiment = parsedContent
+            } catch (error) {
+              console.error('Error processing sentiment data:', error)
               return result
             }
-
-            result.sentiment = parsedContent
-          } catch (error) {
-            console.error('Error processing sentiment data:', error)
-            return result
+          } else if (filenameLower.includes('date_distribution')) {
+            result.dataDistribution = content
+          } else if (filenameLower.includes('email_distribution')) {
+            result.emailDistribution = content
+          } else if (filenameLower.includes('document_summary')) {
+            result.documentSummary = content
           }
-        } else if (filenameLower.includes('date_distribution')) {
-          result.dataDistribution = content
-        } else if (filenameLower.includes('email_distribution')) {
-          result.emailDistribution = content
-        } else if (filenameLower.includes('document_summary')) {
-          result.documentSummary = content
+
+          return result
         }
+      )
 
-        return result
-      })
-
-      const newuseCaseData: TextAnalysisUseCaseData = {
+      const newuseCaseData: CameroonGazetteUseCaseData = {
         job,
         result: textAnalysisResults
       }
 
-      await createOrUpdateTextAnalysis(newuseCaseData)
-      toast.success('Added a new compute result')
+      await createOrUpdateCameroonGazette(newuseCaseData)
+      setActiveJobId(job.jobId)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
+      }
+      setCameroonGazetteData([newuseCaseData])
+      toast.success('Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add compute result')
+      toast.error('Could not add to visualization')
     }
   }
 
-  const deleteJobResultFromDB = async (job: ComputeJobMetaData) => {
-    if (
-      !confirm(`Are you sure you want to delete the result from visualization?`)
-    )
-      return
-
-    const rowToDelete = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
-    if (!rowToDelete) return
-
-    await deleteTextAnalysis(rowToDelete.id)
-    toast.success(`Removed compute job result from visualization.`)
+  const removeJobFromView = async (job: ComputeJobMetaData) => {
+    if (activeJobId === job.jobId) {
+      // Clear all data from indexedDB
+      await clearCameroonGazette()
+      setActiveJobId('')
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('cameroonGazette.activeJobId')
+      }
+      setCameroonGazetteData([])
+      toast.success('Removed from visualization')
+    }
   }
 
   const clearData = async () => {
     if (!confirm('All data will be removed from your cache. Proceed?')) return
 
-    await clearTextAnalysis()
-    toast.success('Text Analysis data was cleared.')
+    await clearCameroonGazette()
+    setActiveJobId('')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('cameroonGazette.activeJobId')
+    }
+    setCameroonGazetteData([])
+    toast.success('Cameroon Gazette data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
     job: ComputeJobMetaData
   ) => {
+    const isActive = activeJobId === job.jobId
+
     const addAction = {
       label: 'Add',
       onClick: () => {
-        addComputeResultToUseCaseDB(job)
-      }
-    }
-    const deleteAction = {
-      label: 'Remove',
-      onClick: () => {
-        deleteJobResultFromDB(job)
+        addJobToView(job)
       }
     }
 
-    const viewContainsResult = textAnalysisList.find(
-      (row) => row.job.jobId === job.jobId
-    )
+    const removeAction = {
+      label: 'Remove',
+      onClick: () => {
+        removeJobFromView(job)
+      }
+    }
 
     const actionArray = []
 
-    if (viewContainsResult) {
-      actionArray.push(deleteAction)
-      // actionArray.push(colorLegend)
-    } else actionArray.push(addAction)
+    if (isActive) {
+      actionArray.push(removeAction)
+    } else {
+      actionArray.push(addAction)
+    }
 
     return actionArray
   }
@@ -314,7 +331,12 @@ export default function JobList(props: {
         />
 
         <div className={styles.actions}>
-          <Button onClick={() => clearData()}>Clear Data</Button>
+          <Button
+            onClick={() => clearData()}
+            disabled={!cameroonGazetteList?.length}
+          >
+            Clear Data
+          </Button>
         </div>
       </Accordion>
     </div>

@@ -5,14 +5,12 @@ import * as d3 from 'd3'
 import ChartModal from './ChartModal'
 import ChartSkeleton from '../../ui/common/ChartSkeleton'
 import ChartError from '../../ui/common/ChartError'
-import { useDataStore } from '../../store/dataStore'
 import { useTheme } from '../../store/themeStore'
 
 interface DataDistributionProps {
   title: string
   description?: string
-  type: 'email' | 'date'
-  skipLoading?: boolean
+  type: 'histogram' | 'timeline'
   customization?: {
     title?: string
     xAxisLabel?: string
@@ -20,12 +18,14 @@ interface DataDistributionProps {
     chartType?: 'bar' | 'line' | 'area'
     unit?: string
   }
+  // Typed data passed from parent (props-only mode)
+  data?: number[] | { time: string; count: number }[]
 }
 
 interface DataPoint {
   time?: string | Date
   count?: number
-  emails_per_day?: number
+  value?: number
 }
 
 interface FormattedDatePoint {
@@ -37,54 +37,52 @@ const DataDistribution = ({
   title,
   description,
   type,
-  skipLoading = false,
-  customization
+  customization,
+  data: inputData
 }: DataDistributionProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const [data, setData] = useState<DataPoint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [chartType, setChartType] = useState<'date' | 'email'>(type)
+  const [chartType, setChartType] = useState<'timeline' | 'histogram'>(type)
   const { theme } = useTheme()
 
-  // Get data fetching functions from store
-  const { fetchEmailDistribution, fetchDateDistribution } = useDataStore()
-
-  // Fetch data with retry functionality
-  const fetchDistributionData = useCallback(async () => {
+  // In pure mode, data is provided via props; convert to internal shape
+  const populateData = useCallback(() => {
     try {
       setLoading(true)
       setError(null)
+      setChartType(type)
 
-      let csvText
-      if (type === 'email') {
-        const emailData = await fetchEmailDistribution()
-        csvText = emailData
-        setChartType('email')
-      } else if (type === 'date') {
-        const dateData = await fetchDateDistribution()
-        csvText = dateData
-        setChartType('date')
-      } else {
-        throw new Error('Invalid distribution type specified')
+      if (!inputData || inputData.length === 0) {
+        setData([])
+        throw new Error('No data provided for distribution chart')
       }
 
-      // Parse CSV data
-      const parsedData = d3.csvParse(csvText)
-      setData(parsedData as unknown as DataPoint[])
+      if (type === 'timeline') {
+        const parsed = (inputData as { time: string; count: number }[]).map(
+          (d) => ({ time: d.time, count: d.count })
+        )
+        setData(parsed as unknown as DataPoint[])
+      } else {
+        // histogram
+        const parsed = (inputData as number[]).map((value) => ({
+          value
+        }))
+        setData(parsed as unknown as DataPoint[])
+      }
     } catch (err) {
       console.error('Error loading data:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
-  }, [type, fetchEmailDistribution, fetchDateDistribution])
+  }, [inputData, type])
 
-  // Fetch data on component mount
   useEffect(() => {
-    fetchDistributionData()
-  }, [fetchDistributionData, skipLoading])
+    populateData()
+  }, [populateData])
 
   // Render chart when data is available or theme changes
   useEffect(() => {
@@ -108,7 +106,7 @@ const DataDistribution = ({
     const textColor = theme === 'dark' ? '#e5e7eb' : '#4b5563' // gray-200 : gray-600
     const titleColor = theme === 'dark' ? '#d1d5db' : '#374151' // gray-300 : gray-700
     const strokeColor = theme === 'dark' ? '#1f2937' : '#ffffff' // gray-800 : white
-    const gridColor = theme === 'dark' ? '#374151' : '#e5e7eb' // gray-700 : gray-200
+    // const gridColor = theme === 'dark' ? '#374151' : '#e5e7eb' // gray-700 : gray-200
     const axisColor = theme === 'dark' ? '#6b7280' : '#9ca3af' // gray-500 : gray-400
     const primaryColor = '#4F46E5' // Indigo color for both themes
     const pointColor = '#F59E0B' // Amber color for data points
@@ -135,7 +133,7 @@ const DataDistribution = ({
       .attr('transform', `translate(${margin.left},${margin.top})`)
 
     // Create chart based on chart type
-    if (chartType === 'date') {
+    if (chartType === 'timeline') {
       // Date distribution chart - Bar chart
       const parseTime = d3.timeParse('%Y-%m-%d')
 
@@ -192,7 +190,9 @@ const DataDistribution = ({
           d3
             .axisBottom(x)
             .ticks(6)
-            .tickFormat(d3.timeFormat('%b %Y') as any)
+            .tickFormat(
+              d3.timeFormat('%b %Y') as unknown as (d: Date) => string
+            )
         )
 
       xAxis
@@ -302,25 +302,25 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', -5)
-        .text(customization?.title || 'Email Count Over Time')
+        .text(customization?.title || 'Count Over Time')
         .style('fill', titleColor)
         .attr('class', 'text-xs font-semibold')
-    } else if (chartType === 'email') {
-      // Emails per day histogram
-      const getEmailValue = (d: DataPoint): number => {
-        if ('emails_per_day' in d) {
-          return +(d.emails_per_day ?? 0)
+    } else if (chartType === 'histogram') {
+      // Value distribution histogram
+      const getValue = (d: DataPoint): number => {
+        if ('value' in d) {
+          return +(d.value ?? 0)
         }
         const firstKey = Object.keys(d)[0]
         return +(d[firstKey as keyof DataPoint] ?? 0)
       }
 
-      const values = data.map(getEmailValue).filter((v) => !isNaN(v))
+      const values = data.map(getValue).filter((v) => !isNaN(v))
 
       if (values.length === 0) {
-        console.error('No valid email count values found')
+        console.error('No valid values found')
         container.innerHTML =
-          '<p class="text-red-500 dark:text-red-400 text-center">Error: Could not parse email count data</p>'
+          '<p class="text-red-500 dark:text-red-400 text-center">Error: Could not parse data values</p>'
         return
       }
 
@@ -404,7 +404,7 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', height + margin.bottom - 10)
-        .text(customization?.xAxisLabel || 'Emails per Day')
+        .text(customization?.xAxisLabel || 'Value')
         .style('fill', textColor)
         .attr('class', 'text-sm')
 
@@ -424,7 +424,7 @@ const DataDistribution = ({
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
         .attr('y', -5)
-        .text(customization?.title || 'Distribution of Emails per Day')
+        .text(customization?.title || 'Value Distribution')
         .style('fill', titleColor)
         .attr('class', 'text-xs font-semibold')
     } else {
@@ -438,7 +438,15 @@ const DataDistribution = ({
         document.head.removeChild(style)
       }
     }
-  }, [data, chartType, type, theme])
+  }, [
+    data,
+    chartType,
+    type,
+    theme,
+    customization?.title,
+    customization?.xAxisLabel,
+    customization?.yAxisLabel
+  ])
 
   // Handle opening the modal
   const handleOpenModal = () => {
@@ -494,13 +502,13 @@ const DataDistribution = ({
           data.length > 0 && !loading && !error ? handleOpenModal : undefined
         }
       >
-        {loading && !skipLoading ? (
+        {loading ? (
           <ChartSkeleton
-            type={chartType === 'date' ? 'line' : 'bar'}
+            type={chartType === 'timeline' ? 'line' : 'bar'}
             height={256}
           />
         ) : error ? (
-          <ChartError message={error} onRetry={fetchDistributionData} />
+          <ChartError message={error} onRetry={populateData} />
         ) : data.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No data available</p>
         ) : null}
@@ -512,7 +520,7 @@ const DataDistribution = ({
         onClose={handleCloseModal}
         title={title}
         chartData={
-          chartType === 'date'
+          chartType === 'timeline'
             ? data
                 .map((d) => {
                   const timeKey = 'time' in d ? 'time' : Object.keys(d)[0]
@@ -527,7 +535,7 @@ const DataDistribution = ({
                 })
                 .filter((d) => d.time !== null)
             : data.map((d) => ({
-                emails_per_day: d.emails_per_day ?? 0
+                value: d.value ?? 0
               }))
         }
         chartType={chartType}

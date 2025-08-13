@@ -1,31 +1,31 @@
 import { ReactElement, useEffect } from 'react'
-import Page from '@shared/Page'
 import { useRouter } from 'next/router'
+import Page from '@shared/Page'
 import content from '../../../content/pages/cameroonGazette.json'
-import TextAnalysis from '../../components/CameroonGazette'
-import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
+import CameroonGazette from '../../components/CameroonGazette'
 import { useUseCases } from '../../@context/UseCases'
 
-export default function CameroonGazette(): ReactElement {
+export default function CameroonGazettePage(): ReactElement {
   const router = useRouter()
-  const { clearAllData } = useDataStore()
-  const { clearTextAnalysis } = useUseCases()
+  const { clearCameroonGazette } = useUseCases()
 
   const { title, description } = content
 
-  // Clear both VizHub localStorage data and IndexedDB data when leaving the page
+  // Clear IndexedDB data when leaving the page
   useEffect(() => {
     return () => {
-      // Clear VizHub localStorage data
-      clearAllData()
-      // Clear IndexedDB TextAnalysis data
-      clearTextAnalysis()
+      const shouldClearOnUnmount =
+        process.env.NEXT_PUBLIC_CLEAR_ON_UNMOUNT !== 'false'
+
+      if (shouldClearOnUnmount) {
+        clearCameroonGazette()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Page title={title} description={description} uri={router.route}>
-      <TextAnalysis />
+      <CameroonGazette />
     </Page>
   )
 }

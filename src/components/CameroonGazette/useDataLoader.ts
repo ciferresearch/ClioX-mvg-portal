@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { VizHubData } from '../@shared/VizHub/types'
-import { TextAnalysisUseCaseData } from '../../@context/UseCases/models/TextAnalysis.model'
+import { CameroonGazetteUseCaseData } from '../../@context/UseCases/models/CameroonGazette.model'
 
 export interface DataLoadingState {
   data: VizHubData | null
@@ -9,17 +9,17 @@ export interface DataLoadingState {
 }
 
 /**
- * Custom hook for loading and transforming text analysis data from local database
- * Converts TextAnalysisUseCaseData into VizHubData format for visualizations
+ * Custom hook for loading and transforming Cameroon Gazette data from local database
+ * Converts CameroonGazetteUseCaseData into VizHubData format for visualizations
  * Includes:
  * - Email distribution patterns
- * - Date-based communication trends
+ * - Date-based publication trends
  * - Sentiment analysis results
  * - Word frequency and cloud data
  * - Document summary statistics
  */
 export function useDataLoader(
-  textAnalysisData: TextAnalysisUseCaseData[] = []
+  textAnalysisData: CameroonGazetteUseCaseData[] = []
 ): DataLoadingState {
   const [state, setState] = useState<DataLoadingState>({
     data: null,
@@ -44,8 +44,8 @@ export function useDataLoader(
 
         // Aggregate data from all text analysis results
         const aggregatedData: VizHubData = {
-          emailDistribution: [],
-          dateDistribution: [],
+          histogram: [],
+          timeline: [],
           sentiment: [],
           wordCloud: { wordCloudData: [] },
           documentSummary: undefined
@@ -106,14 +106,14 @@ export function useDataLoader(
                   const lines = result.emailDistribution.trim().split('\n')
                   emailData = lines
                     .slice(1) // Skip header
-                    .map((line) => ({ emails_per_day: parseInt(line.trim()) }))
-                    .filter((item) => !isNaN(item.emails_per_day))
+                    .map((line) => ({ value: parseInt(line.trim()) }))
+                    .filter((item) => !isNaN(item.value))
                 } else if (Array.isArray(result.emailDistribution)) {
                   emailData = result.emailDistribution
                 }
 
                 if (emailData && emailData.length > 0) {
-                  aggregatedData.emailDistribution.push(...emailData)
+                  aggregatedData.histogram.push(...emailData)
                 }
               } catch (error) {
                 console.warn('Error processing email distribution data:', error)
@@ -142,7 +142,7 @@ export function useDataLoader(
                 }
 
                 if (dateData && dateData.length > 0) {
-                  aggregatedData.dateDistribution.push(...dateData)
+                  aggregatedData.timeline.push(...dateData)
                 }
               } catch (error) {
                 console.warn('Error processing date distribution data:', error)
@@ -165,11 +165,11 @@ export function useDataLoader(
         }
 
         // Remove empty arrays to avoid empty visualizations
-        if (aggregatedData.emailDistribution.length === 0) {
-          delete aggregatedData.emailDistribution
+        if (aggregatedData.histogram.length === 0) {
+          delete aggregatedData.histogram
         }
-        if (aggregatedData.dateDistribution.length === 0) {
-          delete aggregatedData.dateDistribution
+        if (aggregatedData.timeline.length === 0) {
+          delete aggregatedData.timeline
         }
         if (aggregatedData.sentiment.length === 0) {
           delete aggregatedData.sentiment

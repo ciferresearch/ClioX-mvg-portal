@@ -5,7 +5,7 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
  */
 export const TEXT_ANALYSIS_ALGO_DIDS = {
   32456:
-    'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651'
+    'did:op:b0f6cccf8a8c1094e3b29c537271f2dcf025249e8b9324ae93c6b79b20db723c'
 }
 
 export const TEXT_ANALYSIS_USECASE_NAME = 'textAnalysises'
@@ -34,20 +34,20 @@ export const TEXT_ANALYSIS_VIZHUB_CONFIG = {
   components: {
     wordCloud: true,
     sentiment: true,
-    emailDistribution: true,
-    dateDistribution: true,
+    histogram: true,
+    timeline: true,
     documentSummary: true,
     futureFeatures: false
   },
 
   // Customization for distribution charts
   customization: {
-    dateDistribution: {
+    timeline: {
       title: 'Email Count Over Time',
       xAxisLabel: 'Date',
       yAxisLabel: 'Count'
     },
-    emailDistribution: {
+    histogram: {
       title: 'Email Analysis Distribution',
       xAxisLabel: 'Emails per Day',
       yAxisLabel: 'Frequency',

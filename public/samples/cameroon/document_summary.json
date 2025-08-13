@@ -1,0 +1,14 @@
+{
+  "totalDocuments": 5,
+  "totalWords": 12500,
+  "uniqueWords": 2100,
+  "vocabularyDensity": 0.168,
+  "readabilityIndex": 9.2,
+  "wordsPerSentence": 18.4,
+  "frequentWords": [
+    { "word": "gazette", "count": 42 },
+    { "word": "decree", "count": 27 },
+    { "word": "minister", "count": 18 }
+  ],
+  "created": "2025-01-01"
+}

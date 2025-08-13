@@ -1,9 +1,9 @@
 // VizHub component data types
-export interface EmailDistributionData {
-  emails_per_day: number
+export interface HistogramData {
+  value: number
 }
 
-export interface DateDistributionData {
+export interface TimelineData {
   time: string
   count: number
 }
@@ -30,8 +30,8 @@ export interface DocumentSummaryData {
 
 // Main data interface for VizHub
 export interface VizHubData {
-  emailDistribution?: EmailDistributionData[]
-  dateDistribution?: DateDistributionData[]
+  histogram?: HistogramData[]
+  timeline?: TimelineData[]
   sentiment?: SentimentData[]
   wordCloud?: WordCloudData
   documentSummary?: DocumentSummaryData
@@ -74,27 +74,36 @@ export interface VizHubConfig {
   components?: {
     wordCloud?: boolean
     sentiment?: boolean
-    emailDistribution?: boolean
-    dateDistribution?: boolean
+    histogram?: boolean
+    timeline?: boolean
     documentSummary?: boolean
     futureFeatures?: boolean
   }
 
   // NEW: Customization for components that need it
   customization?: {
-    emailDistribution?: {
+    histogram?: {
       title?: string
       xAxisLabel?: string
       yAxisLabel?: string
       chartType?: 'bar' | 'line' | 'area'
       unit?: string
     }
-    dateDistribution?: {
+    timeline?: {
       title?: string
       xAxisLabel?: string
       yAxisLabel?: string
       dateFormat?: string
       aggregation?: 'day' | 'week' | 'month'
+    }
+    sentiment?: {
+      title?: string
+    }
+    wordCloud?: {
+      title?: string
+    }
+    documentSummary?: {
+      title?: string
     }
   }
 
@@ -125,6 +134,8 @@ export interface VizHubProps {
   useCaseConfig: UseCaseConfig
   className?: string
   theme?: 'light' | 'dark'
+  /** Optional: namespace to isolate user preferences (e.g., stoplist/whitelist) */
+  preferencesNamespace?: string
 }
 
 // Default configuration

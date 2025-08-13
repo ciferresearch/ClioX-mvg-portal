@@ -1,11 +1,12 @@
-import { TextAnalysisResult } from '../../../components/TextAnalysis/_types'
+import { CameroonGazetteResult } from '../../../components/CameroonGazette/_types'
 
-export interface TextAnalysisUseCaseData {
+// Dedicated model for Cameroon Gazette use case
+export interface CameroonGazetteUseCaseData {
   id?: number
   job: ComputeJobMetaData
-  result: TextAnalysisResult[]
+  result: CameroonGazetteResult[]
 }
 
-export const TEXT_ANALYSIS_TABLE = {
-  textAnalysises: '++id, job, result'
+export const CAMEROON_GAZETTE_TABLE = {
+  cameroonGazettes: '++id, job, result'
 }

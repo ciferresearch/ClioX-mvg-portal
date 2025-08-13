@@ -9,12 +9,14 @@ import ChartError from '../../ui/common/ChartError'
 import debounce from 'lodash/debounce'
 import { useWordCloudStore } from './store'
 import { useTheme } from '../../store/themeStore'
+import type { WordData } from './types'
 
 interface WordCloudProps {
-  skipLoading?: boolean
+  // Optional: use provided words instead of fetching
+  wordsOverride?: WordData[]
 }
 
-const WordCloud: React.FC<WordCloudProps> = ({ skipLoading = false }) => {
+const WordCloud: React.FC<WordCloudProps> = ({ wordsOverride }) => {
   // Get theme from context
   const { theme } = useTheme()
 
@@ -86,8 +88,24 @@ const WordCloud: React.FC<WordCloudProps> = ({ skipLoading = false }) => {
     setWhitelistEditText,
 
     // Data actions
-    fetchData
+    fetchData,
+    setWords,
+    setLoading,
+    filterWords
   } = useWordCloudStore()
+
+  // Inject override words (pure props mode) and skip fetching
+  useEffect(() => {
+    if (wordsOverride && wordsOverride.length) {
+      setLoading(true)
+      setWords(wordsOverride)
+      // Defer filtering to next tick to ensure state is updated
+      setTimeout(() => {
+        filterWords()
+        setLoading(false)
+      }, 0)
+    }
+  }, [wordsOverride, setWords, setLoading, filterWords])
 
   // References for controlling the wordcloud visualization
   const svgRef = useRef<SVGSVGElement>(null)
@@ -204,13 +222,7 @@ const WordCloud: React.FC<WordCloudProps> = ({ skipLoading = false }) => {
     shouldUpdateLayout
   ])
 
-  // Fetch data on initial load
-  useEffect(() => {
-    // If skipLoading is true, do not execute fetchData
-    if (!skipLoading) {
-      fetchData()
-    }
-  }, [fetchData, skipLoading])
+  // No internal fetch in props-only mode
 
   // Single unified effect to handle all word cloud updates
   useEffect(() => {

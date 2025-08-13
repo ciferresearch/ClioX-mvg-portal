@@ -36,7 +36,7 @@ export interface WordCloud {
   count: number
 }
 
-export interface TextAnalysisResult {
+export interface CameroonGazetteResult {
   wordcloud?: WordCloud[]
   sentiment?: Sentiment
   dataDistribution?: string
