@@ -17,8 +17,8 @@ export type {
   VizHubProps,
   VizHubData,
   VizHubConfig,
-  EmailDistributionData,
-  DateDistributionData,
+  HistogramData,
+  TimelineData,
   SentimentData,
   WordCloudData,
   DocumentSummaryData
