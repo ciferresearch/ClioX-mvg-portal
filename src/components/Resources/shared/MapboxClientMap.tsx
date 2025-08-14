@@ -14,10 +14,14 @@ interface MarkerData {
 
 interface MapboxClientMapProps {
   markers: MarkerData[]
+  focus?: { lat: number; lng: number } | null
+  autoTourEnabled?: boolean
 }
 
 export default function MapboxClientMap({
-  markers
+  markers,
+  focus = null,
+  autoTourEnabled = true
 }: MapboxClientMapProps): ReactElement {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<Map | null>(null)
@@ -150,7 +154,26 @@ export default function MapboxClientMap({
         duration: 300
       })
     }
-  }, [markers])
+    if (focus) {
+      map.flyTo({
+        center: [focus.lng, focus.lat],
+        zoom: 12,
+        duration: 900,
+        essential: true
+      })
+    }
+  }, [markers, focus])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !focus) return
+    map.flyTo({
+      center: [focus.lng, focus.lat],
+      zoom: 12,
+      duration: 900,
+      essential: true
+    })
+  }, [focus])
 
   useEffect(() => {
     const map = mapRef.current
@@ -209,7 +232,7 @@ export default function MapboxClientMap({
     clearTimers()
     tourIndexRef.current = 0
     isPausedRef.current = false
-    if (markers.length > 1) scheduleNext(startDelay)
+    if (autoTourEnabled && markers.length > 1) scheduleNext(startDelay)
 
     const onInteractStart = () => {
       pauseTour()
@@ -238,7 +261,7 @@ export default function MapboxClientMap({
       map.off('touchstart', onInteractStart)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [markers])
+  }, [markers, autoTourEnabled])
 
   return (
     <div

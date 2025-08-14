@@ -1,4 +1,4 @@
-import { ReactElement, useState, useMemo } from 'react'
+import { ReactElement, useState, useMemo, useEffect } from 'react'
 import { motion } from 'motion/react'
 import * as Select from '@radix-ui/react-select'
 import * as Checkbox from '@radix-ui/react-checkbox'
@@ -74,6 +74,42 @@ const sampleEvents: Event[] = [
     description:
       'A recap of last year’s milestones, research highlights, and community updates.',
     link: 'https://example.com/events/recap-webinar'
+  },
+  {
+    id: 'evt-005',
+    title: 'UBC Blockchain Summer Institute',
+    date: new Date(2025, 6, 7),
+    location: 'UBC, Vancouver, BC',
+    type: 'in-person',
+    description:
+      'A summer institute focused on blockchain, governance, and privacy topics hosted at UBC.',
+    link: '#',
+    lat: 49.2606,
+    lng: -123.246
+  },
+  {
+    id: 'evt-006',
+    title: 'Web3 Privacy Workshop',
+    date: new Date(2024, 10, 15),
+    location: 'Berlin, Germany',
+    type: 'in-person',
+    description:
+      'Hands-on workshop exploring privacy-preserving architectures and best practices.',
+    link: '#',
+    lat: 52.52,
+    lng: 13.405
+  },
+  {
+    id: 'evt-007',
+    title: 'Governance & DAOs Summit',
+    date: new Date(2025, 3, 12),
+    location: 'New York, NY',
+    type: 'hybrid',
+    description:
+      'Summit discussing governance frameworks, DAO tooling, and regulatory outlook.',
+    link: '#',
+    lat: 40.7128,
+    lng: -74.006
   }
 ]
 
@@ -103,6 +139,19 @@ export default function Events({
   const [showInPerson, setShowInPerson] = useState(false)
   const [showOnline, setShowOnline] = useState(false)
   const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past'>('upcoming')
+  const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(
+    null
+  )
+  const [searchIdle, setSearchIdle] = useState(false)
+  useEffect(() => {
+    setSearchIdle(false)
+    const delay = Number(
+      process.env.NEXT_PUBLIC_MAP_TOUR_SEARCH_IDLE_MS || '4000'
+    )
+    if (searchTerm.trim() === '') return
+    const id = window.setTimeout(() => setSearchIdle(true), delay)
+    return () => window.clearTimeout(id)
+  }, [searchTerm])
 
   const filteredEvents = useMemo(() => {
     const now = new Date()
@@ -305,7 +354,13 @@ export default function Events({
         className="w-full h-80 rounded-lg overflow-hidden shadow-md"
         variants={itemVariants}
       >
-        <EventsMap events={filteredEvents} />
+        <EventsMap
+          events={filteredEvents}
+          focus={mapFocus}
+          autoTourEnabled={
+            !mapFocus && (searchTerm.trim() === '' ? true : searchIdle)
+          }
+        />
       </motion.div>
 
       {/* Events Table Section */}
@@ -368,10 +423,25 @@ export default function Events({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    {/* Main Event Row */}
-                    <div className="px-4 py-4 hover:bg-gray-50 transition-colors duration-150">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="px-4 py-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                      onClick={() => {
+                        if (event.lat != null && event.lng != null) {
+                          setMapFocus({ lat: event.lat, lng: event.lng })
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          if (event.lat != null && event.lng != null) {
+                            setMapFocus({ lat: event.lat, lng: event.lng })
+                          }
+                        }
+                      }}
+                    >
                       <div className="grid grid-cols-12 gap-4 items-center">
-                        {/* Date Column */}
                         <div className="col-span-3 sm:col-span-2">
                           <div className="flex items-center gap-2">
                             <CalendarIcon className="h-4 w-4 text-gray-400 flex-shrink-0 m-0" />
@@ -384,32 +454,16 @@ export default function Events({
                             </span>
                           </div>
                         </div>
-
-                        {/* Event Name Column */}
                         <div className="col-span-6 sm:col-span-7">
-                          {event.link ? (
-                            <a
-                              href={event.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-base font-semibold text-gray-900 hover:text-amber-700 transition-colors duration-200 block truncate"
-                            >
-                              {event.title}
-                            </a>
-                          ) : (
-                            <span className="text-base font-semibold text-gray-900 block truncate">
-                              {event.title}
-                            </span>
-                          )}
-                          {/* Description for mobile */}
+                          <span className="text-base font-semibold text-gray-900 block truncate group-hover:text-amber-700 transition-colors duration-200">
+                            {event.title}
+                          </span>
                           {event.description && (
                             <p className="mt-1 text-sm text-gray-600 line-clamp-1 sm:hidden">
                               {event.description}
                             </p>
                           )}
                         </div>
-
-                        {/* Location Column */}
                         <div className="col-span-3 flex items-center justify-start gap-2">
                           <MapPinIcon className="h-4 w-4 text-gray-400 flex-shrink-0 m-0" />
                           <span className="text-sm text-gray-700 truncate">
@@ -417,8 +471,6 @@ export default function Events({
                           </span>
                         </div>
                       </div>
-
-                      {/* Expandable Description for Desktop */}
                       {event.description && (
                         <Collapsible.Content className="hidden sm:block mt-3 pl-6">
                           <Separator.Root className="my-2 h-px bg-gray-200" />

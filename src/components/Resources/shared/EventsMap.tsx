@@ -22,9 +22,15 @@ const MapImpl = dynamic(
 
 interface EventsMapProps {
   events: MappedEvent[]
+  focus?: { lat: number; lng: number } | null
+  autoTourEnabled?: boolean
 }
 
-export default function EventsMap({ events }: EventsMapProps): ReactElement {
+export default function EventsMap({
+  events,
+  focus = null,
+  autoTourEnabled = true
+}: EventsMapProps): ReactElement {
   const markers = useMemo(
     () =>
       events
@@ -40,5 +46,11 @@ export default function EventsMap({ events }: EventsMapProps): ReactElement {
     [events]
   )
 
-  return <MapImpl markers={markers} />
+  return (
+    <MapImpl
+      markers={markers}
+      focus={focus ? { lat: focus.lat, lng: focus.lng } : null}
+      autoTourEnabled={autoTourEnabled}
+    />
+  )
 }
