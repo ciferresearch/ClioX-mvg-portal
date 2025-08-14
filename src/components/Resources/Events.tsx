@@ -1,17 +1,17 @@
 import { ReactElement, useState, useMemo, useEffect } from 'react'
 import { motion } from 'motion/react'
-import * as Select from '@radix-ui/react-select'
+// import * as Select from '@radix-ui/react-select'
 import * as Checkbox from '@radix-ui/react-checkbox'
 import * as Separator from '@radix-ui/react-separator'
 import * as Collapsible from '@radix-ui/react-collapsible'
 import {
-  ChevronDownIcon,
   MagnifyingGlassIcon,
   CheckIcon,
   MapPinIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
 import EventsMap from './shared/EventsMap'
+import CustomDropdown from './shared/CustomDropdown'
 
 interface Event {
   id: string
@@ -103,7 +103,7 @@ const sampleEvents: Event[] = [
     id: 'evt-007',
     title: 'Governance & DAOs Summit',
     date: new Date(2025, 3, 12),
-    location: 'New York, NY',
+    location: 'New York, NY & Online',
     type: 'hybrid',
     description:
       'Summit discussing governance frameworks, DAO tooling, and regulatory outlook.',
@@ -252,71 +252,36 @@ export default function Events({
               placeholder="Location or name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-gray-300"
             />
           </div>
 
-          {/* Year Select */}
-          <Select.Root value={selectedYear} onValueChange={setSelectedYear}>
-            <Select.Trigger className="inline-flex items-center justify-between w-32 px-3 py-2 text-base bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-              <Select.Value placeholder="Year" />
-              <Select.Icon>
-                <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                <Select.Viewport className="p-1">
-                  <Select.Item
-                    value="all-years"
-                    className="relative flex items-center px-3 py-2 text-base text-gray-700 cursor-pointer hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                  >
-                    <Select.ItemText>All Years</Select.ItemText>
-                  </Select.Item>
-                  {years.map((year) => (
-                    <Select.Item
-                      key={year}
-                      value={year.toString()}
-                      className="relative flex items-center px-3 py-2 text-base text-gray-700 cursor-pointer hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                    >
-                      <Select.ItemText>{year}</Select.ItemText>
-                    </Select.Item>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
+          {/* Year Select - Custom Dropdown */}
+          <CustomDropdown
+            id="events-year"
+            value={selectedYear}
+            onChange={setSelectedYear}
+            widthClass="w-32"
+            options={[
+              { value: 'all-years', label: 'All Years' },
+              ...years.map((y) => ({
+                value: y.toString(),
+                label: y.toString()
+              }))
+            ]}
+          />
 
-          {/* Month Select */}
-          <Select.Root value={selectedMonth} onValueChange={setSelectedMonth}>
-            <Select.Trigger className="inline-flex items-center justify-between w-36 px-3 py-2 text-base bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-              <Select.Value placeholder="Month" />
-              <Select.Icon>
-                <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content className="bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                <Select.Viewport className="p-1">
-                  <Select.Item
-                    value="all-months"
-                    className="relative flex items-center px-3 py-2 text-base text-gray-700 cursor-pointer hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                  >
-                    <Select.ItemText>All Months</Select.ItemText>
-                  </Select.Item>
-                  {months.map((month) => (
-                    <Select.Item
-                      key={month}
-                      value={month}
-                      className="relative flex items-center px-3 py-2 text-base text-gray-700 cursor-pointer hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                    >
-                      <Select.ItemText>{month}</Select.ItemText>
-                    </Select.Item>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
+          {/* Month Select - Custom Dropdown */}
+          <CustomDropdown
+            id="events-month"
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            widthClass="w-36"
+            options={[
+              { value: 'all-months', label: 'All Months' },
+              ...months.map((m) => ({ value: m, label: m }))
+            ]}
+          />
 
           {/* Checkboxes */}
           <div className="flex items-center gap-4">
@@ -369,9 +334,9 @@ export default function Events({
         <div className="flex mb-4">
           <button
             onClick={() => setTimeFilter('upcoming')}
-            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors duration-200 ${
+            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
               timeFilter === 'upcoming'
-                ? 'bg-amber-700 text-white'
+                ? 'bg-[var(--color-primary)] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -379,9 +344,9 @@ export default function Events({
           </button>
           <button
             onClick={() => setTimeFilter('past')}
-            className={`px-6 py-2.5 text-base font-semibold rounded-r-md transition-colors duration-200 ${
+            className={`px-6 py-2.5 text-base font-semibold rounded-r-md transition-colors cursor-pointer duration-200 ${
               timeFilter === 'past'
-                ? 'bg-amber-700 text-white'
+                ? 'bg-[var(--color-primary)] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -495,7 +460,7 @@ export default function Events({
                       Please check back soon or{' '}
                       <a
                         href="/#contact"
-                        className="text-amber-700 font-semibold underline hover:text-amber-800"
+                        className="text-[var(--color-primary)] font-semibold underline hover:opacity-90"
                       >
                         contact us
                       </a>{' '}

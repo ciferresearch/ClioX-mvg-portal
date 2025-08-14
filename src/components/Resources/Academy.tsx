@@ -133,7 +133,7 @@ export default function Academy({
               whitespace-nowrap transition-all duration-200 hover:scale-105
               ${
                 activeFilter === pill.value
-                  ? 'bg-amber-700 text-white shadow-md'
+                  ? 'bg-[var(--color-primary)] text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }
             `}
@@ -179,7 +179,7 @@ export default function Academy({
             <div className="px-3 py-2.5 flex flex-col flex-grow space-y-1.5">
               {/* Subject Badge */}
               <div className="self-start">
-                <span className="inline-block bg-amber-50 text-amber-700 text-xs font-bold uppercase px-1.5 py-0.5 rounded-lg">
+                <span className="inline-block bg-[var(--button-secondary-background)] text-[var(--color-primary)] text-xs font-bold uppercase px-1.5 py-0.5 rounded-lg">
                   {lesson.subject.charAt(0).toUpperCase() +
                     lesson.subject.slice(1)}
                 </span>

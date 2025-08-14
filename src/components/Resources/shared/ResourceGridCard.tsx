@@ -65,10 +65,10 @@ export default function ResourceGridCard({
             {card.description}
           </p>
         </div>
-        <div className={`mt-auto flex items-center ${footerHeightClass}`}>
+        <div className={`mt-auto flex items-start py-2 ${footerHeightClass}`}>
           <a
             href={card.link}
-            className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
+            className="text-[var(--color-primary)] font-semibold text-sm hover:underline hover:text-[#a25e3c] transition-colors duration-200"
           >
             {linkText}
           </a>

@@ -59,7 +59,7 @@ export default function FeaturedResearchCard({
       {/* Left Content */}
       <div className="space-y-4 text-left">
         <motion.div variants={itemVariants}>
-          <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100/70 px-3 py-2 rounded-full mb-3">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-[var(--color-primary)] bg-[var(--button-secondary-background)] px-3 py-2 rounded-full mb-3">
             <span>Featured Research</span>
           </div>
         </motion.div>
@@ -133,7 +133,7 @@ export default function FeaturedResearchCard({
           href={ctaLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 font-bold text-amber-700 border-b-2 border-transparent pb-1 hover:text-amber-800 hover:border-amber-100 transition-colors duration-200"
+          className="inline-flex items-center gap-2 font-bold text-[var(--color-primary)] border-b-2 border-transparent pb-1 hover:text-[#a25e3c] hover:border-[#f2e5d5] transition-colors duration-200"
           variants={itemVariants}
           whileHover={{
             gap: 12,

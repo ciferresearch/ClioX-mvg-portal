@@ -307,7 +307,7 @@ export default function Resources({
               <a
                 href="/#contact"
                 onClick={handleContactClick}
-                className="text-amber-700 underline hover:text-amber-800"
+                className="text-[var(--color-primary)] underline hover:opacity-90"
               >
                 get in touch
               </a>
@@ -326,7 +326,7 @@ export default function Resources({
               />
             </div>
             <div className="mt-4">
-              <span className="inline-block bg-amber-50 text-amber-700 text-xs font-semibold uppercase px-3 py-1 rounded-xl">
+              <span className="inline-block bg-[var(--button-secondary-background)] text-[var(--color-primary)] text-xs font-bold uppercase px-3 py-1 rounded-xl tracking-tight">
                 Featured
               </span>
             </div>
@@ -387,7 +387,7 @@ export default function Resources({
         {searchQuery.trim() === '' && (
           <div
             ref={tabsContainerRef}
-            className="relative flex flex-wrap justify-center gap-4 py-5 mb-10"
+            className="relative flex flex-wrap justify-center gap-4 py-5 mb-4"
           >
             {tabs.map((tab) => (
               <button
@@ -396,8 +396,8 @@ export default function Resources({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center justify-center px-4 py-2.5 cursor-pointer font-semibold text-base h-12 transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'text-amber-700'
-                    : 'text-black hover:text-amber-700'
+                    ? 'text-[var(--color-primary)]'
+                    : 'text-black hover:text-[var(--color-primary)]'
                 }`}
               >
                 {tab.label}
@@ -408,7 +408,7 @@ export default function Resources({
             {underlineReady ? (
               <motion.span
                 aria-hidden
-                className="absolute bg-amber-700 block rounded"
+                className="absolute bg-[var(--color-primary)] block rounded"
                 initial={false}
                 animate={{
                   x: underlineStyle.left,
@@ -430,7 +430,7 @@ export default function Resources({
             ) : (
               <span
                 aria-hidden
-                className="absolute bg-amber-700 block rounded"
+                className="absolute bg-[var(--color-primary)] block rounded"
                 style={{
                   height: 2,
                   left: underlineStyle.left,
