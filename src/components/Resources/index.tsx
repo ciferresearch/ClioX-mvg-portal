@@ -10,23 +10,34 @@ import { motion } from 'motion/react'
 import { useRouter } from 'next/router'
 import SearchIcon from '@images/search.svg'
 import { ResourceCard, Tab } from './types'
-import { loadResourcesByCategory } from '@/utils/loadResources'
+import {
+  loadResourcesByCategory,
+  generateResourceCardImageForList
+} from '@/utils/loadResources'
 import {
   searchGlossaryTerms,
-  generateGlossaryTermImage
+  generateGlossaryTermImage,
+  generateGlossaryTermImageForList
 } from '@/utils/loadGlossary'
 import {
   searchResearchPapers,
-  generateResearchImage
+  generateResearchImage,
+  generateResearchImageForList
 } from '@/utils/loadResearch'
 import Glossary from './Glossary'
 import Research from './Research'
+import Academy from './Academy'
+import Events from './Events'
+import ResourceGridCard from './shared/ResourceGridCard'
+import ResourceArticles from './ResourceArticles'
+
+// Resource card item moved to separate component
 
 const tabs: Tab[] = [
   { id: 'articles', label: 'Resource Articles' },
   { id: 'academy', label: 'Clio-X Academy' },
   { id: 'events', label: 'Events' },
-  { id: 'guides', label: 'Guides' },
+  // { id: 'guides', label: 'Guides' }, // temporarily hidden
   { id: 'glossary', label: 'Glossary' },
   { id: 'research', label: 'Research' }
 ]
@@ -46,6 +57,8 @@ export default function Resources({
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const router = useRouter()
+
+  // Guides tab commented out above; no special filtering needed
 
   // Sliding underline state
   const tabsContainerRef = useRef<HTMLDivElement | null>(null)
@@ -151,23 +164,68 @@ export default function Resources({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
+  // Animations for search results (grid & list)
+  const resultsContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.7,
+        staggerChildren: 0.12
+      }
+    }
+  }
+
+  const resultsItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1]
+      }
+    }
+  }
+
+  // For list view, avoid vertical translate to remove perceived parent shift
+  const resultsListItemVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.55,
+        ease: [0.22, 1, 0.36, 1]
+      }
+    }
+  }
+
   const filteredCards = useMemo(() => {
     // If there's a search query, search across all resources
     if (searchQuery.trim() !== '') {
       const searchTerm = searchQuery.toLowerCase()
 
-      // Search regular resource cards
-      const matchingCards = allResourceCards.filter(
-        (card) =>
-          card.title.toLowerCase().includes(searchTerm) ||
-          card.description.toLowerCase().includes(searchTerm) ||
-          card.tag.toLowerCase().includes(searchTerm) ||
-          // Search through article content
-          (card.content && card.content.toLowerCase().includes(searchTerm)) ||
-          // Search through tags array
-          (card.tags &&
-            card.tags.some((tag) => tag.toLowerCase().includes(searchTerm)))
-      )
+      // Search regular resource cards and optimize images for list view
+      const matchingCards = allResourceCards
+        .filter(
+          (card) =>
+            card.title.toLowerCase().includes(searchTerm) ||
+            card.description.toLowerCase().includes(searchTerm) ||
+            card.tag.toLowerCase().includes(searchTerm) ||
+            // Search through article content
+            (card.content && card.content.toLowerCase().includes(searchTerm)) ||
+            // Search through tags array
+            (card.tags &&
+              card.tags.some((tag) => tag.toLowerCase().includes(searchTerm)))
+        )
+        .map((card) => ({
+          ...card,
+          image:
+            viewMode === 'list' &&
+            (!card.image || card.image.includes('placeholder'))
+              ? generateResourceCardImageForList(card.title, card.category)
+              : card.image
+        }))
 
       // Search glossary terms and convert to resource cards for display
       const glossaryMatches = searchGlossaryTerms(searchQuery)
@@ -177,7 +235,10 @@ export default function Resources({
         description:
           term.definition.substring(0, 150) +
           (term.definition.length > 150 ? '...' : ''),
-        image: generateGlossaryTermImage(term.term),
+        image:
+          viewMode === 'list'
+            ? generateGlossaryTermImageForList(term.term)
+            : generateGlossaryTermImage(term.term),
         link: term.link || '#',
         tag: 'GLOSSARY TERM',
         category: 'glossary',
@@ -193,7 +254,10 @@ export default function Resources({
           paper.abstract?.substring(0, 150) +
             (paper.abstract && paper.abstract.length > 150 ? '...' : '') ||
           `Research paper by ${paper.authors.join(', ')} (${paper.year})`,
-        image: generateResearchImage(paper.title),
+        image:
+          viewMode === 'list'
+            ? generateResearchImageForList(paper.title)
+            : generateResearchImage(paper.title),
         link: paper.link,
         tag: 'RESEARCH',
         category: 'research',
@@ -204,9 +268,18 @@ export default function Resources({
       return [...matchingCards, ...glossaryCards, ...researchCards]
     }
 
-    // Otherwise, filter by current tab
-    return resourceCards.filter((card) => card.category === activeTab)
-  }, [resourceCards, allResourceCards, activeTab, searchQuery])
+    // Otherwise, filter by current tab and optimize images for list view
+    return resourceCards
+      .filter((card) => card.category === activeTab)
+      .map((card) => ({
+        ...card,
+        image:
+          viewMode === 'list' &&
+          (!card.image || card.image.includes('placeholder'))
+            ? generateResourceCardImageForList(card.title, card.category)
+            : card.image
+      }))
+  }, [resourceCards, allResourceCards, activeTab, searchQuery, viewMode])
 
   // Show search results count when searching
   const searchResultsText = useMemo(() => {
@@ -246,9 +319,8 @@ export default function Resources({
               <iframe
                 width="100%"
                 height="100%"
-                src="https://www.youtube.com/embed/3v4yBHtCGGk"
+                src="https://www.youtube-nocookie.com/embed/3v4yBHtCGGk?rel=0&modestbranding=1&playsinline=1"
                 title="ClioX Overview"
-                frameBorder="0"
                 allowFullScreen
                 className="w-full h-full"
               />
@@ -375,39 +447,17 @@ export default function Resources({
         {searchQuery.trim() !== '' ? (
           viewMode === 'grid' ? (
             /* Grid view for search */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 pb-16">
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-5 pb-16"
+              variants={resultsContainerVariants}
+              initial="hidden"
+              animate="visible"
+              key={`search-grid-${searchQuery}`}
+            >
               {filteredCards.map((card) => (
-                <div
-                  key={card.id}
-                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
-                >
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="w-full h-40 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
-                    }}
-                  />
-                  <div className="p-5 flex flex-col flex-grow">
-                    <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
-                      {card.tag}
-                    </div>
-                    <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
-                      {card.title}
-                    </h3>
-                    <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
-                      {card.description}
-                    </p>
-                    <a
-                      href={card.link}
-                      className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
-                    >
-                      Read more →
-                    </a>
-                  </div>
-                </div>
+                <motion.div key={card.id} variants={resultsItemVariants}>
+                  <ResourceGridCard card={card} />
+                </motion.div>
               ))}
               {filteredCards.length === 0 && (
                 <div className="col-span-full text-center py-16">
@@ -420,38 +470,49 @@ export default function Resources({
                   </p>
                 </div>
               )}
-            </div>
+            </motion.div>
           ) : (
             /* List view for search */
-            <div className="mt-5 pb-16 space-y-4">
+            <motion.div
+              className="mt-5 pb-16 space-y-4"
+              variants={resultsContainerVariants}
+              initial="hidden"
+              animate="visible"
+              key={`search-list-${searchQuery}`}
+            >
               {filteredCards.map((card) => (
-                <div
+                <motion.div
                   key={card.id}
                   className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                  style={{ minHeight: 180 }}
+                  variants={resultsListItemVariants}
                 >
                   <div className="flex">
-                    <div className="w-48 h-32 flex-shrink-0">
+                    <div className="w-56 h-32 flex-shrink-0">
                       <img
                         src={card.image}
                         alt={card.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.src =
-                            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
+                            generateResourceCardImageForList(
+                              card.title,
+                              card.category
+                            )
                         }}
                       />
                     </div>
-                    <div className="p-5 flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="px-5 pt-5 pb-7 flex flex-col gap-1 flex-1 min-w-0">
                       <div className="text-xs font-semibold uppercase text-gray-600">
                         {card.tag}
                       </div>
                       <h3 className="text-lg md:text-xl font-bold text-black truncate">
                         {card.title}
                       </h3>
-                      <p className="text-base text-gray-600 line-clamp-2">
+                      <p className="text-base text-gray-600 leading-relaxed line-clamp-3 min-h-[theme(spacing.16)] md:min-h-[theme(spacing.20)]">
                         {card.description}
                       </p>
-                      <div className="mt-2">
+                      <div className="mt-auto pt-2">
                         <a
                           href={card.link}
                           className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
@@ -461,7 +522,7 @@ export default function Resources({
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
               {filteredCards.length === 0 && (
                 <div className="text-center py-16">
@@ -474,7 +535,7 @@ export default function Resources({
                   </p>
                 </div>
               )}
-            </div>
+            </motion.div>
           )
         ) : activeTab === 'glossary' ? (
           <div className="pb-16">
@@ -484,57 +545,17 @@ export default function Resources({
           <div className="pb-16">
             <Research />
           </div>
+        ) : activeTab === 'academy' ? (
+          <div className="pb-16">
+            <Academy />
+          </div>
+        ) : activeTab === 'events' ? (
+          <div className="pb-16">
+            <Events />
+          </div>
         ) : (
           /* Resource Cards Grid for other tabs */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-5 pb-16">
-            {loading ? (
-              <div className="col-span-full text-center py-16">
-                <p className="text-gray-500 text-lg">Loading resources...</p>
-              </div>
-            ) : (
-              filteredCards.map((card) => (
-                <div
-                  key={card.id}
-                  className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col h-[360px]"
-                >
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="w-full h-40 object-cover"
-                    onError={(e) => {
-                      // Fallback to a placeholder if image fails to load
-                      e.currentTarget.src =
-                        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
-                    }}
-                  />
-                  <div className="p-5 flex flex-col flex-grow">
-                    <div className="text-xs font-semibold uppercase text-gray-600 mb-2">
-                      {card.tag}
-                    </div>
-                    <h3 className="text-xl font-bold mb-2.5 text-black line-clamp-2">
-                      {card.title}
-                    </h3>
-                    <p className="text-base text-gray-600 flex-grow mb-4 leading-relaxed line-clamp-3">
-                      {card.description}
-                    </p>
-                    <a
-                      href={card.link}
-                      className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
-                    >
-                      Read more →
-                    </a>
-                  </div>
-                </div>
-              ))
-            )}
-            {!loading && filteredCards.length === 0 && (
-              <div className="col-span-full text-center py-16">
-                <p className="text-gray-500 text-lg">
-                  No resources found in this category.
-                </p>
-              </div>
-            )}
-          </div>
+          <ResourceArticles cards={filteredCards} loading={loading} />
         )}
       </div>
     </div>

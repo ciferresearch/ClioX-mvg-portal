@@ -1,14 +1,15 @@
 import { ReactElement, useState, useMemo } from 'react'
+import { motion } from 'motion/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import { ResearchSortBy, ResearchGroup } from './types'
 import {
   getResearchTopics,
-  getAllResearchPapers,
   sortResearchPapers,
   filterResearchPapers,
   getSortOptions,
   getResearchGroups
 } from '@/utils/loadResearch'
+import FeaturedResearchCard from './shared/FeaturedResearchCard'
 
 interface CustomDropdownProps {
   label: string
@@ -131,10 +132,69 @@ export default function Research(): ReactElement {
     })
   }, [researchTopics, sortBy, filterGroup])
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.7, staggerChildren: 0.12 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+    }
+  }
+
+  // Topic cards: use fade only to avoid any perceived parent shift after animation
+  const topicCardVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Featured Research Card */}
+      <motion.div variants={itemVariants}>
+        <FeaturedResearchCard
+          title="Clio-X: A Web3 Solution for Privacy-Preserving AI Access to Digital Archives"
+          description="By integrating technical safeguards with community-based oversight, Clio-X offers a novel model to ethically deploy AI in cultural heritage contexts."
+          paperMeta={{
+            type: 'arXiv preprint',
+            year: '2025',
+            authors: [
+              'Lemieux',
+              'Gil',
+              'Molosiwa',
+              'Zhou',
+              'Li',
+              'Garcia',
+              'Cubillo',
+              'Wang'
+            ]
+          }}
+          ctaLink="https://arxiv.org/pdf/2507.08853"
+          imageSrc="/content/resources/research/clio.jpg"
+          imageAlt="Classical relief sculpture of Clio, the muse of history, in flowing robes with a scroll"
+        />
+      </motion.div>
+
       {/* Sort & Filter Controls */}
-      <div className="flex flex-wrap gap-6 items-center justify-start">
+      <motion.div
+        className="flex flex-wrap gap-6 items-center justify-start"
+        variants={itemVariants}
+      >
         <CustomDropdown
           label="Sort by:"
           value={sortBy}
@@ -150,15 +210,19 @@ export default function Research(): ReactElement {
           onChange={(value) => setFilterGroup(value as ResearchGroup)}
           id="filter-select"
         />
-      </div>
+      </motion.div>
 
       {/* Research Topics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        variants={containerVariants}
+      >
         {processedTopics.map((topic) => (
-          <div
+          <motion.div
             key={topic.id}
             className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
             style={{ borderTopColor: '#c8794d' }}
+            variants={topicCardVariants}
           >
             {/* Topic Header */}
             <div className="flex items-center justify-between mb-4">
@@ -212,9 +276,9 @@ export default function Research(): ReactElement {
                 </ul>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
