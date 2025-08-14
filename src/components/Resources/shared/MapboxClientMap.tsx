@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MapPinIcon as HeroMapPin } from '@heroicons/react/24/solid'
+import { PlusIcon, MinusIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import mapboxgl, { LngLatBoundsLike, Map } from 'mapbox-gl'
 
 interface MarkerData {
@@ -269,6 +270,112 @@ export default function MapboxClientMap({
       className="events-map"
       style={{ width: '100%', height: '100%', position: 'relative' }}
     >
+      {/* Custom Map Controls */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 12,
+          left: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0,
+          zIndex: 2,
+          background: 'rgba(255,255,255,0.55)',
+          border: '1px solid rgba(17,24,39,0.12)',
+          borderRadius: 10,
+          overflow: 'hidden',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+          backdropFilter: 'saturate(1.8) blur(10px)',
+          WebkitBackdropFilter: 'saturate(1.8) blur(10px)'
+        }}
+        aria-label="Map controls"
+      >
+        <button
+          type="button"
+          title="Zoom in"
+          onClick={() => mapRef.current?.zoomIn({ duration: 250 })}
+          style={{
+            width: 32,
+            height: 32,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <PlusIcon
+            width={16}
+            height={16}
+            className="text-gray-800"
+            strokeWidth={3}
+          />
+        </button>
+        <div style={{ height: 1, background: 'rgba(17,24,39,0.08)' }} />
+        <button
+          type="button"
+          title="Zoom out"
+          onClick={() => mapRef.current?.zoomOut({ duration: 250 })}
+          style={{
+            width: 32,
+            height: 32,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <MinusIcon
+            width={16}
+            height={16}
+            className="text-gray-800"
+            strokeWidth={2}
+          />
+        </button>
+        <div style={{ height: 1, background: 'rgba(17,24,39,0.08)' }} />
+        <button
+          type="button"
+          title="Reset view"
+          onClick={() => {
+            const map = mapRef.current
+            if (!map) return
+            if (markers.length > 1) {
+              const first: [number, number] = [
+                markers[0].position[1],
+                markers[0].position[0]
+              ]
+              const initial = new mapboxgl.LngLatBounds(first, first)
+              const bounds = markers.reduce((acc, m) => {
+                acc.extend([m.position[1], m.position[0]])
+                return acc
+              }, initial) as unknown as LngLatBoundsLike
+              map.fitBounds(bounds as mapboxgl.LngLatBoundsLike, {
+                padding: 40,
+                duration: 300
+              })
+            } else {
+              map.flyTo({ center, zoom: 3, duration: 300, essential: true })
+            }
+          }}
+          style={{
+            width: 32,
+            height: 32,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <ArrowPathIcon
+            width={16}
+            height={16}
+            className="text-gray-800"
+            strokeWidth={2}
+          />
+        </button>
+      </div>
       {errorMsg && (
         <div
           style={{
@@ -291,13 +398,21 @@ export default function MapboxClientMap({
         {`
         .events-map .mapboxgl-ctrl-attrib {
           font-size: 11px;
-          color: #6b7280;
-          background: rgba(255, 255, 255, 0.85);
-          border-radius: 6px;
-          padding: 2px 6px;
+          color: #374151;
+          background: rgba(255,255,255,0.55);
+          border: 1px solid rgba(17,24,39,0.12);
+          border-radius: 8px;
+          padding: 4px 8px;
+          box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+          backdrop-filter: saturate(1.8) blur(8px);
+          -webkit-backdrop-filter: saturate(1.8) blur(8px);
         }
         .events-map .mapboxgl-ctrl-attrib a {
-          color: #374151;
+          color: #1f2937;
+          text-decoration: none;
+        }
+        .events-map .mapboxgl-ctrl-attrib a:hover {
+          text-decoration: underline;
         }
         `}
       </style>
