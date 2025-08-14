@@ -8,7 +8,10 @@ import {
   MagnifyingGlassIcon,
   CheckIcon,
   MapPinIcon,
-  CalendarIcon
+  CalendarIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ArrowsUpDownIcon
 } from '@heroicons/react/24/outline'
 import EventsMap from './shared/EventsMap'
 import CustomDropdown from './shared/CustomDropdown'
@@ -74,6 +77,9 @@ const months = [
   'December'
 ]
 
+type SortBy = 'date' | 'title' | 'location'
+type SortDir = 'asc' | 'desc'
+
 export default function Events({ events = [] }: EventsProps): ReactElement {
   const [eventsList, setEventsList] = useState<Event[]>(events)
   const [searchTerm, setSearchTerm] = useState('')
@@ -86,6 +92,17 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
     null
   )
   const [searchIdle, setSearchIdle] = useState(false)
+  const [sortBy, setSortBy] = useState<SortBy>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const handleSort = (column: SortBy) => {
+    if (sortBy === column) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(column)
+      setSortDir('asc')
+    }
+  }
   useEffect(() => {
     setSearchIdle(false)
     const delay = Number(
@@ -133,7 +150,7 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   const filteredEvents = useMemo(() => {
     const now = new Date()
 
-    return eventsList.filter((event) => {
+    const filtered = eventsList.filter((event) => {
       // Time filter
       const isUpcoming = event.date >= now
       if (timeFilter === 'upcoming' && !isUpcoming) return false
@@ -171,6 +188,20 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
 
       return true
     })
+
+    const compare = (a: Event, b: Event) => {
+      let result = 0
+      if (sortBy === 'date') {
+        result = a.date.getTime() - b.date.getTime()
+      } else if (sortBy === 'title') {
+        result = a.title.localeCompare(b.title)
+      } else if (sortBy === 'location') {
+        result = a.location.localeCompare(b.location)
+      }
+      return sortDir === 'asc' ? result : -result
+    }
+
+    return filtered.sort(compare)
   }, [
     eventsList,
     searchTerm,
@@ -178,7 +209,9 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
     selectedMonth,
     showInPerson,
     showOnline,
-    timeFilter
+    timeFilter,
+    sortBy,
+    sortDir
   ])
 
   const containerVariants = {
@@ -337,19 +370,52 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <div className="grid grid-cols-12 gap-4 items-center">
               <div className="col-span-3 sm:col-span-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Date
-                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSort('date')}
+                  className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 cursor-pointer"
+                >
+                  <span>Date</span>
+                  {sortBy !== 'date' ? (
+                    <ArrowsUpDownIcon className="h-3.5 w-3.5" />
+                  ) : sortDir === 'asc' ? (
+                    <ChevronUpIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDownIcon className="h-3.5 w-3.5" />
+                  )}
+                </button>
               </div>
               <div className="col-span-6 sm:col-span-7">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Event Name
-                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSort('title')}
+                  className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 cursor-pointer"
+                >
+                  <span>Event Name</span>
+                  {sortBy !== 'title' ? (
+                    <ArrowsUpDownIcon className="h-3.5 w-3.5" />
+                  ) : sortDir === 'asc' ? (
+                    <ChevronUpIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDownIcon className="h-3.5 w-3.5" />
+                  )}
+                </button>
               </div>
               <div className="col-span-3">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Location
-                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSort('location')}
+                  className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 cursor-pointer"
+                >
+                  <span>Location</span>
+                  {sortBy !== 'location' ? (
+                    <ArrowsUpDownIcon className="h-3.5 w-3.5" />
+                  ) : sortDir === 'asc' ? (
+                    <ChevronUpIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDownIcon className="h-3.5 w-3.5" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
