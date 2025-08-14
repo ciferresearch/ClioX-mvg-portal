@@ -25,93 +25,37 @@ interface Event {
   lng?: number
 }
 
+interface EventsJsonItem {
+  id: string
+  category: string
+  tag: string
+  title: string
+  description: string
+  image: string
+  link: string
+  content?: string
+  tags?: string[]
+  eventDate: string
+  endDate?: string
+  timezone?: string
+  location: string
+  eventType: 'in-person' | 'online' | 'hybrid'
+  lat?: number
+  lng?: number
+  registrationUrl?: string
+  registrationRequired?: boolean
+  price?: string
+  organizer?: string
+  venueName?: string
+  speakers?: string[]
+  status?: 'scheduled' | 'completed' | 'cancelled'
+}
+
 interface EventsProps {
   events?: Event[]
 }
 
-// Sample events data - in real app this would come from props or API
-const sampleEvents: Event[] = [
-  {
-    id: 'evt-001',
-    title: 'Clio-X Summit',
-    date: new Date(new Date().getFullYear(), 9, 5),
-    location: 'San Francisco, CA',
-    type: 'in-person',
-    description:
-      'A full-day summit focused on privacy-preserving technologies and governance best practices.',
-    link: 'https://example.com/events/cliox-summit',
-    lat: 37.7749,
-    lng: -122.4194
-  },
-  {
-    id: 'evt-002',
-    title: 'Zero-Knowledge Bootcamp',
-    date: new Date(new Date().getFullYear(), 8, 20),
-    location: 'Online',
-    type: 'online',
-    description:
-      'Hands-on workshop covering zk basics, tooling, and practical applications.',
-    link: 'https://example.com/events/zk-bootcamp'
-  },
-  {
-    id: 'evt-003',
-    title: 'Governance & Privacy Forum',
-    date: new Date(new Date().getFullYear() + 1, 2, 12),
-    location: 'London, UK & Online',
-    type: 'hybrid',
-    description:
-      'Hybrid forum exploring privacy, governance, and education initiatives in decentralized systems.',
-    link: 'https://example.com/events/governance-privacy-forum',
-    lat: 51.5074,
-    lng: -0.1278
-  },
-  {
-    id: 'evt-004',
-    title: 'Past Year Recap Webinar',
-    date: new Date(new Date().getFullYear() - 1, 11, 15),
-    location: 'Online',
-    type: 'online',
-    description:
-      'A recap of last year’s milestones, research highlights, and community updates.',
-    link: 'https://example.com/events/recap-webinar'
-  },
-  {
-    id: 'evt-005',
-    title: 'UBC Blockchain Summer Institute',
-    date: new Date(2025, 6, 7),
-    location: 'UBC, Vancouver, BC',
-    type: 'in-person',
-    description:
-      'A summer institute focused on blockchain, governance, and privacy topics hosted at UBC.',
-    link: '#',
-    lat: 49.2606,
-    lng: -123.246
-  },
-  {
-    id: 'evt-006',
-    title: 'Web3 Privacy Workshop',
-    date: new Date(2024, 10, 15),
-    location: 'Berlin, Germany',
-    type: 'in-person',
-    description:
-      'Hands-on workshop exploring privacy-preserving architectures and best practices.',
-    link: '#',
-    lat: 52.52,
-    lng: 13.405
-  },
-  {
-    id: 'evt-007',
-    title: 'Governance & DAOs Summit',
-    date: new Date(2025, 3, 12),
-    location: 'New York, NY & Online',
-    type: 'hybrid',
-    description:
-      'Summit discussing governance frameworks, DAO tooling, and regulatory outlook.',
-    link: '#',
-    lat: 40.7128,
-    lng: -74.006
-  }
-]
+// All events are loaded from content JSON; optional `events` prop can provide fallback
 
 const currentYear = new Date().getFullYear()
 const years = Array.from({ length: 5 }, (_, i) => currentYear + i)
@@ -130,9 +74,8 @@ const months = [
   'December'
 ]
 
-export default function Events({
-  events = sampleEvents
-}: EventsProps): ReactElement {
+export default function Events({ events = [] }: EventsProps): ReactElement {
+  const [eventsList, setEventsList] = useState<Event[]>(events)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedYear, setSelectedYear] = useState<string>('all-years')
   const [selectedMonth, setSelectedMonth] = useState<string>('all-months')
@@ -153,10 +96,44 @@ export default function Events({
     return () => window.clearTimeout(id)
   }, [searchTerm])
 
+  // Load events from JSON for search and display
+  useEffect(() => {
+    const loadFromJson = async () => {
+      try {
+        // Use dynamic import so JSON is bundled and available client-side
+        const mod = await import('../../../content/resources/events/index.json')
+        const dataModule = mod as unknown as
+          | { default: { events?: EventsJsonItem[] } }
+          | { events?: EventsJsonItem[] }
+        const data: { events?: EventsJsonItem[] } =
+          'default' in dataModule ? dataModule.default : dataModule
+        const items: EventsJsonItem[] = data?.events || []
+        const mapped: Event[] = items
+          .map((it) => ({
+            id: it.id,
+            title: it.title,
+            date: new Date(it.eventDate),
+            location: it.location,
+            type: it.eventType,
+            description: it.description,
+            link: it.link,
+            lat: it.lat,
+            lng: it.lng
+          }))
+          // filter out invalid dates
+          .filter((ev) => !isNaN(ev.date.getTime()))
+        if (mapped.length > 0) setEventsList(mapped)
+      } catch (e) {
+        // keep fallback sample events
+      }
+    }
+    loadFromJson()
+  }, [])
+
   const filteredEvents = useMemo(() => {
     const now = new Date()
 
-    return events.filter((event) => {
+    return eventsList.filter((event) => {
       // Time filter
       const isUpcoming = event.date >= now
       if (timeFilter === 'upcoming' && !isUpcoming) return false
@@ -195,7 +172,7 @@ export default function Events({
       return true
     })
   }, [
-    events,
+    eventsList,
     searchTerm,
     selectedYear,
     selectedMonth,
@@ -289,7 +266,7 @@ export default function Events({
               <Checkbox.Root
                 checked={showInPerson}
                 onCheckedChange={(checked) => setShowInPerson(!!checked)}
-                className="flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                className="flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white hover:border-gray-400 focus:outline-none data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600 cursor-pointer"
               >
                 <Checkbox.Indicator>
                   <CheckIcon className="h-3 w-3 text-white" />
@@ -302,7 +279,7 @@ export default function Events({
               <Checkbox.Root
                 checked={showOnline}
                 onCheckedChange={(checked) => setShowOnline(!!checked)}
-                className="flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                className="flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white hover:border-gray-400 focus:outline-none data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600 cursor-pointer"
               >
                 <Checkbox.Indicator>
                   <CheckIcon className="h-3 w-3 text-white" />

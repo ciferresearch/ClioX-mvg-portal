@@ -8,11 +8,12 @@ import {
 } from 'react'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/router'
-import SearchIcon from '@images/search.svg'
+import { IconSearch as SearchIcon } from '@tabler/icons-react'
 import { ResourceCard, Tab } from './types'
 import {
   loadResourcesByCategory,
-  generateResourceCardImageForList
+  generateResourceCardImageForList,
+  generateResourceCardImage
 } from '@/utils/loadResources'
 import {
   searchGlossaryTerms,
@@ -221,9 +222,10 @@ export default function Resources({
         .map((card) => ({
           ...card,
           image:
-            viewMode === 'list' &&
-            (!card.image || card.image.includes('placeholder'))
-              ? generateResourceCardImageForList(card.title, card.category)
+            !card.image || card.image.includes('placeholder')
+              ? viewMode === 'list'
+                ? generateResourceCardImageForList(card.title, card.category)
+                : generateResourceCardImage(card.title, card.category)
               : card.image
         }))
 
@@ -274,9 +276,10 @@ export default function Resources({
       .map((card) => ({
         ...card,
         image:
-          viewMode === 'list' &&
-          (!card.image || card.image.includes('placeholder'))
-            ? generateResourceCardImageForList(card.title, card.category)
+          !card.image || card.image.includes('placeholder')
+            ? viewMode === 'list'
+              ? generateResourceCardImageForList(card.title, card.category)
+              : generateResourceCardImage(card.title, card.category)
             : card.image
       }))
   }, [resourceCards, allResourceCards, activeTab, searchQuery, viewMode])
@@ -336,7 +339,7 @@ export default function Resources({
 
       {/* Search Bar */}
       <div>
-        <div className="w-full mb-10">
+        <div className="w-full mb-2">
           <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex items-center">
             <SearchIcon className="w-5 h-5 mr-3 flex-shrink-0" />
             <input
@@ -387,7 +390,7 @@ export default function Resources({
         {searchQuery.trim() === '' && (
           <div
             ref={tabsContainerRef}
-            className="relative flex flex-wrap justify-center gap-4 py-5 mb-4"
+            className="relative flex flex-wrap justify-center gap-4 py-5 mb-2"
           >
             {tabs.map((tab) => (
               <button
@@ -484,11 +487,10 @@ export default function Resources({
                 <motion.div
                   key={card.id}
                   className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                  style={{ minHeight: 180 }}
                   variants={resultsListItemVariants}
                 >
                   <div className="flex">
-                    <div className="w-56 h-32 flex-shrink-0">
+                    <div className="w-56 h-37 flex-shrink-0">
                       <img
                         src={card.image}
                         alt={card.title}
@@ -502,17 +504,17 @@ export default function Resources({
                         }}
                       />
                     </div>
-                    <div className="px-5 pt-5 pb-7 flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="px-5 py-4 flex flex-col gap-1 flex-1 min-w-0">
                       <div className="text-xs font-semibold uppercase text-gray-600">
                         {card.tag}
                       </div>
                       <h3 className="text-lg md:text-xl font-bold text-black truncate">
                         {card.title}
                       </h3>
-                      <p className="text-base text-gray-600 leading-relaxed line-clamp-3 min-h-[theme(spacing.16)] md:min-h-[theme(spacing.20)]">
+                      <p className="text-base text-gray-600 leading-relaxed line-clamp-3">
                         {card.description}
                       </p>
-                      <div className="mt-auto pt-2">
+                      <div className="mt-2">
                         <a
                           href={card.link}
                           className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
