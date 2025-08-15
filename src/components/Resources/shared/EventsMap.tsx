@@ -14,7 +14,7 @@ export interface MappedEvent {
 }
 
 const MapImpl = dynamic(
-  async () => (await import('./MapboxClientMap')).default,
+  async () => (await import('./MapLibreClientMap')).default,
   {
     ssr: false
   }

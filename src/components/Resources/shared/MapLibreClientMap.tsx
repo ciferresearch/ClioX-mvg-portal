@@ -2,7 +2,7 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MapPinIcon as HeroMapPin } from '@heroicons/react/24/solid'
 import { PlusIcon, MinusIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
-import mapboxgl, { LngLatBoundsLike, Map } from 'mapbox-gl'
+import maplibregl, { LngLatBoundsLike, Map } from 'maplibre-gl'
 
 interface MarkerData {
   id: string
@@ -13,17 +13,17 @@ interface MarkerData {
   type: 'in-person' | 'online' | 'hybrid'
 }
 
-interface MapboxClientMapProps {
+interface MapLibreClientMapProps {
   markers: MarkerData[]
   focus?: { lat: number; lng: number } | null
   autoTourEnabled?: boolean
 }
 
-export default function MapboxClientMap({
+export default function MapLibreClientMap({
   markers,
   focus = null,
   autoTourEnabled = true
-}: MapboxClientMapProps): ReactElement {
+}: MapLibreClientMapProps): ReactElement {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<Map | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -61,34 +61,24 @@ export default function MapboxClientMap({
     if (!containerRef.current) return
     if (mapRef.current) return
 
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
     const styleUrl =
-      process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL ||
-      'mapbox://styles/mapbox/light-v11'
+      process.env.NEXT_PUBLIC_MAP_STYLE_URL ||
+      'https://tiles.openfreemap.org/styles/bright'
 
-    if (token) {
-      mapboxgl.accessToken = token
-    } else {
-      setErrorMsg(
-        'Missing Mapbox token. Set NEXT_PUBLIC_MAPBOX_TOKEN and restart the dev server.'
-      )
-      return
-    }
-
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: containerRef.current,
       style: styleUrl,
       center,
       zoom: 3,
       logoPosition: 'top-right',
-      attributionControl: true
+      attributionControl: { compact: false }
     })
 
     mapRef.current = map
     map.on('style.load', () => {
       try {
         // Force flat map; remove sky background if present
-        map.setProjection({ name: 'mercator' })
+        map.setProjection({ type: 'mercator' })
         if (map.getLayer('sky')) {
           map.removeLayer('sky')
         }
@@ -96,8 +86,9 @@ export default function MapboxClientMap({
         // ignore
       }
     })
-    map.on('error', (e: mapboxgl.MapboxEvent & { error?: Error }) => {
-      // Capture style/tiles auth errors
+
+    map.on('error', (e: maplibregl.ErrorEvent) => {
+      // Capture style/tiles errors
       if (e && e.error && e.error.message) {
         setErrorMsg(e.error.message)
       }
@@ -115,18 +106,18 @@ export default function MapboxClientMap({
 
     // Remove existing markers
     const mapWithMarkers = mapRef.current as unknown as {
-      __eventMarkers?: mapboxgl.Marker[]
+      __eventMarkers?: maplibregl.Marker[]
     }
     const existing = mapWithMarkers.__eventMarkers
     if (existing) existing.forEach((m) => m.remove())
 
-    const created: mapboxgl.Marker[] = []
+    const created: maplibregl.Marker[] = []
     markers.forEach((m) => {
       const el = createMarkerElement(m)
-      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([m.position[1], m.position[0]])
         .setPopup(
-          new mapboxgl.Popup({ closeButton: false, offset: 12 }).setHTML(
+          new maplibregl.Popup({ closeButton: false, offset: 12 }).setHTML(
             `<div style="min-width:180px"><div style="font-weight:600">${
               m.title
             }</div><div style="font-size:12px;color:#4b5563">${m.date.toLocaleDateString(
@@ -145,12 +136,12 @@ export default function MapboxClientMap({
         markers[0].position[1],
         markers[0].position[0]
       ]
-      const initial = new mapboxgl.LngLatBounds(first, first)
+      const initial = new maplibregl.LngLatBounds(first, first)
       const bounds = markers.reduce((acc, m) => {
         acc.extend([m.position[1], m.position[0]])
         return acc
       }, initial) as unknown as LngLatBoundsLike
-      map.fitBounds(bounds as mapboxgl.LngLatBoundsLike, {
+      map.fitBounds(bounds as maplibregl.LngLatBoundsLike, {
         padding: 40,
         duration: 300
       })
@@ -345,12 +336,12 @@ export default function MapboxClientMap({
                 markers[0].position[1],
                 markers[0].position[0]
               ]
-              const initial = new mapboxgl.LngLatBounds(first, first)
+              const initial = new maplibregl.LngLatBounds(first, first)
               const bounds = markers.reduce((acc, m) => {
                 acc.extend([m.position[1], m.position[0]])
                 return acc
               }, initial) as unknown as LngLatBoundsLike
-              map.fitBounds(bounds as mapboxgl.LngLatBoundsLike, {
+              map.fitBounds(bounds as maplibregl.LngLatBoundsLike, {
                 padding: 40,
                 duration: 300
               })
@@ -396,7 +387,7 @@ export default function MapboxClientMap({
       )}
       <style>
         {`
-        .events-map .mapboxgl-ctrl-attrib {
+        .events-map .maplibregl-ctrl-attrib {
           font-size: 11px;
           color: #374151;
           background: rgba(255,255,255,0.55);
@@ -407,11 +398,11 @@ export default function MapboxClientMap({
           backdrop-filter: saturate(1.8) blur(8px);
           -webkit-backdrop-filter: saturate(1.8) blur(8px);
         }
-        .events-map .mapboxgl-ctrl-attrib a {
+        .events-map .maplibregl-ctrl-attrib a {
           color: #1f2937;
           text-decoration: none;
         }
-        .events-map .mapboxgl-ctrl-attrib a:hover {
+        .events-map .maplibregl-ctrl-attrib a:hover {
           text-decoration: underline;
         }
         `}
