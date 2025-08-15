@@ -207,7 +207,7 @@ export default function MapLibreClientMap({
     const resumeDelay = Number(
       process.env.NEXT_PUBLIC_MAP_TOUR_RESUME_MS || '10000'
     )
-    const tourZoom = Number(process.env.NEXT_PUBLIC_MAP_TOUR_ZOOM || '5.5')
+    const tourZoom = Number(process.env.NEXT_PUBLIC_MAP_TOUR_ZOOM || '15')
 
     const clearAllTimers = () => {
       tourTimersRef.current.forEach((id) => window.clearTimeout(id))
