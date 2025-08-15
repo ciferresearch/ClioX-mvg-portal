@@ -343,7 +343,10 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
         {/* Time Filter Controls */}
         <div className="flex mb-4">
           <button
-            onClick={() => setTimeFilter('upcoming')}
+            onClick={() => {
+              setTimeFilter('upcoming')
+              setMapFocus(null) // Reset map focus when switching filters
+            }}
             className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
               timeFilter === 'upcoming'
                 ? 'bg-[var(--color-primary)] text-white'
@@ -353,7 +356,10 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
             Upcoming
           </button>
           <button
-            onClick={() => setTimeFilter('past')}
+            onClick={() => {
+              setTimeFilter('past')
+              setMapFocus(null) // Reset map focus when switching filters
+            }}
             className={`px-6 py-2.5 text-base font-semibold rounded-r-md transition-colors cursor-pointer duration-200 ${
               timeFilter === 'past'
                 ? 'bg-[var(--color-primary)] text-white'

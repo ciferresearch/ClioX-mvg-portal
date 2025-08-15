@@ -27,9 +27,13 @@ export default function MapLibreClientMap({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<Map | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  // Tour state management with refs for latest values
   const tourIndexRef = useRef<number>(0)
   const tourTimersRef = useRef<number[]>([])
   const isPausedRef = useRef<boolean>(false)
+  const markersRef = useRef<MarkerData[]>(markers)
+  const autoTourEnabledRef = useRef<boolean>(autoTourEnabled)
 
   const center: [number, number] = useMemo(() => {
     if (markers.length > 0)
@@ -131,21 +135,36 @@ export default function MapLibreClientMap({
     })
     mapWithMarkers.__eventMarkers = created
 
-    if (markers.length > 1) {
-      const first: [number, number] = [
-        markers[0].position[1],
-        markers[0].position[0]
-      ]
-      const initial = new maplibregl.LngLatBounds(first, first)
-      const bounds = markers.reduce((acc, m) => {
-        acc.extend([m.position[1], m.position[0]])
-        return acc
-      }, initial) as unknown as LngLatBoundsLike
-      map.fitBounds(bounds as maplibregl.LngLatBoundsLike, {
-        padding: 40,
-        duration: 300
-      })
+    // Auto-fit view to show all markers when no specific focus is set
+    if (!focus && markers.length > 0) {
+      if (markers.length === 1) {
+        // Single marker: center on it with reasonable zoom
+        const marker = markers[0]
+        map.flyTo({
+          center: [marker.position[1], marker.position[0]],
+          zoom: 8,
+          duration: 500,
+          essential: true
+        })
+      } else {
+        // Multiple markers: fit bounds to show all
+        const first: [number, number] = [
+          markers[0].position[1],
+          markers[0].position[0]
+        ]
+        const initial = new maplibregl.LngLatBounds(first, first)
+        const bounds = markers.reduce((acc, m) => {
+          acc.extend([m.position[1], m.position[0]])
+          return acc
+        }, initial) as unknown as LngLatBoundsLike
+        map.fitBounds(bounds as maplibregl.LngLatBoundsLike, {
+          padding: 40,
+          duration: 500
+        })
+      }
     }
+
+    // If there's a specific focus, override auto-fit behavior
     if (focus) {
       map.flyTo({
         center: [focus.lng, focus.lat],
@@ -167,6 +186,13 @@ export default function MapLibreClientMap({
     })
   }, [focus])
 
+  // Update refs when props change
+  useEffect(() => {
+    markersRef.current = markers
+    autoTourEnabledRef.current = autoTourEnabled
+  }, [markers, autoTourEnabled])
+
+  // Tour management effect - clean separation of concerns
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -183,25 +209,34 @@ export default function MapLibreClientMap({
     )
     const tourZoom = Number(process.env.NEXT_PUBLIC_MAP_TOUR_ZOOM || '5.5')
 
-    const clearTimers = () => {
+    const clearAllTimers = () => {
       tourTimersRef.current.forEach((id) => window.clearTimeout(id))
       tourTimersRef.current = []
     }
 
-    const pauseTour = () => {
+    const stopTour = () => {
       isPausedRef.current = true
-      clearTimers()
+      clearAllTimers()
     }
 
     const scheduleNext = (delayMs: number) => {
       if (!mapRef.current || isPausedRef.current) return
       const id = window.setTimeout(() => {
         if (!mapRef.current || isPausedRef.current) return
-        const list = markers
-        if (list.length <= 1) return
-        const idx = tourIndexRef.current % list.length
-        const target = list[idx]
-        tourIndexRef.current = (idx + 1) % list.length
+        // Always use the latest markers from ref
+        const currentMarkers = markersRef.current
+        const currentAutoTourEnabled = autoTourEnabledRef.current
+
+        if (!currentAutoTourEnabled || currentMarkers.length <= 1) return
+
+        // Ensure index is within bounds
+        if (tourIndexRef.current >= currentMarkers.length) {
+          tourIndexRef.current = 0
+        }
+
+        const idx = tourIndexRef.current % currentMarkers.length
+        const target = currentMarkers[idx]
+        tourIndexRef.current = (idx + 1) % currentMarkers.length
         mapRef.current.flyTo({
           center: [target.position[1], target.position[0]],
           zoom: tourZoom,
@@ -215,43 +250,70 @@ export default function MapLibreClientMap({
     }
 
     const resumeTour = () => {
-      if (markers.length <= 1) return
+      const currentMarkers = markersRef.current
+      if (currentMarkers.length <= 1) return
+
       isPausedRef.current = false
-      clearTimers()
+      clearAllTimers()
       scheduleNext(startDelay)
     }
 
-    clearTimers()
-    tourIndexRef.current = 0
-    isPausedRef.current = false
-    if (autoTourEnabled && markers.length > 1) scheduleNext(startDelay)
+    const initializeTour = () => {
+      const currentMarkers = markersRef.current
+      const currentAutoTourEnabled = autoTourEnabledRef.current
+
+      // Reset tour state
+      tourIndexRef.current = 0
+      isPausedRef.current = false
+
+      // Start tour if conditions are met
+      if (currentAutoTourEnabled && currentMarkers.length > 1) {
+        // Delay start to let map view settle
+        const startId = window.setTimeout(() => {
+          if (mapRef.current && !isPausedRef.current) {
+            scheduleNext(startDelay)
+          }
+        }, 800)
+        tourTimersRef.current.push(startId)
+      }
+    }
+
+    // Clean up any existing tour
+    stopTour()
+
+    // Initialize new tour
+    initializeTour()
 
     const onInteractStart = () => {
-      pauseTour()
+      stopTour()
       window.setTimeout(() => {
         if (document.visibilityState === 'visible') {
           resumeTour()
         }
       }, resumeDelay)
     }
-    const onVisibility = () => {
-      if (document.visibilityState !== 'visible') pauseTour()
-      else onInteractStart()
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') {
+        stopTour()
+      } else {
+        onInteractStart()
+      }
     }
 
     map.on('dragstart', onInteractStart)
     map.on('zoomstart', onInteractStart)
     map.on('mousedown', onInteractStart)
     map.on('touchstart', onInteractStart)
-    document.addEventListener('visibilitychange', onVisibility)
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
-      clearTimers()
+      clearAllTimers()
       map.off('dragstart', onInteractStart)
       map.off('zoomstart', onInteractStart)
       map.off('mousedown', onInteractStart)
       map.off('touchstart', onInteractStart)
-      document.removeEventListener('visibilitychange', onVisibility)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [markers, autoTourEnabled])
 
