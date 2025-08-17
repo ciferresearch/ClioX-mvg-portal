@@ -1,3 +1,26 @@
 {
-  "academy": []
+  "academy": [
+    {
+      "id": "academy-1",
+      "category": "academy",
+      "tag": "ACADEMY",
+      "title": "Blockchain From an Archival Science Perspective",
+      "description": "Video lesson on blockchain viewed through archival science.",
+      "image": "/content/resources/academy/placeholder.jpg",
+      "link": "https://www.youtube.com/watch?v=EmHBY3BuzLE",
+      "content": "video lesson blockchain archival science",
+      "tags": ["blockchain", "archives", "lesson"]
+    },
+    {
+      "id": "academy-2",
+      "category": "academy",
+      "tag": "ACADEMY",
+      "title": "The Blockchain Genesis Story",
+      "description": "Video lesson covering the origin of blockchain.",
+      "image": "/content/resources/academy/placeholder.jpg",
+      "link": "https://www.youtube.com/watch?v=dX-x4RQdI14",
+      "content": "video lesson blockchain genesis story",
+      "tags": ["blockchain", "history", "lesson"]
+    }
+  ]
 }

@@ -1,5 +1,15 @@
 import { ResourceCard } from '@/components/Resources/types'
 
+// Escape XML/SVG special characters to avoid invalid SVGs (e.g., titles with &)
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 interface ArticleMetadata {
   id: string
   slug: string
@@ -175,6 +185,211 @@ export async function loadResourcesByCategory(
       return await loadResearchPapers()
     default:
       return []
+  }
+}
+
+/**
+ * Generate a generic resource card image optimized for list view
+ */
+export function generateResourceCardImageForList(
+  title: string,
+  category: string
+): string {
+  // Truncate title if too long for display
+  const displayTitle =
+    title.length > 20 ? title.substring(0, 17) + '...' : title
+
+  // Get category label
+  const categoryLabel = category.toUpperCase()
+
+  // Choose background color based on category
+  const getBackgroundColor = (cat: string) => {
+    switch (cat) {
+      case 'articles':
+        return '#e3f2fd'
+      case 'academy':
+        return '#f3e5f5'
+      case 'events':
+        return '#e8f5e8'
+      case 'guides':
+        return '#fff3e0'
+      default:
+        return '#f5f5f5'
+    }
+  }
+
+  // Choose accent color based on category
+  const getAccentColor = (cat: string) => {
+    switch (cat) {
+      case 'articles':
+        return '#1976d2'
+      case 'academy':
+        return '#7b1fa2'
+      case 'events':
+        return '#388e3c'
+      case 'guides':
+        return '#f57c00'
+      default:
+        return '#666666'
+    }
+  }
+
+  const backgroundColor = getBackgroundColor(category)
+  const accentColor = getAccentColor(category)
+
+  // Build title tspans: mimic research layout for academy/events
+  const useResearchLayout =
+    category === 'academy' || category === 'events' || category === 'research'
+  const titleSpans = useResearchLayout
+    ? (() => {
+        const lines = escapeXml(displayTitle)
+          .split(' ')
+          .reduce((acc, word) => {
+            const current = acc[acc.length - 1]
+            if (current && current.length + word.length + 1 <= 22) {
+              acc[acc.length - 1] = current + ' ' + word
+            } else {
+              acc.push(word)
+            }
+            return acc
+          }, [] as string[])
+          .slice(0, 4)
+        return lines
+          .map(
+            (line, i) =>
+              `<tspan x="16" dy="${i === 0 ? 0 : 14}">${line}</tspan>`
+          )
+          .join('')
+      })()
+    : escapeXml(displayTitle)
+        .split(' ')
+        .map(
+          (word, i) => `<tspan x="16" dy="${i === 0 ? 0 : 16}">${word}</tspan>`
+        )
+        .join('')
+
+  const svg = `
+    <svg width="192" height="128" viewBox="0 0 192 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="192" height="128" fill="${backgroundColor}"/>
+      <defs>
+        <pattern id="dots-small" patternUnits="userSpaceOnUse" width="24" height="24">
+          <circle cx="12" cy="12" r="1" fill="${accentColor}" opacity="0.08"/>
+        </pattern>
+      </defs>
+      <rect width="192" height="128" fill="url(#dots-small)"/>
+      
+      <!-- Category label -->
+      <text x="16" y="25" font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="600" fill="${accentColor}" text-transform="uppercase" letter-spacing="1px">
+        ${categoryLabel}
+      </text>
+      
+      <!-- Title -->
+      <text x="16" y="45" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="#2c2c2c" text-anchor="start">
+        ${titleSpans}
+      </text>
+      
+      <!-- Decorative element -->
+      <circle cx="160" cy="100" r="20" fill="${accentColor}" opacity="0.1"/>
+      <circle cx="160" cy="100" r="12" fill="${accentColor}" opacity="0.2"/>
+    </svg>
+  `.trim()
+
+  // Convert to base64 data URL
+  try {
+    return `data:image/svg+xml;base64,${btoa(svg)}`
+  } catch (error) {
+    console.error('Error generating resource card image:', error)
+    // Return a generic fallback image if generation fails
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDE5MiAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTI4IiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9Ijk2IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOUNBM0FGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iMC4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pgo8L3N2Zz4='
+  }
+}
+
+/**
+ * Generate a generic resource card image optimized for grid view (bigger canvas)
+ */
+export function generateResourceCardImage(
+  title: string,
+  category: string
+): string {
+  // Truncate title for grid display (mimic research sizing)
+  const displayTitle =
+    title.length > 35 ? title.substring(0, 32) + '...' : title
+
+  const categoryLabel = category.toUpperCase()
+
+  const getBackgroundColor = (cat: string) => {
+    switch (cat) {
+      case 'articles':
+        return '#e3f2fd'
+      case 'academy':
+        return '#f3e5f5'
+      case 'events':
+        return '#e8f5e8'
+      case 'guides':
+        return '#fff3e0'
+      default:
+        return '#f5f5f5'
+    }
+  }
+
+  const getAccentColor = (cat: string) => {
+    switch (cat) {
+      case 'articles':
+        return '#1976d2'
+      case 'academy':
+        return '#7b1fa2'
+      case 'events':
+        return '#388e3c'
+      case 'guides':
+        return '#f57c00'
+      default:
+        return '#666666'
+    }
+  }
+
+  const backgroundColor = getBackgroundColor(category)
+  const accentColor = getAccentColor(category)
+
+  const svg = `
+    <svg width="320" height="160" viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" fill="${backgroundColor}"/>
+      <defs>
+        <pattern id="dots-large" patternUnits="userSpaceOnUse" width="30" height="30">
+          <circle cx="15" cy="15" r="1.5" fill="${accentColor}" opacity="0.08"/>
+        </pattern>
+      </defs>
+      <rect width="320" height="160" fill="url(#dots-large)"/>
+      <text x="20" y="35" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="${accentColor}" text-transform="uppercase" letter-spacing="1px">${categoryLabel}</text>
+      <text x="20" y="65" font-family="IBM Plex Sans, sans-serif" font-size="18" font-weight="600" fill="#2c2c2c" text-anchor="start">
+        ${escapeXml(displayTitle)
+          .split(' ')
+          .reduce((lines, word) => {
+            const current = lines[lines.length - 1]
+            if (current && current.length + word.length + 1 <= 30) {
+              lines[lines.length - 1] = current + ' ' + word
+            } else {
+              lines.push(word)
+            }
+            return lines
+          }, [] as string[])
+          .slice(0, 4)
+          .map(
+            (line, i) =>
+              `<tspan x="20" dy="${i === 0 ? 0 : 20}">${line}</tspan>`
+          )
+          .join('')}
+      </text>
+      <circle cx="285" cy="135" r="20" fill="${accentColor}" opacity="0.12"/>
+      <circle cx="285" cy="135" r="12" fill="${accentColor}" opacity="0.2"/>
+    </svg>
+  `.trim()
+
+  try {
+    return `data:image/svg+xml;base64,${btoa(svg)}`
+  } catch (error) {
+    console.error('Error generating resource card image (grid):', error)
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQwIiBoZWlnaHQ9IjM2MCIgdmlld0JveD0iMCAwIDY0MCAzNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0MCIgaGVpZ2h0PSIzNjAiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSIzMjAiIHk9IjE4MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOUNBM0FGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iMC4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pjwvc3ZnPg=='
   }
 }
 

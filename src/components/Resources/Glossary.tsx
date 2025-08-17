@@ -1,4 +1,5 @@
 import { ReactElement, useState, useMemo, useEffect } from 'react'
+import { motion } from 'motion/react'
 import SearchIcon from '@images/search.svg'
 import { GlossaryTerm, GlossarySection } from './types'
 import { loadGlossaryTerms } from '@/utils/loadGlossary'
@@ -159,8 +160,30 @@ export default function Glossary(): ReactElement {
     )
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.75, staggerChildren: 0.12 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+    }
+  }
+
   return (
-    <div className="max-w-6xl mx-auto">
+    <motion.div
+      className="max-w-6xl mx-auto"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Local search bar */}
       {
         <div className="max-w-md mx-auto mb-6">
@@ -228,7 +251,7 @@ export default function Glossary(): ReactElement {
       )}
 
       {/* Glossary Sections */}
-      <div className="space-y-12">
+      <motion.div className="space-y-12" variants={containerVariants}>
         {glossarySections.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-500 text-lg">
@@ -244,10 +267,11 @@ export default function Glossary(): ReactElement {
           </div>
         ) : (
           glossarySections.map((section) => (
-            <section
+            <motion.section
               key={section.letter}
               id={`section-${section.letter}`}
               className="grid grid-cols-[80px_1fr] gap-5"
+              variants={itemVariants}
             >
               {/* Large Letter */}
               <div className="flex justify-center">
@@ -259,7 +283,11 @@ export default function Glossary(): ReactElement {
               {/* Terms */}
               <div className="space-y-8">
                 {section.terms.map((term) => (
-                  <div key={term.id} className="glossary-term">
+                  <motion.div
+                    key={term.id}
+                    className="glossary-term"
+                    variants={itemVariants}
+                  >
                     {term.link ? (
                       <a
                         href={term.link}
@@ -285,13 +313,13 @@ export default function Glossary(): ReactElement {
                         </span>
                       )}
                     </p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </section>
+            </motion.section>
           ))
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

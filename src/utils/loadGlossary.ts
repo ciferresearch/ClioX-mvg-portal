@@ -77,7 +77,49 @@ export const glossaryData: GlossaryTerm[] = [
 ]
 
 /**
- * Generate a custom SVG image for a glossary term
+ * Generate a custom SVG image for a glossary term (optimized for list view)
+ */
+export function generateGlossaryTermImageForList(term: string): string {
+  // Truncate term if too long for display
+  const displayTerm = term.length > 20 ? term.substring(0, 17) + '...' : term
+
+  // Get first character using destructuring to satisfy ESLint
+  const [firstChar] = term
+
+  const svg = `
+    <svg width="192" height="128" viewBox="0 0 192 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="192" height="128" fill="#f2e5d5"/>
+      
+      <!-- Decorative large letter in background -->
+      <text x="160" y="100" font-family="IBM Plex Sans, sans-serif" font-size="80" font-weight="700" fill="#e0d5c7" text-anchor="end">
+        ${firstChar.toUpperCase()}
+      </text>
+      
+      <!-- GLOSSARY label -->
+      <text x="16" y="25" font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="600" fill="#8b7355" text-transform="uppercase" letter-spacing="1px">
+        GLOSSARY
+      </text>
+      
+      <!-- Term name -->
+      <text x="16" y="45" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="#4a3f36" text-anchor="start">
+        ${displayTerm
+          .split(' ')
+          .map(
+            (word, i) =>
+              `<tspan x="16" dy="${i === 0 ? 0 : 16}">${word}</tspan>`
+          )
+          .join('')}
+      </text>
+    </svg>
+  `.trim()
+
+  // Convert to base64 data URL
+  return `data:image/svg+xml;base64,${btoa(svg)}`
+}
+
+/**
+ * Generate a custom SVG image for a glossary term (original for grid view)
  */
 export function generateGlossaryTermImage(term: string): string {
   // Truncate term if too long for display

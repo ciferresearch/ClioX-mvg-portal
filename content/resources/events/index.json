@@ -1,3 +1,29 @@
 {
-  "events": []
+  "events": [
+    {
+      "id": "event-1",
+      "category": "events",
+      "tag": "EVENT",
+      "title": "UBC Blockchain Summer Institute",
+      "description": "A summer institute focused on blockchain, governance, and privacy topics hosted at UBC.",
+      "image": "/content/resources/events/placeholder.jpg",
+      "link": "#",
+      "content": "summer institute blockchain governance privacy ubc",
+      "tags": ["blockchain", "governance", "privacy"],
+      "eventDate": "2025-07-07",
+      "endDate": "2025-07-07",
+      "timezone": "America/Vancouver",
+      "location": "UBC, Vancouver, BC",
+      "eventType": "in-person",
+      "lat": 49.2606,
+      "lng": -123.246,
+      "registrationUrl": "#",
+      "registrationRequired": false,
+      "price": "Free",
+      "organizer": "Clio-X",
+      "venueName": "University of British Columbia",
+      "speakers": ["TBA"],
+      "status": "completed"
+    }
+  ]
 }

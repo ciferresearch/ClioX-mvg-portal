@@ -198,9 +198,85 @@ function escapeXml(text: string): string {
 }
 
 /**
- * Generate a custom SVG image for a research paper
+ * Generate a custom SVG image for Research (optimized for list view)
  */
-export function generateResearchPaperImage(title: string): string {
+export function generateResearchImageForList(title: string): string {
+  // Truncate title if too long for display
+  const displayTitle =
+    title.length > 25 ? title.substring(0, 22) + '...' : title
+
+  // Escape special characters for XML/SVG
+  const safeTitle = escapeXml(displayTitle)
+
+  const svg = `
+    <svg width="192" height="128" viewBox="0 0 192 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="192" height="128" fill="#f2e5d5"/>
+      
+      <!-- Subtle geometric pattern -->
+      <defs>
+        <pattern id="dots" patternUnits="userSpaceOnUse" width="24" height="24">
+          <circle cx="12" cy="12" r="1" fill="#e8ddd2" opacity="0.4"/>
+        </pattern>
+      </defs>
+      <rect width="192" height="128" fill="url(#dots)"/>
+      
+      <!-- RESEARCH label -->
+      <text x="16" y="25" font-family="IBM Plex Sans, sans-serif" font-size="10" font-weight="600" fill="#8b7355" text-transform="uppercase" letter-spacing="1px">
+        RESEARCH
+      </text>
+      
+      <!-- Research title -->
+      <text x="16" y="45" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="#4a3f36" text-anchor="start">
+        ${safeTitle
+          .split(' ')
+          .reduce((lines, word) => {
+            const currentLine = lines[lines.length - 1]
+            if (currentLine && currentLine.length + word.length + 1 <= 22) {
+              lines[lines.length - 1] = currentLine + ' ' + word
+            } else {
+              lines.push(word)
+            }
+            return lines
+          }, [] as string[])
+          .slice(0, 4)
+          .map(
+            (line, i) =>
+              `<tspan x="16" dy="${i === 0 ? 0 : 14}">${line}</tspan>`
+          )
+          .join('')}
+      </text>
+      
+      <!-- Icon decoration -->
+      <g transform="translate(130, 75)">
+        <!-- Paper body -->
+        <rect x="0" y="0" width="45" height="50" rx="3" fill="#e8ddd2" opacity="0.6"/>
+        <!-- Folded corner -->
+        <path d="M32 0 L45 13 L32 13 Z" fill="#ddd0c0" opacity="0.7"/>
+        <!-- Text lines -->
+        <rect x="6" y="14" width="24" height="2" fill="#c8b8a5" opacity="0.5"/>
+        <rect x="6" y="20" width="18" height="2" fill="#c8b8a5" opacity="0.5"/>
+        <rect x="6" y="26" width="22" height="2" fill="#c8b8a5" opacity="0.5"/>
+        <rect x="6" y="32" width="16" height="2" fill="#c8b8a5" opacity="0.5"/>
+        <rect x="6" y="38" width="14" height="2" fill="#c8b8a5" opacity="0.5"/>
+      </g>
+    </svg>
+  `.trim()
+
+  // Convert to base64 data URL with error handling
+  try {
+    return `data:image/svg+xml;base64,${btoa(svg)}`
+  } catch (error) {
+    console.error('Error generating research list image:', error)
+    // Return a generic fallback image if generation fails
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDE5MiAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTI4IiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9Ijk2IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOUNBM0FGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iMC4zZW0iPkltYWdlIFBsYWNlaG9sZGVyPC90ZXh0Pgo8L3N2Zz4='
+  }
+}
+
+/**
+ * Generate a custom SVG image for Research (original for grid view)
+ */
+export function generateResearchImage(title: string): string {
   // Truncate title if too long for display
   const displayTitle =
     title.length > 35 ? title.substring(0, 32) + '...' : title
@@ -221,16 +297,16 @@ export function generateResearchPaperImage(title: string): string {
       </defs>
       <rect width="320" height="160" fill="url(#dots)"/>
       
-      <!-- RESEARCH PAPER label -->
+      <!-- RESEARCH label -->
       <text x="20" y="35" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="#8b7355" text-transform="uppercase" letter-spacing="1px">
-        RESEARCH PAPER
+        RESEARCH
       </text>
       
-      <!-- Paper title -->
+      <!-- Research title -->
       <text x="20" y="65" font-family="IBM Plex Sans, sans-serif" font-size="16" font-weight="600" fill="#4a3f36" text-anchor="start">
         ${safeTitle
           .split(' ')
-          .reduce((lines, word, index) => {
+          .reduce((lines, word) => {
             const currentLine = lines[lines.length - 1]
             if (currentLine && currentLine.length + word.length + 1 <= 30) {
               lines[lines.length - 1] = currentLine + ' ' + word
@@ -247,7 +323,7 @@ export function generateResearchPaperImage(title: string): string {
           .join('')}
       </text>
       
-      <!-- Paper icon decoration -->
+      <!-- Icon decoration -->
       <g transform="translate(230, 95)">
         <!-- Paper body -->
         <rect x="0" y="0" width="55" height="65" rx="4" fill="#e8ddd2" opacity="0.6"/>
@@ -267,8 +343,8 @@ export function generateResearchPaperImage(title: string): string {
   try {
     return `data:image/svg+xml;base64,${btoa(svg)}`
   } catch (error) {
-    console.error('Error generating research paper image:', error)
-    // Return a fallback image if generation fails
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmMmU1ZDUiLz48dGV4dCB4PSIxNjAiIHk9IjcwIiBmb250LWZhbWlseT0iSUJNIFBsZXggU2Fucywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9IjYwMCIgZmlsbD0iIzRhM2YzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UkVTRUFSQ0ggUEFQRVI8L3RleHQ+PC9zdmc+'
+    console.error('Error generating research image:', error)
+    // Return a generic fallback image if generation fails
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE2MCIgdmlld0JveD0iMCAwIDMyMCAxNjAiIGZpbGw9Im5vbGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjZjNmNGY2Ii8+Cjx0ZXh0IHg9IjE2MCIgeT0iODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9IjAuM2VtIj5JbWFnZSBQbGFjZWhvbGRlcjwvdGV4dD4KPC9zdmc+'
   }
 }
