@@ -11,6 +11,7 @@ interface RouteGuardProps {
 const COMING_SOON_ROUTES = [
   '/bookmarks',
   '/verify',
+  '/partners',
   '/resources',
   '/publish',
   '/profile',
