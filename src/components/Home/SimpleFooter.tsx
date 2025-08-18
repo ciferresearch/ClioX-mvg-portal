@@ -60,8 +60,8 @@ export default function SimpleFooter() {
             {/* Copyright */}
             <div className="text-gray-500 text-xs">
               <p>© {currentYear} ClioX. All rights reserved.</p>
-              <p className="mt-1">
-                Built by{' '}
+              {/* <p className="mt-1">
+                Powered by{' '}
                 <a
                   href="https://delta-dao.com"
                   target="_blank"
@@ -70,7 +70,7 @@ export default function SimpleFooter() {
                 >
                   deltaDAO
                 </a>
-              </p>
+              </p> */}
             </div>
           </div>
         </div>
