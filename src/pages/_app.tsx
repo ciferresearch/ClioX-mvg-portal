@@ -5,6 +5,7 @@ import UrqlProvider from '@context/UrqlProvider'
 import ConsentProvider from '@context/CookieConsent'
 import { SearchBarStatusProvider } from '@context/SearchBarStatus'
 import App from '../../src/components/App'
+import RouteGuard from '../components/RouteGuard'
 import '@oceanprotocol/typographies/css/ocean-typo.css'
 import '../stylesGlobal/styles.css'
 import '@radix-ui/themes/styles.css'
@@ -40,7 +41,9 @@ function MyApp({ Component, pageProps }: AppProps): ReactElement {
                         <SearchBarStatusProvider>
                           <FilterProvider>
                             <App>
-                              <Component {...pageProps} />
+                              <RouteGuard>
+                                <Component {...pageProps} />
+                              </RouteGuard>
                             </App>
                           </FilterProvider>
                         </SearchBarStatusProvider>
