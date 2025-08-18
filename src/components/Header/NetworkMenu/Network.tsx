@@ -1,27 +1,61 @@
-import { ReactElement } from 'react'
+import { ReactElement, useState } from 'react'
+import { motion } from 'motion/react'
 import Status from '@shared/atoms/Status'
-import Badge from '@shared/atoms/Badge'
+
 import Tooltip from '@shared/atoms/Tooltip'
 import NetworkName from '@shared/NetworkName'
-import styles from './Network.module.css'
+import { IconChevronDown } from '@tabler/icons-react'
 import { useNetwork } from 'wagmi'
 import useNetworkMetadata from '@hooks/useNetworkMetadata'
-import Caret from '@images/caret.svg'
 
-export default function Network(): ReactElement {
+export default function Network({
+  onClick
+}: {
+  onClick?: () => void
+}): ReactElement {
   const { chain } = useNetwork()
   const { isTestnet, isSupportedOceanNetwork } = useNetworkMetadata()
+  const [isHovered, setIsHovered] = useState(false)
+
+  const handleClick = () => {
+    onClick?.()
+  }
 
   return chain?.id ? (
-    <button className={styles.network}>
+    <motion.button
+      className="flex items-center space-x-2 px-3 rounded-lg border border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap cursor-pointer flex-shrink-0 h-9"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      style={{
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+      }}
+    >
       {!isSupportedOceanNetwork && (
         <Tooltip content="No Ocean Protocol contracts are deployed to this network.">
-          <Status state="error" className={styles.warning} />
+          <Status state="error" />
         </Tooltip>
       )}
-      <NetworkName className={styles.name} networkId={chain.id} minimal />
-      {isTestnet && <Badge label="Test" className={styles.badge} />}
-      <Caret aria-hidden="true" className={styles.caret} />
-    </button>
+      <div className="flex items-center space-x-1">
+        <NetworkName networkId={chain.id} minimal />
+        {isTestnet && (
+          <span className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-md font-medium">
+            TEST
+          </span>
+        )}
+      </div>
+      <motion.div
+        animate={{ rotate: isHovered ? 180 : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <IconChevronDown
+          size={14}
+          stroke={2.5}
+          className="text-gray-400 transition-colors duration-300"
+        />
+      </motion.div>
+    </motion.button>
   ) : null
 }

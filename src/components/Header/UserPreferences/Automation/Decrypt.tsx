@@ -1,12 +1,5 @@
-import {
-  FormEvent,
-  FormEventHandler,
-  ReactElement,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
-import styles from './Decrypt.module.css'
+import { FormEvent, ReactElement, useEffect, useRef } from 'react'
+
 import Button from '../../../@shared/atoms/Button'
 import { toast } from 'react-toastify'
 import { useAutomation } from '../../../../@context/Automation/AutomationProvider'
@@ -41,13 +34,15 @@ export default function Decrypt(): ReactElement {
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div className="p-4 space-y-3">
       {isLoading ? (
         <Loader message="Decrypting..." />
       ) : (
         <>
-          <strong className={styles.warning}>The wallet is locked!</strong>
-          <form onSubmit={initiateDecryption} className={styles.form}>
+          <strong className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+            The wallet is locked!
+          </strong>
+          <form onSubmit={initiateDecryption} className="space-y-3">
             <InputElement
               name="password"
               placeholder="Password"
@@ -57,7 +52,7 @@ export default function Decrypt(): ReactElement {
             />
             <Button type="submit">Decrypt</Button>
           </form>
-          <span className={styles.help}>
+          <span className="text-xs text-gray-600 dark:text-gray-400">
             Enter the password that was used to encrypt this wallet.
           </span>
         </>

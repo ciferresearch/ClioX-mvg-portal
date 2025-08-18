@@ -1,9 +1,6 @@
 import { ReactElement, ReactNode } from 'react'
 import { useSwitchNetwork } from 'wagmi'
-import Button from '@shared/atoms/Button'
-import styles from './index.module.css'
 import EthIcon from '@images/eth.svg'
-import AddTokenStyles from '../AddToken/index.module.css'
 
 export interface AddNetworkProps {
   chainId: number
@@ -19,22 +16,22 @@ export default function AddNetwork({
   const { switchNetwork } = useSwitchNetwork({ chainId })
 
   return (
-    <Button
-      className={AddTokenStyles.button}
-      style="text"
-      size="small"
+    <div
+      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-teal-50 rounded-lg transition-colors duration-200 cursor-pointer w-full text-xs font-medium text-gray-700 hover:text-teal-700"
       onClick={() => switchNetwork()}
     >
-      <span className={AddTokenStyles.logoWrap}>
-        <div className={styles.logo}>{logo || <EthIcon />}</div>
+      <div className="relative w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center bg-white">
+        {logo || <EthIcon className="w-3 h-3" />}
+        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-teal-500 rounded-full flex items-center justify-center">
+          <span className="text-white text-[8px] font-bold leading-none">
+            +
+          </span>
+        </div>
+      </div>
+      <span className="text-xs">
+        Connect to{' '}
+        <span className="font-semibold text-gray-800">{networkName}</span>
       </span>
-
-      <span className={AddTokenStyles.text}>
-        {'Connect to '}
-        <span className={`${AddTokenStyles.symbol} ${styles.networkName}`}>
-          {networkName}
-        </span>
-      </span>
-    </Button>
+    </div>
   )
 }

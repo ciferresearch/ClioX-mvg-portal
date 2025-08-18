@@ -1,9 +1,6 @@
 import { ReactElement, useState } from 'react'
-import Button from '../../../@shared/atoms/Button'
 import { useAutomation } from '../../../../@context/Automation/AutomationProvider'
 import Loader from '../../../@shared/atoms/Loader'
-import styles from './Import.module.css'
-import Input from '../../../@shared/FormInput'
 import { LoggerInstance } from '@oceanprotocol/lib'
 import { toast } from 'react-toastify'
 
@@ -26,7 +23,7 @@ export default function Import(): ReactElement {
 
   const importWalletFromFile = async (target: EventTarget) => {
     try {
-      const file = (target as any).files[0]
+      const file = (target as HTMLInputElement).files?.[0]
       const reader = new FileReader()
       reader.readAsText(file)
       reader.onload = async (event) => {
@@ -50,35 +47,38 @@ export default function Import(): ReactElement {
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div className="p-2 space-y-3">
       {showFileInput ? (
         <>
-          <Input
-            name="walletJSONFile"
-            type="file"
-            label="Select file to import"
-            onChange={(e) => {
-              importWalletFromFile(e.target)
-            }}
-            className={styles.input}
-          />
-          <Button
-            style="text"
-            size="small"
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 rounded-lg p-3 space-y-2">
+            <label className="block text-xs font-medium text-gray-700">
+              Select file to import
+            </label>
+            <input
+              name="walletJSONFile"
+              type="file"
+              accept=".json"
+              onChange={(e) => {
+                importWalletFromFile(e.target)
+              }}
+              className="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-emerald-50 file:text-emerald-600 hover:file:bg-emerald-100 transition-colors duration-200"
+            />
+          </div>
+          <button
             onClick={() => setShowFileInput(false)}
-            className={styles.cancel}
+            className="text-xs text-gray-500 hover:text-emerald-600 font-medium transition-colors duration-200 cursor-pointer"
           >
             Cancel
-          </Button>
+          </button>
         </>
       ) : (
-        <Button
+        <button
           onClick={() => setShowFileInput(true)}
           disabled={isLoading}
-          className={styles.button}
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg py-1.5 px-3 text-sm font-medium transition-colors duration-200 disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? <Loader /> : `Import Wallet JSON`}
-        </Button>
+        </button>
       )}
     </div>
   )

@@ -1,4 +1,5 @@
 import { ReactElement, useEffect, useState } from 'react'
+import { motion } from 'motion/react'
 import {
   AUTOMATION_MODES,
   useAutomation
@@ -7,7 +8,7 @@ import { useMarketMetadata } from '../../../../@context/MarketMetadata'
 import { useUserPreferences } from '../../../../@context/UserPreferences'
 import Button from '../../../@shared/atoms/Button'
 import Balance from './Balance'
-import styles from './Details.module.css'
+
 import Import from './Import'
 import Address from './Address'
 import Decrypt from './Decrypt'
@@ -16,16 +17,23 @@ function AdvancedView(): ReactElement {
   const { deleteCurrentAutomationWallet } = useAutomation()
 
   return (
-    <div className={styles.advanced}>
+    <motion.div
+      className="space-y-3"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+    >
       <Balance />
 
-      <Button
-        onClick={() => deleteCurrentAutomationWallet()}
-        className={styles.deleteBtn}
-      >
-        Delete Wallet
-      </Button>
-    </div>
+      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <Button
+          onClick={() => deleteCurrentAutomationWallet()}
+          className="w-full text-center bg-red-500 hover:bg-red-600 text-white rounded-lg py-1.5 px-3 text-sm"
+        >
+          Delete Wallet
+        </Button>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -37,22 +45,39 @@ function SimpleView({
   roughTxCountEstimate?: number
 }): ReactElement {
   return (
-    <div className={styles.simple}>
+    <motion.div
+      className="w-full text-center p-3 rounded-lg border"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.1, duration: 0.3 }}
+      style={{
+        background: isFunded
+          ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'
+          : 'linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%)',
+        borderColor: isFunded ? '#10b981' : '#ef4444'
+      }}
+    >
       {isFunded && roughTxCountEstimate && roughTxCountEstimate > 0 ? (
-        <>
-          <span className={styles.success}>
-            Automation available for roughly {roughTxCountEstimate.toFixed(0)}{' '}
-            transactions.
-          </span>
-        </>
+        <motion.span
+          className="block text-sm font-medium text-emerald-700"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Automation available for roughly {roughTxCountEstimate.toFixed(0)}{' '}
+          transactions.
+        </motion.span>
       ) : (
-        <>
-          <span className={styles.error}>
-            Automation not sufficiently funded!
-          </span>
-        </>
+        <motion.span
+          className="block text-sm font-medium text-red-700"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Automation not sufficiently funded!
+        </motion.span>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -91,34 +116,81 @@ export default function Details({
   }, [balance.native, automationConfig?.roughTxGasEstimate])
 
   return (
-    <div className={styles.details}>
+    <div className="max-w-md p-4">
       {/* DESCRIPTION */}
-      <strong className={styles.title}>Automation</strong>
-      <div className={styles.help}>
-        Automate transactions using an imported wallet of your choice.
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-2"
+      >
+        <h3
+          className="font-bold text-lg mb-2"
+          style={{
+            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            textShadow: '0 2px 4px rgba(5, 150, 105, 0.1)'
+          }}
+        >
+          Automation
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Automate transactions using an imported wallet of your choice.
+        </p>
+      </motion.div>
 
       {/* EN-/DISABLE */}
       {autoWallet?.address && (
-        <Button
-          style="primary"
-          onClick={() => {
-            setIsAutomationEnabled(!isAutomationEnabled)
-          }}
-          className={styles.toggleBtn}
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
         >
-          {isAutomationEnabled ? 'Disable automation' : 'Enable automation'}
-        </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <button
+              onClick={() => {
+                setIsAutomationEnabled(!isAutomationEnabled)
+              }}
+              className="w-full rounded-lg py-1 px-3 text-sm font-medium transition-all duration-200"
+              style={{
+                background: isAutomationEnabled
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#ffffff',
+                border: 'none',
+                boxShadow: isAutomationEnabled
+                  ? '0 4px 12px rgba(239, 68, 68, 0.3)'
+                  : '0 4px 12px rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              {isAutomationEnabled ? 'Disable automation' : 'Enable automation'}
+            </button>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* AUTOMATION ADDRESS */}
       {autoWalletAddress && (
-        <Address showDelete={autoWallet === undefined && !isLoading} />
+        <motion.div
+          className="mb-3"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
+        >
+          <Address showDelete={autoWallet === undefined && !isLoading} />
+        </motion.div>
       )}
 
       {/* MAIN AUTOMATION SECTION */}
       {autoWallet && (
-        <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
           {automationWalletMode === AUTOMATION_MODES.SIMPLE ? (
             <SimpleView
               isFunded={isFunded}
@@ -127,11 +199,19 @@ export default function Details({
           ) : (
             <AdvancedView />
           )}
-        </>
+        </motion.div>
       )}
 
       {/* IMPORT / EXPORT */}
-      {!autoWallet && (needsImport ? <Import /> : <Decrypt />)}
+      {!autoWallet && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.3 }}
+        >
+          {needsImport ? <Import /> : <Decrypt />}
+        </motion.div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { ReactElement } from 'react'
 import Alert from '@shared/atoms/Alert'
 import SimpleFooter from '../Home/SimpleFooter'
-import GlobalFloatingHeader from '../Home/GlobalFloatingHeader'
+import Header from '../Header'
 import { useAccountPurgatory } from '@hooks/useAccountPurgatory'
 import AnnouncementBanner from '@shared/AnnouncementBanner'
 import PrivacyPreferenceCenter from '../Privacy/PrivacyPreferenceCenter'
@@ -34,7 +34,7 @@ export default function App({
         devPreviewAnnouncementText !== '' && (
           <AnnouncementBanner text={devPreviewAnnouncementText} />
         )}
-      <GlobalFloatingHeader />
+      <Header />
 
       {isInPurgatory && (
         <Alert
