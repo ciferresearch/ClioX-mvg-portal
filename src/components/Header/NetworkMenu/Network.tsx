@@ -41,9 +41,9 @@ export default function Network({
       <div className="flex items-center space-x-1">
         <NetworkName networkId={chain.id} minimal />
         {isTestnet && (
-          <span className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-md font-medium">
+          <div className="text-[10px] leading-none px-1 py-1 bg-emerald-100 text-emerald-700 rounded-md font-medium flex items-center justify-center h-4">
             TEST
-          </span>
+          </div>
         )}
       </div>
       <motion.div
