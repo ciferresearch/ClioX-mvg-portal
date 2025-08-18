@@ -1,5 +1,8 @@
+import { useUserPreferences } from '@context/UserPreferences'
+
 export default function SimpleFooter() {
   const currentYear = new Date().getFullYear()
+  const { setShowPPC } = useUserPreferences()
 
   const footerLinks = [
     { label: 'Documentation', href: '/docs' },
@@ -46,15 +49,24 @@ export default function SimpleFooter() {
           <div className="text-center lg:text-right">
             {/* Links */}
             <div className="flex flex-wrap justify-center lg:justify-end gap-6 mb-6">
-              {footerLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-gray-600 hover:text-teal-600 transition-colors duration-200 text-sm font-medium"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {footerLinks.map((link) => {
+                const isCookieLink = link.href === '#cookies'
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={(e) => {
+                      if (isCookieLink) {
+                        e.preventDefault()
+                        setShowPPC(true)
+                      }
+                    }}
+                    className="text-gray-600 hover:text-teal-600 transition-colors duration-200 text-sm font-medium"
+                  >
+                    {link.label}
+                  </a>
+                )
+              })}
             </div>
 
             {/* Copyright */}

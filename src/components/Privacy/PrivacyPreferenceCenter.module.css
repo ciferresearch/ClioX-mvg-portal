@@ -3,10 +3,10 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  background: var(--background-body-transparent);
-  backdrop-filter: blur(4px);
+  background: #ffffff; /* Pure white background */
   padding: calc(var(--spacer) / 2);
   min-height: 100vh;
+  border-radius: 16px; /* Rounded corners like Tailwind rounded-2xl */
 }
 
 .banner p {
@@ -28,6 +28,9 @@
 
 .closeButton {
   margin-top: var(--spacer);
+  border: 2px solid #d1d5db; /* border-gray-300 */
+  background-color: var(--cookie-acknowledge-background);
+  border-radius: 8px; /* Rounded corners like Tailwind rounded-lg */
 }
 
 .header {
@@ -60,11 +63,13 @@
   max-width: 42rem;
   overflow: hidden;
   height: auto;
+  border-radius: 16px; /* Rounded corners for small banner */
 }
 
 .small .banner {
   display: block;
   min-height: 0;
+  border-radius: 16px; /* Rounded corners for small banner content */
 }
 
 .small .header {
@@ -98,11 +103,13 @@
 
 .small .closeButton {
   margin: calc(var(--spacer) / 4) auto 0;
-  background-color: var(--color-primary);
+  background-color: var(--cookie-acknowledge-background);
+  border: 2px solid #d1d5db; /* border-gray-300 */
 }
 
 .small .closeButton:hover {
-  background-color: var(--color-highlight);
+  background-color: var(--cookie-acknowledge-hover-background);
+  border-color: #059669; /* border-emerald-600 */
 }
 
 /* Hide and show the Cookie Banner */

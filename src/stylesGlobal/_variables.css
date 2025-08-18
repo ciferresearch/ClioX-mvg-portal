@@ -119,6 +119,10 @@
   --button-ghost-hover-background: var(--brand-red-dark);
   --button-text-font-color: var(--color-secondary);
 
+  /* Cookie Banner acknowledge button (align with landing color) */
+  --cookie-acknowledge-background: #10b981; /* emerald-500 */
+  --cookie-acknowledge-hover-background: #10b981; /* emerald-500 */
+
   /* Loading spinner */
   --loader-border-color: var(--brand-blue);
   --loader-top-border-color: transparent;
