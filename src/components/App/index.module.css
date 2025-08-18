@@ -14,6 +14,9 @@
 .main {
   /* sticky footer technique */
   flex: 1;
+
+  /* Add top margin to account for fixed header */
+  padding-top: 6rem; /* 96px - accounts for header + search bar + some spacing */
 }
 
 .main > div[class*='Alert']:first-child {

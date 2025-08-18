@@ -1,6 +1,5 @@
 import { ReactElement } from 'react'
 import { motion } from 'motion/react'
-import * as Button from '@radix-ui/react-button'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -8,7 +7,7 @@ export default function Page404(): ReactElement {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 -mt-24">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-teal-100/30 to-emerald-100/30 rounded-full blur-3xl" />
@@ -81,7 +80,7 @@ export default function Page404(): ReactElement {
         >
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
+            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
           >
             <span>Return to Homepage</span>
             <motion.svg
@@ -102,7 +101,7 @@ export default function Page404(): ReactElement {
 
           <Link
             href="/search"
-            className="inline-flex items-center justify-center px-8 py-4 border-2 border-teal-200 text-teal-700 font-semibold rounded-xl hover:bg-teal-50 hover:border-teal-300 transition-all duration-200 cursor-pointer group"
+            className="inline-flex items-center justify-center px-6 py-3 border-2 border-teal-200 text-teal-700 font-semibold rounded-xl hover:bg-teal-50 hover:border-teal-300 transition-all duration-200 cursor-pointer group"
           >
             <span>Browse Catalogue</span>
             <motion.svg
@@ -120,35 +119,6 @@ export default function Page404(): ReactElement {
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </motion.svg>
           </Link>
-        </motion.div>
-
-        {/* Helpful Links */}
-        <motion.div
-          className="flex flex-wrap justify-center gap-6 text-sm text-gray-500"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
-        >
-          <Link
-            href="/resources"
-            className="hover:text-teal-600 transition-colors duration-200"
-          >
-            Resources
-          </Link>
-          <Link
-            href="/partners"
-            className="hover:text-teal-600 transition-colors duration-200"
-          >
-            Partners
-          </Link>
-          <Link
-            href="/verify"
-            className="hover:text-teal-600 transition-colors duration-200"
-          >
-            Verify
-          </Link>
-          <span className="text-gray-300">•</span>
-          <span>Current path: {router.asPath}</span>
         </motion.div>
       </div>
 

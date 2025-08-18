@@ -4,7 +4,7 @@ import StakeholdersSection from './StakeholdersSection'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 -mt-24">
       <HeroSection />
       <BenefitsSection />
       <StakeholdersSection />
