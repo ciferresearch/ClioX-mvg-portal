@@ -1,6 +1,5 @@
 import { FormEvent, ReactElement } from 'react'
 import SearchIcon from '@images/search.svg'
-import styles from './SearchButton.module.css'
 import { useSearchBarStatus } from '@context/SearchBarStatus'
 
 export default function SearchButton(): ReactElement {
@@ -13,9 +12,17 @@ export default function SearchButton(): ReactElement {
   }
 
   return (
-    <div className={styles.search}>
-      <button onClick={handleButtonClick} className={styles.button}>
-        <SearchIcon className={styles.searchIcon} />
+    <div className="relative">
+      <button
+        onClick={handleButtonClick}
+        className={`p-2 rounded-lg transition-colors duration-200 hover:bg-teal-50 ${
+          isSearchBarVisible
+            ? 'bg-teal-100 text-teal-700'
+            : 'text-gray-600 hover:text-teal-700'
+        }`}
+        aria-label="Search"
+      >
+        <SearchIcon className="w-5 h-5" />
       </button>
     </div>
   )

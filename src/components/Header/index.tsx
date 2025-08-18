@@ -1,10 +1,9 @@
 import { ReactElement } from 'react'
 import Menu from './Menu'
-import styles from './index.module.css'
 
 export default function Header(): ReactElement {
   return (
-    <header className={styles.header}>
+    <header className="bg-white border-b border-gray-100 shadow-sm">
       <Menu />
     </header>
   )

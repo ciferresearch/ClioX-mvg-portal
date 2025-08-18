@@ -1,21 +1,13 @@
-import { ReactElement } from 'react'
-import Hero from './Hero'
-import ChooseRole from './ChooseRole'
-import WhatWeDo from './WhatWeDo'
-import Pillars from './Pillars'
-import ContactAndOnboarding from './Contact'
-import FAQ from './FAQ'
-import styles from './home.module.css'
+import HeroSection from './HeroSection'
+import BenefitsSection from './BenefitsSection'
+import StakeholdersSection from './StakeholdersSection'
 
-export default function Home(): ReactElement {
+export default function HomePage() {
   return (
-    <main className={styles.home}>
-      <Hero />
-      <ChooseRole />
-      <WhatWeDo />
-      <Pillars />
-      <FAQ />
-      <ContactAndOnboarding />
-    </main>
+    <div className="min-h-screen bg-gray-50">
+      <HeroSection />
+      <BenefitsSection />
+      <StakeholdersSection />
+    </div>
   )
 }

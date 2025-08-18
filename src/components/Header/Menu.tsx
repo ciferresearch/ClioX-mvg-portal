@@ -3,10 +3,8 @@ import Link from 'next/link'
 import loadable from '@loadable/component'
 import Logo from '@shared/atoms/Logo'
 import Networks from './UserPreferences/Networks'
-import styles from './Menu.module.css'
 import { useRouter } from 'next/router'
 import { useMarketMetadata } from '@context/MarketMetadata'
-import classNames from 'classnames/bind'
 import MenuDropdown from '@components/@shared/MenuDropdown'
 import SearchButton from './SearchButton'
 import Button from '@components/@shared/atoms/Button'
@@ -14,8 +12,6 @@ import UserPreferences from './UserPreferences'
 import Automation from './UserPreferences/Automation'
 import NetworkMenu from './NetworkMenu'
 const Wallet = loadable(() => import('./Wallet'))
-
-const cx = classNames.bind(styles)
 
 declare type MenuItem = {
   name: string
@@ -34,17 +30,16 @@ export function MenuLink({ name, link, className, isLive }: MenuItem) {
   const currentPath = router?.pathname
   const isActive = link.startsWith('/') && currentPath === link
 
-  const classes = cx({
-    link: true,
-    active: isActive,
-    [className]: className
-  })
+  const baseClasses =
+    'px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-teal-50 hover:text-teal-700'
+  const activeClasses = isActive ? 'bg-teal-100 text-teal-700' : 'text-gray-700'
+  const finalClasses = `${baseClasses} ${activeClasses} ${className || ''}`
 
   return isLive === false ? (
     <></>
   ) : (
     <Button
-      className={classes}
+      className={finalClasses}
       {...(link.startsWith('/') ? { to: link } : { href: link })}
     >
       {name}
@@ -56,32 +51,37 @@ export default function Menu(): ReactElement {
   const { appConfig, siteContent } = useMarketMetadata()
 
   return (
-    <nav className={styles.menu}>
-      <Link href="/" className={styles.logo}>
-        <Logo />
-      </Link>
+    <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between h-16">
+        <Link
+          href="/"
+          className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+        >
+          <Logo />
+        </Link>
 
-      <ul className={styles.navigation}>
-        {siteContent?.menu.map((item: MenuItem) => (
-          <li key={item.name}>
-            {item?.subItems ? (
-              <MenuDropdown label={item.name} items={item.subItems} />
-            ) : (
-              <MenuLink {...item} />
-            )}
-          </li>
-        ))}
-      </ul>
+        <ul className="hidden md:flex items-center space-x-1">
+          {siteContent?.menu.map((item: MenuItem) => (
+            <li key={item.name}>
+              {item?.subItems ? (
+                <MenuDropdown label={item.name} items={item.subItems} />
+              ) : (
+                <MenuLink {...item} />
+              )}
+            </li>
+          ))}
+        </ul>
 
-      <div className={styles.actions}>
-        <SearchButton />
-        {appConfig.chainIdsSupported.length > 1 && <Networks />}
-        <NetworkMenu />
-        <Wallet />
-        {appConfig.automationConfig.enableAutomation === 'true' && (
-          <Automation />
-        )}
-        <UserPreferences />
+        <div className="flex items-center space-x-2">
+          <SearchButton />
+          {appConfig.chainIdsSupported.length > 1 && <Networks />}
+          <NetworkMenu />
+          <Wallet />
+          {appConfig.automationConfig.enableAutomation === 'true' && (
+            <Automation />
+          )}
+          <UserPreferences />
+        </div>
       </div>
     </nav>
   )

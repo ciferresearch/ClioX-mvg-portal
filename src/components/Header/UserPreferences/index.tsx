@@ -1,7 +1,6 @@
 import { ReactElement } from 'react'
 import Tooltip from '@shared/atoms/Tooltip'
 import Cog from '@images/cog.svg'
-import styles from './index.module.css'
 import Debug from './Debug'
 import Caret from '@images/caret.svg'
 import ExternalContent from './ExternalContent'
@@ -15,7 +14,7 @@ export default function UserPreferences(): ReactElement {
   return (
     <Tooltip
       content={
-        <ul className={styles.preferencesDetails}>
+        <ul className="bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
           <li>
             <ExternalContent />
           </li>
@@ -33,12 +32,12 @@ export default function UserPreferences(): ReactElement {
         </ul>
       }
       trigger="click focus mouseenter"
-      className={styles.preferences}
+      className="relative"
     >
-      <>
-        <Cog aria-label="Preferences" className={styles.icon} />
-        <Caret aria-hidden="true" className={styles.caret} />
-      </>
+      <button className="p-2 rounded-lg text-gray-600 hover:text-teal-700 hover:bg-teal-50 transition-colors duration-200 flex items-center space-x-1">
+        <Cog aria-label="Preferences" className="w-5 h-5" />
+        <Caret aria-hidden="true" className="w-3 h-3 opacity-60" />
+      </button>
     </Tooltip>
   )
 }

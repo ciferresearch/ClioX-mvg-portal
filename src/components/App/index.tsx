@@ -1,7 +1,7 @@
 import { ReactElement } from 'react'
 import Alert from '@shared/atoms/Alert'
-import Footer from '../Footer/Footer'
-import Header from '../Header'
+import SimpleFooter from '../Home/SimpleFooter'
+import GlobalFloatingHeader from '../Home/GlobalFloatingHeader'
 import { useAccountPurgatory } from '@hooks/useAccountPurgatory'
 import AnnouncementBanner from '@shared/AnnouncementBanner'
 import PrivacyPreferenceCenter from '../Privacy/PrivacyPreferenceCenter'
@@ -34,7 +34,7 @@ export default function App({
         devPreviewAnnouncementText !== '' && (
           <AnnouncementBanner text={devPreviewAnnouncementText} />
         )}
-      <Header />
+      <GlobalFloatingHeader />
 
       {isInPurgatory && (
         <Alert
@@ -45,7 +45,7 @@ export default function App({
         />
       )}
       <main className={styles.main}>{children}</main>
-      <Footer />
+      <SimpleFooter />
 
       {appConfig?.privacyPreferenceCenter === 'true' && (
         <PrivacyPreferenceCenter style="small" />
