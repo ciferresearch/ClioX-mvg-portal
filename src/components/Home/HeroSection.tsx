@@ -34,7 +34,7 @@ export default function HeroSection() {
             <button className="bg-white text-teal-800 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer">
               Get started
             </button>
-            <button className="border border-white/40 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer">
+            <button className="border-2 border-white/40 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer">
               Explore our solution
             </button>
           </motion.div>
