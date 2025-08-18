@@ -45,11 +45,11 @@ export default function AutomationWalletMode(): ReactElement {
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 5 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="absolute right-0 bottom-full mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-50"
+              className="absolute right-0 bottom-full mb-2 w-64 p-2 text-gray-800 text-xs rounded-lg shadow-lg z-50 backdrop-blur-2xl bg-white/80 border border-white/30"
               style={{ pointerEvents: 'none' }}
             >
               Set the viewing mode for your automation wallet
-              <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
+              <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
             </motion.div>
           )}
         </div>
