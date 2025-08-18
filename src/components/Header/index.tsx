@@ -121,7 +121,7 @@ export default function Header() {
           </nav>
 
           {/* Desktop Actions */}
-          {/* <div className="hidden lg:flex items-center gap-2 ml-6">
+          <div className="hidden lg:flex items-center gap-2 ml-6">
             <SearchButton />
             {appConfig?.chainIdsSupported?.length > 1 && <Networks />}
             <NetworkMenu />
@@ -130,7 +130,7 @@ export default function Header() {
               <Automation />
             )}
             <UserPreferences />
-          </div> */}
+          </div>
 
           {/* Mobile Menu Button */}
           <button
