@@ -69,9 +69,9 @@ export default function Wallet(): ReactElement {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute right-0 top-full mt-2 z-50"
+            className="absolute left-0 top-full mt-2 z-50"
             style={{
-              transformOrigin: 'top right'
+              transformOrigin: 'top left'
             }}
           >
             <Details />
