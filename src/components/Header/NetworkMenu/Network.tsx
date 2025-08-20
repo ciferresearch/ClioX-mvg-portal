@@ -4,9 +4,10 @@ import Status from '@shared/atoms/Status'
 
 import Tooltip from '@shared/atoms/Tooltip'
 import NetworkName from '@shared/NetworkName'
-import { IconChevronDown } from '@tabler/icons-react'
+import { IconChevronDown, IconCurrencyEthereum } from '@tabler/icons-react'
 import { useNetwork } from 'wagmi'
 import useNetworkMetadata from '@hooks/useNetworkMetadata'
+import { useSearchBarStatus } from '@context/SearchBarStatus'
 
 export default function Network({
   onClick
@@ -15,6 +16,7 @@ export default function Network({
 }): ReactElement {
   const { chain } = useNetwork()
   const { isTestnet, isSupportedOceanNetwork } = useNetworkMetadata()
+  const { isSearchBarVisible } = useSearchBarStatus()
   const [isHovered, setIsHovered] = useState(false)
 
   const handleClick = () => {
@@ -23,7 +25,9 @@ export default function Network({
 
   return chain?.id ? (
     <motion.button
-      className="flex items-center space-x-2 px-3 rounded-lg border border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap cursor-pointer flex-shrink-0 h-9"
+      className={`flex items-center space-x-2 rounded-lg border border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-emerald-700 whitespace-nowrap cursor-pointer flex-shrink-0 h-9 ${
+        isSearchBarVisible ? 'px-2' : 'px-2 md:px-3'
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
@@ -38,7 +42,16 @@ export default function Network({
           <Status state="error" />
         </Tooltip>
       )}
-      <div className="flex items-center space-x-1">
+      {/* Compact mode icon - shown when search bar is visible */}
+      {isSearchBarVisible && (
+        <IconCurrencyEthereum size={16} stroke={2} className="text-gray-600" />
+      )}
+      {/* Full network info - hidden when search bar is visible */}
+      <div
+        className={`flex items-center space-x-1 ${
+          isSearchBarVisible ? 'hidden' : 'hidden md:flex'
+        }`}
+      >
         <NetworkName networkId={chain.id} minimal />
         {isTestnet && (
           <div className="text-[10px] leading-none px-1 py-1 bg-emerald-100 text-emerald-700 rounded-md font-medium flex items-center justify-center h-4">

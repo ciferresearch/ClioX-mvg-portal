@@ -5,6 +5,7 @@ import { accountTruncate } from '@utils/wallet'
 import Avatar from '@shared/atoms/Avatar'
 import { useAccount } from 'wagmi'
 import { useModal } from 'connectkit'
+import { useSearchBarStatus } from '@context/SearchBarStatus'
 
 // Forward ref for dropdown functionality
 // eslint-disable-next-line
@@ -12,6 +13,7 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
   (props, ref) => {
     const { address: accountId } = useAccount()
     const { setOpen } = useModal()
+    const { isSearchBarVisible } = useSearchBarStatus()
     const [isHovered, setIsHovered] = useState(false)
 
     async function handleActivation(e: FormEvent<HTMLButtonElement>) {
@@ -32,7 +34,9 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
 
     return accountId ? (
       <motion.button
-        className="flex items-center space-x-2 px-3 rounded-lg border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-teal-700 h-9 cursor-pointer"
+        className={`flex items-center space-x-2 rounded-lg border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-teal-700 h-9 cursor-pointer ${
+          isSearchBarVisible ? 'px-2' : 'px-2 md:px-3'
+        }`}
         aria-label="Account"
         ref={ref}
         onClick={handleClick}
@@ -45,7 +49,10 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
         }}
       >
         <Avatar accountId={accountId} />
-        <span title={accountId} className="hidden sm:block">
+        <span
+          title={accountId}
+          className={`${isSearchBarVisible ? 'hidden' : 'hidden md:block'}`}
+        >
           {accountTruncate(accountId)}
         </span>
         <motion.div
@@ -68,7 +75,7 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
           boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
         }}
       >
-        <span className="hidden sm:inline">Connect </span>Wallet
+        <span className="hidden md:inline">Connect </span>Wallet
       </motion.button>
     )
   }

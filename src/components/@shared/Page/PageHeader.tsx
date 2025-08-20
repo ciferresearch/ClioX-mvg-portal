@@ -1,4 +1,3 @@
-import SearchBar from '@components/Header/SearchBar'
 import BrandLogo from '@images/pontusx_logo_horizontal.svg'
 import GaiaXLogo from '@images/gaia-x-logo.svg'
 import Markdown from '@shared/Markdown'
@@ -13,14 +12,12 @@ export default function PageHeader({
   title,
   center,
   description,
-  isHome,
-  showSearch
+  isHome
 }: {
   title: string | ReactElement
   center?: boolean
   description?: string
   isHome?: boolean
-  showSearch?: boolean
 }): ReactElement {
   const styleClasses = cx({
     header: true,
@@ -55,11 +52,7 @@ export default function PageHeader({
       {description && !isHome && (
         <Markdown text={description} className={styles.description} />
       )}
-      {showSearch && (
-        <div className={styles.search}>
-          <SearchBar placeholder="Search for service offerings" />
-        </div>
-      )}
+      {/* SearchBar removed - now using header expanded search bar instead */}
     </header>
   )
 }
