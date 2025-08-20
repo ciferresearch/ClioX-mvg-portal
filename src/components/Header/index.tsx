@@ -15,17 +15,41 @@ const Wallet = loadable(() => import('./Wallet'))
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  )
   const router = useRouter()
   const { appConfig } = useMarketMetadata()
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
+
+      // Set scrolling state to true
+      setIsScrolling(true)
+
+      // Clear existing timeout
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+
+      // Set new timeout to detect when scrolling stops
+      const timeout = setTimeout(() => {
+        setIsScrolling(false)
+      }, 150) // 150ms delay after scrolling stops
+
+      setScrollTimeout(timeout)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    }
+  }, [scrollTimeout])
 
   const brandIcon = (
     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-sm">
@@ -69,14 +93,34 @@ export default function Header() {
     <>
       <div className="fixed inset-x-0 top-4 flex justify-center pointer-events-none z-50">
         <motion.div
-          className={`max-w-fit mx-4 bg-white border rounded-3xl shadow-lg flex items-center px-4 py-2 pointer-events-auto transition-all duration-300 header-hover-disabled ${
+          className={`max-w-fit mx-4 border rounded-3xl shadow-lg flex items-center px-4 py-2 pointer-events-auto transition-all duration-500 header-hover-disabled ${
             isScrolled
               ? 'shadow-xl border-gray-200 transform -translate-y-1'
               : 'shadow-md border-gray-100'
           }`}
+          style={{
+            background: isScrolling
+              ? 'rgba(255, 255, 255, 0.8)'
+              : 'rgba(255, 255, 255, 1)',
+            backdropFilter: isScrolling ? 'blur(20px)' : 'blur(0px)',
+            WebkitBackdropFilter: isScrolling ? 'blur(20px)' : 'blur(0px)',
+            borderColor: isScrolling ? 'rgba(255, 255, 255, 0.3)' : undefined
+          }}
           initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            background: isScrolling
+              ? 'rgba(255, 255, 255, 0.8)'
+              : 'rgba(255, 255, 255, 1)',
+            backdropFilter: isScrolling ? 'blur(20px)' : 'blur(0px)'
+          }}
+          transition={{
+            duration: 0.5,
+            ease: 'easeOut',
+            background: { duration: 0.3 },
+            backdropFilter: { duration: 0.3 }
+          }}
         >
           {/* Brand */}
           <Link
