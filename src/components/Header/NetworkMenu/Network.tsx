@@ -42,14 +42,18 @@ export default function Network({
           <Status state="error" />
         </Tooltip>
       )}
-      {/* Compact mode icon - shown when search bar is visible */}
-      {isSearchBarVisible && (
+      {/* Compact mode icon - shown when search bar is visible or screen is smaller than xl */}
+      <div
+        className={`${
+          isSearchBarVisible ? 'flex' : 'flex xl:hidden'
+        } items-center`}
+      >
         <IconCurrencyEthereum size={16} stroke={2} className="text-gray-600" />
-      )}
-      {/* Full network info - hidden when search bar is visible */}
+      </div>
+      {/* Full network info - hidden when search bar is visible or screen is smaller than xl */}
       <div
         className={`flex items-center space-x-1 ${
-          isSearchBarVisible ? 'hidden' : 'hidden md:flex'
+          isSearchBarVisible ? 'hidden' : 'hidden xl:flex'
         }`}
       >
         <NetworkName networkId={chain.id} minimal />

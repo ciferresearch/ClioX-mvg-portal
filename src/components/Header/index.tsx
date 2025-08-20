@@ -90,7 +90,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1 ml-6">
+          <nav className="hidden md:flex items-center gap-1 ml-6">
             {mainNavLinks.map((link) => {
               const isActive =
                 router.pathname === link.href ||
@@ -113,7 +113,7 @@ export default function Header() {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-2 ml-6">
+          <div className="hidden md:flex items-center gap-2 ml-6">
             <SearchButton />
             {appConfig?.chainIdsSupported?.length > 1 && <Networks />}
             <NetworkMenu />
@@ -127,7 +127,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
+            className="md:hidden w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
             aria-label="Toggle menu"
           >
             {menuIcon}
@@ -137,7 +137,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-x-0 top-20 flex justify-center pointer-events-none z-40 lg:hidden">
+        <div className="fixed inset-x-0 top-20 flex justify-center pointer-events-none z-40 md:hidden">
           <motion.div
             className="max-w-md w-full mx-4 bg-white border border-gray-100 rounded-xl shadow-lg pointer-events-auto"
             initial={{ opacity: 0, y: -10 }}
@@ -189,7 +189,7 @@ export default function Header() {
       {/* Mobile menu backdrop */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-20 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-20 z-30 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}

@@ -19,6 +19,11 @@ export default function SearchButton(): ReactElement {
   async function handleButtonClick(e: FormEvent<HTMLButtonElement>) {
     e.preventDefault()
 
+    // Check if we're in md to xl range (768px to 1280px)
+    const isMediumToLarge = window.matchMedia(
+      '(min-width: 768px) and (max-width: 1279px)'
+    ).matches
+
     if (isSearchPage) {
       // Focus on the existing search bar in the search page
       const searchPageInput = document.querySelector(
@@ -42,6 +47,12 @@ export default function SearchButton(): ReactElement {
           }
         }
       }
+      return
+    }
+
+    // If in md to xl range, redirect to catalogue page instead of expanding search
+    if (isMediumToLarge) {
+      router.push('/search?sort=nft.created&sortOrder=desc')
       return
     }
 
@@ -90,6 +101,22 @@ export default function SearchButton(): ReactElement {
       searchInputRef.current.focus()
     }
   }, [isSearchBarVisible])
+
+  // Focus search input on catalogue page after navigation
+  useEffect(() => {
+    if (router.pathname === '/search') {
+      // Small delay to ensure the page has rendered
+      const timer = setTimeout(() => {
+        const searchPageInput = document.querySelector(
+          '.search-page-input'
+        ) as HTMLInputElement
+        if (searchPageInput) {
+          searchPageInput.focus()
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [router.pathname])
 
   // Responsive target width for expanded search bar
   useEffect(() => {

@@ -51,7 +51,7 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
         <Avatar accountId={accountId} />
         <span
           title={accountId}
-          className={`${isSearchBarVisible ? 'hidden' : 'hidden md:block'}`}
+          className={`${isSearchBarVisible ? 'hidden' : 'hidden xl:block'}`}
         >
           {accountTruncate(accountId)}
         </span>
