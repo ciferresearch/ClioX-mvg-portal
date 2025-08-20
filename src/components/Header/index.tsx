@@ -91,16 +91,16 @@ export default function Header() {
           {/* Brand */}
           <Link
             href="/"
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 lg:gap-3 hover:opacity-80 transition-opacity"
           >
             {brandIcon}
-            <span className="font-bold text-gray-900 text-md">
+            <span className="hidden xl:block font-bold text-gray-900 text-md">
               MY Data Platform
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center gap-1 ml-6">
+          <nav className="hidden lg:flex items-center gap-1 ml-6">
             {mainNavLinks.map((link) => {
               const isActive =
                 router.pathname === link.href ||
@@ -110,7 +110,7 @@ export default function Header() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 h-9 flex items-center rounded-lg font-medium text-sm transition-colors duration-200 mx-1 ${
+                  className={`px-2 lg:px-3 h-9 flex items-center rounded-lg font-medium text-sm transition-colors duration-200 mx-0.5 lg:mx-1 ${
                     isActive
                       ? 'bg-teal-100 text-teal-700'
                       : 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'

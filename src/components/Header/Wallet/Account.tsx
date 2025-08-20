@@ -32,7 +32,7 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
 
     return accountId ? (
       <motion.button
-        className="flex items-center space-x-2 px-3 rounded-lg border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-teal-700 h-9 cursor-pointer"
+        className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 rounded-lg border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 text-sm font-medium text-gray-700 hover:text-teal-700 h-9 cursor-pointer"
         aria-label="Account"
         ref={ref}
         onClick={handleClick}
@@ -45,7 +45,7 @@ const Account = forwardRef<HTMLButtonElement, { onClick?: () => void }>(
         }}
       >
         <Avatar accountId={accountId} />
-        <span title={accountId} className="hidden sm:block">
+        <span title={accountId} className="hidden 2xl:block">
           {accountTruncate(accountId)}
         </span>
         <motion.div

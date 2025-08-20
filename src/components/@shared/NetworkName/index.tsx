@@ -30,7 +30,7 @@ export default function NetworkName({
       <NetworkIcon name={networkName} />
       <span
         className={`
-        ${minimal ? 'opacity-0 w-0 lg:opacity-100 lg:w-auto' : ''}
+        ${minimal ? 'opacity-0 w-0 2xl:opacity-100 2xl:w-auto' : ''}
         transition-all duration-200
       `}
       >
