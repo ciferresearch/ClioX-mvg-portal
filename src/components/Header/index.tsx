@@ -6,7 +6,6 @@ import loadable from '@loadable/component'
 import Networks from './UserPreferences/Networks'
 import NetworkMenu from './NetworkMenu'
 import SearchButton from './SearchButton'
-import SearchBar from './SearchBar'
 import UserPreferences from './UserPreferences'
 import Automation from './UserPreferences/Automation'
 import { useMarketMetadata } from '@context/MarketMetadata'
@@ -68,15 +67,6 @@ export default function Header() {
 
   return (
     <>
-      {/* SearchBar - positioned below the header - only show on home page */}
-      {router.pathname === '/' && (
-        <div className="fixed inset-x-0 top-20 flex justify-center pointer-events-none z-40">
-          <div className="w-full max-w-2xl mx-4 pointer-events-auto">
-            <SearchBar placeholder="Search for service offerings" />
-          </div>
-        </div>
-      )}
-
       <div className="fixed inset-x-0 top-4 flex justify-center pointer-events-none z-50">
         <motion.div
           className={`max-w-fit mx-4 bg-white border rounded-3xl shadow-lg flex items-center px-4 py-2 pointer-events-auto transition-all duration-300 ${
