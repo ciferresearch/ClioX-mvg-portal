@@ -25,8 +25,8 @@ export default function NumberUnit({
       transition={{ duration: 0.2 }}
     >
       <motion.div
-        className={`text-3xl font-bold text-teal-800 mb-2 ${
-          small ? 'text-2xl' : ''
+        className={`text-2xl font-bold text-teal-800 mb-1 ${
+          small ? 'text-xl' : ''
         }`}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -37,7 +37,7 @@ export default function NumberUnit({
       </motion.div>
 
       <motion.span
-        className="text-sm font-medium text-gray-600 block"
+        className="text-xs font-medium text-gray-600 block"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
