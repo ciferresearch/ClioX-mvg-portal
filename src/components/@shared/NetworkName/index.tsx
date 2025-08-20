@@ -21,7 +21,7 @@ export default function NetworkName({
   return (
     <span
       className={`
-        inline-flex items-center cursor-default capitalize
+        inline-flex items-center cursor-inherit capitalize
         ${minimal ? 'relative' : ''}
         ${className || ''}
       `}
