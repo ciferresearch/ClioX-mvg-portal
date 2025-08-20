@@ -161,7 +161,7 @@ export default function SearchBar({
         autoComplete={!value ? 'off' : 'on'}
         onSubmit={startSearch}
       >
-        <div className="relative flex items-center bg-white border border-gray-200 rounded-lg shadow-xs transition-all duration-200">
+        <div className="relative flex items-center bg-white border border-gray-200 rounded-lg transition-all duration-200">
           {/* Search icon on the left - clickable submit button */}
           <button
             type="submit"
@@ -178,7 +178,7 @@ export default function SearchBar({
             value={value}
             onChange={handleChange}
             onKeyPress={handleKeyPress}
-            className={`w-full pl-10 pr-12 py-3 text-sm bg-transparent border-0 rounded-lg focus:outline-none placeholder-gray-400 ${
+            className={`w-full pl-10 pr-12 py-3 text-sm bg-transparent border-0 rounded-lg focus:outline-none focus:bg-transparent placeholder-gray-400 ${
               isSearchPage ? 'search-page-input' : ''
             }`}
           />

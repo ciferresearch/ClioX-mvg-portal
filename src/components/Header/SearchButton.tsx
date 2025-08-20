@@ -111,20 +111,20 @@ export default function SearchButton(): ReactElement {
           className="relative"
         >
           <form onSubmit={handleSearch} className="w-full">
-            <div className="relative flex items-center bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="relative flex items-center h-9 bg-white border border-gray-100 rounded-lg">
               <input
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search for service offerings..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 text-xs bg-transparent border-0 rounded-lg focus:outline-none focus:bg-gray-50 placeholder-gray-400"
+                className="w-full pl-3 pr-10 text-xs bg-transparent border-0 rounded-lg focus:outline-none focus:bg-transparent placeholder-gray-400"
               />
               {/* Close button */}
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute right-2 w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200"
+                className="absolute right-2 w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
                 <IconX size={12} stroke={2.5} />
               </button>
@@ -134,7 +134,7 @@ export default function SearchButton(): ReactElement {
       ) : (
         <button
           onClick={handleButtonClick}
-          className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200 text-gray-600 hover:text-teal-700 hover:bg-teal-50 cursor-pointer"
+          className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-200 text-gray-600 hover:text-teal-700 cursor-pointer"
           aria-label="Search"
         >
           <IconSearch size={14} stroke={2.5} />
