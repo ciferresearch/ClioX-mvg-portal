@@ -310,11 +310,12 @@ hidden lg:block         /* display: none; display: block (1024px+) */
 
 #### Button Specifications
 
-| Button Type   | Background                                          | Text Color | Border              | Shadow                               | Hover Effects     |
-| ------------- | --------------------------------------------------- | ---------- | ------------------- | ------------------------------------ | ----------------- |
-| **Primary**   | `linear-gradient(135deg, #10b981 0%, #059669 100%)` | `#ffffff`  | None                | `0 4px 12px rgba(16, 185, 129, 0.3)` | `scale: 1.05`     |
-| **Secondary** | `#ffffff`                                           | `#115e59`  | None                | `shadow-lg` → `shadow-xl`            | `-translate-y-1`  |
-| **Outline**   | `transparent`                                       | `#ffffff`  | `1px solid #d1d5db` | None                                 | `border-gray-400` |
+| Button Type     | Background                                          | Text Color | Border              | Shadow                               | Hover Effects     |
+| --------------- | --------------------------------------------------- | ---------- | ------------------- | ------------------------------------ | ----------------- |
+| **Primary**     | `linear-gradient(135deg, #10b981 0%, #059669 100%)` | `#ffffff`  | None                | `0 4px 12px rgba(16, 185, 129, 0.3)` | `scale: 1.05`     |
+| **Secondary**   | `#ffffff`                                           | `#115e59`  | None                | `shadow-lg` → `shadow-xl`            | `-translate-y-1`  |
+| **Outline**     | `transparent`                                       | `#ffffff`  | `1px solid #d1d5db` | None                                 | `border-gray-400` |
+| **Acknowledge** | `#0d9488` (teal-600)                                | `#ffffff`  | `1px solid #e5e7eb` | None                                 | `bg-teal-700`     |
 
 #### Button Size Variants
 
@@ -351,6 +352,11 @@ hidden lg:block         /* display: none; display: block (1024px+) */
 // Outline - Medium
 <button className="px-4 py-2 rounded-lg text-sm font-semibold bg-transparent border border-gray-300 text-white">
   Explore
+</button>
+
+// Acknowledge - Medium (Cookie Settings)
+<button className="px-4 py-2 rounded-lg text-sm font-semibold bg-teal-600 text-white border border-gray-200 hover:bg-teal-700 transition-colors duration-200">
+  Acknowledge
 </button>
 ```
 
