@@ -69,7 +69,7 @@ export default function Header() {
     <>
       <div className="fixed inset-x-0 top-4 flex justify-center pointer-events-none z-50">
         <motion.div
-          className={`max-w-fit mx-4 bg-white border rounded-3xl shadow-lg flex items-center px-4 py-2 pointer-events-auto transition-all duration-300 ${
+          className={`max-w-fit mx-4 bg-white border rounded-3xl shadow-lg flex items-center px-4 py-2 pointer-events-auto transition-all duration-300 header-hover-disabled ${
             isScrolled
               ? 'shadow-xl border-gray-200 transform -translate-y-1'
               : 'shadow-md border-gray-100'

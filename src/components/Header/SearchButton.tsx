@@ -11,6 +11,7 @@ export default function SearchButton(): ReactElement {
   const [searchValue, setSearchValue] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [expandedWidth, setExpandedWidth] = useState<number>(280)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Check if we're on a search page
   const isSearchPage = router.pathname.startsWith('/search')
@@ -64,8 +65,23 @@ export default function SearchButton(): ReactElement {
   }
 
   function handleClose() {
+    setIsTransitioning(true)
     setSearchBarVisible(false)
     setSearchValue('')
+
+    // Add delay after animation completes to prevent immediate hover effects
+    setTimeout(() => {
+      setIsTransitioning(false)
+      // After animation, add a class to prevent hover effects until mouse moves
+      document.body.classList.add('search-hover-disabled')
+
+      // Remove the class when user moves mouse
+      const handleMouseMove = () => {
+        document.body.classList.remove('search-hover-disabled')
+        document.removeEventListener('mousemove', handleMouseMove)
+      }
+      document.addEventListener('mousemove', handleMouseMove, { once: true })
+    }, 500) // 500ms delay after the 300ms animation
   }
 
   // Focus input when search bar becomes visible
@@ -87,6 +103,20 @@ export default function SearchButton(): ReactElement {
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
 
+  // Add CSS class to body when transitioning to disable hover effects
+  useEffect(() => {
+    if (isTransitioning) {
+      document.body.classList.add('search-transitioning')
+    } else {
+      document.body.classList.remove('search-transitioning')
+    }
+
+    return () => {
+      document.body.classList.remove('search-transitioning')
+      document.body.classList.remove('search-hover-disabled')
+    }
+  }, [isTransitioning])
+
   if (isSearchPage) {
     return (
       <div className="relative flex-shrink-0">
@@ -107,6 +137,7 @@ export default function SearchButton(): ReactElement {
         <motion.div
           initial={{ width: 36 }}
           animate={{ width: expandedWidth }}
+          exit={{ width: 36 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="relative"
         >

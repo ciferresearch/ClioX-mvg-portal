@@ -224,3 +224,43 @@
 .ReactModal__Body--open {
   overflow: hidden;
 }
+
+/* Disable hover effects when search bar is transitioning */
+body.search-transitioning .header-hover-disabled * {
+  pointer-events: none;
+}
+
+/* More specific rules for header elements */
+body.search-transitioning .header-hover-disabled button,
+body.search-transitioning .header-hover-disabled a,
+body.search-transitioning .header-hover-disabled [role='button'] {
+  pointer-events: none;
+}
+
+/* Alternative approach: disable hover effects without blocking interactions */
+body.search-transitioning .header-hover-disabled button:hover,
+body.search-transitioning .header-hover-disabled a:hover,
+body.search-transitioning .header-hover-disabled [role='button']:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+  transform: none !important;
+}
+
+/* Disable all hover effects after search bar closes until mouse moves */
+body.search-hover-disabled *:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
+/* Specific rules for common hover effects */
+body.search-hover-disabled button:hover,
+body.search-hover-disabled a:hover,
+body.search-hover-disabled [role='button']:hover,
+body.search-hover-disabled .hover\:bg-teal-50:hover,
+body.search-hover-disabled .hover\:text-teal-700:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}
