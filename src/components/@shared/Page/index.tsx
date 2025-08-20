@@ -14,6 +14,7 @@ export interface PageProps {
   noPageHeader?: boolean
   headerCenter?: boolean
   noContainer?: boolean
+  noSearchBar?: boolean
 }
 
 export default function Page({
@@ -23,7 +24,8 @@ export default function Page({
   description,
   noPageHeader,
   headerCenter,
-  noContainer
+  noContainer,
+  noSearchBar
 }: PageProps): ReactElement {
   const { allowExternalContent } = useUserPreferences()
 
@@ -36,8 +38,8 @@ export default function Page({
 
   const content = (
     <>
-      {/* SearchBar is only shown on non-home pages */}
-      {!isHome && (
+      {/* SearchBar is only shown on non-home pages, when not explicitly hidden, and not on search pages */}
+      {!isHome && !noSearchBar && !isSearchPage && (
         <SearchBar
           placeholder="Search for service offerings"
           isSearchPage={isSearchPage}

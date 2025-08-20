@@ -9,21 +9,25 @@ interface RouteGuardProps {
 
 // Routes that show coming soon page
 const COMING_SOON_ROUTES = [
-  '/bookmarks',
   '/verify',
   '/partners',
   '/resources',
   '/publish',
-  '/profile',
   '/faucet',
   '/intake',
   '/onboarding',
-  '/usecases',
-  '/search'
+  '/usecases'
 ]
 
 // Routes that are fully accessible
-const ALLOWED_ROUTES = ['/', '/coming-soon', '/404']
+const ALLOWED_ROUTES = [
+  '/',
+  '/coming-soon',
+  '/404',
+  '/profile',
+  '/search',
+  '/bookmarks'
+]
 
 export default function RouteGuard({ children }: RouteGuardProps) {
   const router = useRouter()

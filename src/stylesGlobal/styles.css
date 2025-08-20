@@ -1,6 +1,12 @@
 @import './_variables.css';
 
-/* Custom base styles that should be applied before Tailwind */
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-serif: 'Libre Baskerville', serif;
+}
+
 @layer base {
   *,
   *:before,
@@ -38,8 +44,6 @@
     background: var(--background-body);
   }
 
-  /* Apply Libre Baskerville only to the home page content */
-  /* For all other pages, use the base font */
   .markdown p,
   article p,
   .body-text,
@@ -51,7 +55,6 @@
     font-family: var(--font-family-base);
   }
 
-  /* Special class to apply Libre Baskerville only on home page */
   .home .markdown p,
   .home article p,
   .home .body-text,
@@ -144,9 +147,6 @@
     display: block;
   }
 
-  /* ::selection styling removed as requested */
-
-  /* fix required for codemirror */
   .cm-scroller ::selection {
     color: var(--font-color-heading);
   }
@@ -181,14 +181,10 @@
   }
 }
 
-/* Custom components */
 @layer components {
-  /* Add your custom component classes here */
 }
 
-/* Custom utilities */
 @layer utilities {
-  /* Add your custom utility classes here */
   .font-heading {
     font-family: var(--font-family-heading) !important;
   }
@@ -197,7 +193,6 @@
     font-family: var(--font-family-body) !important;
   }
 
-  /* Animation keyframes */
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -221,18 +216,11 @@
   }
 }
 
-/* Import other custom styles */
 @import './_code.css';
 @import './_toast.css';
 @import './_emojipicker.css';
 @import './_typography.css';
 
-/* prevent background scrolling */
 .ReactModal__Body--open {
   overflow: hidden;
 }
-
-@import 'tailwindcss';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

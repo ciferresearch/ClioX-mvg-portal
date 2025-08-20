@@ -5,7 +5,6 @@ import Modal from '@shared/atoms/Modal'
 import External from '@images/external.svg'
 import { getAsset } from '@utils/aquarius'
 import Results from './Results'
-import styles from './Details.module.css'
 import { useCancelToken } from '@hooks/useCancelToken'
 import MetaItem from '../../../Asset/AssetContent/MetaItem'
 import { useMarketMetadata } from '@context/MarketMetadata'
@@ -20,21 +19,24 @@ function Asset({
   did: string
 }) {
   return (
-    <div className={styles.asset}>
-      <h3 className={styles.assetTitle}>
-        {title}{' '}
+    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+        {title}
         <a
-          className={styles.assetLink}
+          className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
           href={`/asset/${did}`}
           target="_blank"
           rel="noreferrer"
         >
-          <External />
+          <External className="w-4 h-4" />
         </a>
       </h3>
-      <p className={styles.assetMeta}>
-        <span className={styles.assetMeta}> {`${symbol} | `}</span>
-        <code className={styles.assetMeta}>{did}</code>
+      <p className="text-sm text-gray-600">
+        <span className="font-medium">{symbol}</span>
+        <span className="mx-2">|</span>
+        <code className="bg-gray-200 px-2 py-1 rounded text-xs font-mono">
+          {did}
+        </code>
       </p>
     </div>
   )
@@ -49,9 +51,17 @@ function DetailsAssets({ job }: { job: ComputeJobMetaData }) {
 
   useEffect(() => {
     async function getAlgoMetadata() {
-      const ddo = await getAsset(job.algoDID, newCancelToken())
-      setAlgoDtSymbol(ddo.datatokens[0].symbol)
-      setAlgoName(ddo?.metadata.name)
+      try {
+        const ddo = await getAsset(job.algoDID, newCancelToken())
+        if (ddo && ddo.datatokens && ddo.datatokens[0]) {
+          setAlgoDtSymbol(ddo.datatokens[0].symbol)
+        }
+        if (ddo && ddo.metadata && ddo.metadata.name) {
+          setAlgoName(ddo.metadata.name)
+        }
+      } catch (error) {
+        console.warn('Failed to fetch algo metadata:', error)
+      }
     }
     getAlgoMetadata()
   }, [appConfig.metadataCacheUri, job.algoDID, newCancelToken])
@@ -77,9 +87,12 @@ export default function Details({
 
   return (
     <>
-      <Button style="text" size="small" onClick={() => setIsDialogOpen(true)}>
+      <button
+        onClick={() => setIsDialogOpen(true)}
+        className="text-xs font-medium text-emerald-700 hover:text-emerald-600 transition-colors duration-200 cursor-pointer"
+      >
         Show Details
-      </Button>
+      </button>
       <Modal
         title={job.statusText}
         isOpen={isDialogOpen}
@@ -88,7 +101,7 @@ export default function Details({
         <DetailsAssets job={job} />
         <Results job={job} />
 
-        <div className={styles.meta}>
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <MetaItem
             title="Created"
             content={<Time date={job.dateCreated} isUnix relative />}
@@ -99,7 +112,6 @@ export default function Details({
               content={<Time date={job.dateFinished} isUnix relative />}
             />
           )}
-          <MetaItem title="Job ID" content={<code>{job.jobId}</code>} />
         </div>
       </Modal>
     </>

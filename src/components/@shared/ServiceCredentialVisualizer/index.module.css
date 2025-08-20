@@ -17,7 +17,13 @@
 }
 
 .toggle {
-  composes: toggle from '../Accordion/index.module.css';
+  padding: 0.25rem;
+  color: var(--font-color-secondary);
+  transition: color 0.2s ease-out;
+}
+
+.toggle:hover {
+  color: var(--font-color-title);
 }
 
 .toggle svg {

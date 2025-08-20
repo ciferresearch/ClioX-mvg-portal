@@ -15,7 +15,7 @@ export default function Avatar({
 }: AvatarProps): ReactElement {
   return (
     <img
-      className={`${className || ''} ${styles.avatar} `}
+      className={className || styles.avatar}
       src={src || (accountId ? toDataUrl(accountId) : '')}
       alt="Avatar"
       aria-hidden="true"

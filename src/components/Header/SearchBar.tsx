@@ -25,11 +25,13 @@ async function emptySearch() {
 export default function SearchBar({
   placeholder,
   initialValue,
-  isSearchPage
+  isSearchPage,
+  isSearching
 }: {
   placeholder?: string
   initialValue?: string
   isSearchPage?: boolean
+  isSearching?: boolean
 }): ReactElement {
   const router = useRouter()
   const [value, setValue] = useState(initialValue || '')
@@ -161,7 +163,9 @@ export default function SearchBar({
             value={value}
             onChange={handleChange}
             onKeyPress={handleKeyPress}
-            className="w-full pl-4 pr-20 py-3 text-sm bg-transparent border-0 rounded-xl focus:outline-none focus:bg-gray-50 placeholder-gray-400"
+            className={`w-full pl-4 pr-20 py-3 text-sm bg-transparent border-0 rounded-xl focus:outline-none focus:bg-gray-50 placeholder-gray-400 ${
+              isSearchPage ? 'search-page-input' : ''
+            }`}
           />
           {/* Clear button */}
           {value && (
@@ -179,9 +183,14 @@ export default function SearchBar({
           <motion.button
             type="submit"
             onClick={handleButtonClick}
-            className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-teal-600 hover:bg-gray-100 transition-colors duration-200"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            disabled={isSearching}
+            className={`absolute right-2 w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-200 ${
+              isSearching
+                ? 'text-gray-400 cursor-not-allowed'
+                : 'text-gray-500 hover:text-teal-600 hover:bg-gray-100'
+            }`}
+            whileHover={isSearching ? {} : { scale: 1.05 }}
+            whileTap={isSearching ? {} : { scale: 0.95 }}
           >
             <IconSearch size={14} stroke={2.5} />
           </motion.button>

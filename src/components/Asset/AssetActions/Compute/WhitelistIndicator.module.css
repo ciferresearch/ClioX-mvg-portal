@@ -18,7 +18,10 @@
 }
 
 .invalidAddressMessage {
-  composes: empty from '../../../@shared/atoms/Table/Empty.module.css';
-
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--color-secondary);
+  font-size: var(--font-size-small);
+  font-style: italic;
   margin-bottom: 0;
 }
