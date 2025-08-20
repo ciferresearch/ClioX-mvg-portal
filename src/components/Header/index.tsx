@@ -68,12 +68,14 @@ export default function Header() {
 
   return (
     <>
-      {/* SearchBar - positioned below the header */}
-      <div className="fixed inset-x-0 top-20 flex justify-center pointer-events-none z-40">
-        <div className="w-full max-w-2xl mx-4 pointer-events-auto">
-          <SearchBar placeholder="Search for service offerings" />
+      {/* SearchBar - positioned below the header - only show on home page */}
+      {router.pathname === '/' && (
+        <div className="fixed inset-x-0 top-20 flex justify-center pointer-events-none z-40">
+          <div className="w-full max-w-2xl mx-4 pointer-events-auto">
+            <SearchBar placeholder="Search for service offerings" />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="fixed inset-x-0 top-4 flex justify-center pointer-events-none z-50">
         <motion.div
