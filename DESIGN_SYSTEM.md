@@ -254,6 +254,25 @@ hidden lg:block         /* display: none; display: block (1024px+) */
 
 ### Button Styles
 
+#### Primary Button (ConnectWallet)
+
+```tsx
+<motion.button
+  className="px-4 rounded-lg font-medium transition-all duration-200 text-sm h-9 flex items-center cursor-pointer"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  style={{
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    color: '#ffffff',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+  }}
+>
+  Connect Wallet
+</motion.button>
+```
+
+#### Secondary Button (Get Started)
+
 ```tsx
 <button className="bg-white text-teal-800 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
   {/* Results in:
@@ -267,6 +286,71 @@ hidden lg:block         /* display: none; display: block (1024px+) */
       hover: transform: translateY(-4px)
       transition: all 200ms
   */}
+  Get Started
+</button>
+```
+
+#### Outline Button (Explore our solution)
+
+```tsx
+<button className="bg-transparent border border-gray-300 text-white px-6 py-3 rounded-xl font-semibold hover:border-gray-400 transition-all duration-200">
+  {/* Results in:
+      background: transparent
+      border: 1px solid #d1d5db
+      color: white
+      padding: 1.5rem 1rem
+      border-radius: 12px
+      font-weight: 600
+      hover: border-color: #9ca3af
+      transition: all 200ms
+  */}
+  Explore our solution
+</button>
+```
+
+#### Button Specifications
+
+| Button Type   | Background                                          | Text Color | Border              | Shadow                               | Hover Effects     |
+| ------------- | --------------------------------------------------- | ---------- | ------------------- | ------------------------------------ | ----------------- |
+| **Primary**   | `linear-gradient(135deg, #10b981 0%, #059669 100%)` | `#ffffff`  | None                | `0 4px 12px rgba(16, 185, 129, 0.3)` | `scale: 1.05`     |
+| **Secondary** | `#ffffff`                                           | `#115e59`  | None                | `shadow-lg` → `shadow-xl`            | `-translate-y-1`  |
+| **Outline**   | `transparent`                                       | `#ffffff`  | `1px solid #d1d5db` | None                                 | `border-gray-400` |
+
+#### Button Size Variants
+
+| Size        | Padding       | Font Size   | Border Radius | Height | Use Case                 |
+| ----------- | ------------- | ----------- | ------------- | ------ | ------------------------ |
+| **Large**   | `px-6 py-3`   | `text-base` | `rounded-xl`  | Auto   | Hero sections, main CTAs |
+| **Medium**  | `px-4 py-2`   | `text-sm`   | `rounded-lg`  | `h-9`  | Standard buttons, forms  |
+| **Compact** | `px-3 py-1.5` | `text-xs`   | `rounded-md`  | Auto   | Dialogs, inline actions  |
+| **Small**   | `px-2 py-1`   | `text-xs`   | `rounded`     | Auto   | Tags, badges, minimal UI |
+
+#### Button Usage Examples
+
+```tsx
+// Primary - Large (Hero CTA)
+<button className="px-6 py-3 rounded-xl text-base font-semibold bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
+  Get Started
+</button>
+
+// Primary - Medium (Standard)
+<button className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-teal-600 to-emerald-500 text-white h-9">
+  Connect Wallet
+</button>
+
+// Primary - Compact (Dialog)
+<button className="px-3 py-1.5 rounded-md text-xs font-medium bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
+  Allow
+</button>
+
+// Secondary - Medium
+<button className="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-teal-800 shadow-lg h-9">
+  Learn More
+</button>
+
+// Outline - Medium
+<button className="px-4 py-2 rounded-lg text-sm font-semibold bg-transparent border border-gray-300 text-white">
+  Explore
 </button>
 ```
 

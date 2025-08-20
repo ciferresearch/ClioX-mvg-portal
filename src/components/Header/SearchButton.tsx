@@ -50,7 +50,7 @@ export default function SearchButton(): ReactElement {
           isSearchPage
             ? 'text-gray-600 hover:text-teal-700 hover:bg-teal-50 cursor-pointer'
             : isSearchBarVisible
-            ? 'bg-teal-100 text-teal-700 hover:bg-teal-50 cursor-pointer'
+            ? 'text-emerald-600 hover:bg-teal-50 cursor-pointer'
             : 'text-gray-600 hover:text-teal-700 hover:bg-teal-50 cursor-pointer'
         }`}
         aria-label={isSearchPage ? 'Focus search bar' : 'Search'}
