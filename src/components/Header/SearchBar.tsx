@@ -50,13 +50,8 @@ export default function SearchBar({
   }, [parsed?.text, parsed?.owner])
 
   useEffect(() => {
-    // On non-home pages, default to showing the search bar
-    const isHomePage = router.pathname === '/'
-    if (!isHomePage) {
-      setSearchBarVisible(true)
-    } else {
-      setSearchBarVisible(false)
-    }
+    // Always default to hiding the search bar
+    setSearchBarVisible(false)
     setHomeSearchBarFocus(false)
   }, [setSearchBarVisible, setHomeSearchBarFocus, router.pathname])
 

@@ -12,7 +12,6 @@ const COMING_SOON_ROUTES = [
   '/verify',
   '/partners',
   '/resources',
-  '/publish',
   '/faucet',
   '/intake',
   '/onboarding',
@@ -27,7 +26,8 @@ const ALLOWED_ROUTES = [
   '/profile',
   '/search',
   '/bookmarks',
-  '/asset'
+  '/asset',
+  '/publish'
 ]
 
 export default function RouteGuard({ children }: RouteGuardProps) {
@@ -49,7 +49,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   }
 
   // Allow asset detail pages (paths starting with /asset/)
-  if (pathname.startsWith('/asset/')) {
+  if (pathname.startsWith('/asset/') || pathname.startsWith('/publish/')) {
     return children
   }
 

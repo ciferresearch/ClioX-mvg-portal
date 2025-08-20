@@ -2,9 +2,9 @@
 @import '../../public/static/fonts/fonts.css';
 
 :root {
-  --color-primary: #0d9488;
+  --color-primary: #059669;
   --color-secondary: #0f766e;
-  --color-highlight: #059669;
+  --color-highlight: #10b981;
 
   /* Only use these vars for most color referencing for easy light/dark mode */
   --font-color-text: var(--brand-grey);
