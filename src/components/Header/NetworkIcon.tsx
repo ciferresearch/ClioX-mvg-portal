@@ -18,5 +18,5 @@ export function NetworkIcon({ name }: { name: string }): ReactElement {
     ? EnergywebIcon
     : EthIcon // ETH icon as fallback
 
-  return <IconMapped className="inline-block w-3 h-3 fill-current mr-1" />
+  return <IconMapped className="inline-block w-4 h-4 fill-current" />
 }

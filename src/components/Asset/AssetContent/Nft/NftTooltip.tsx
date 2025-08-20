@@ -1,6 +1,6 @@
 import External from '@images/external.svg'
 import Copy from '@shared/atoms/Copy'
-import explorerLinkStyles from '@shared/ExplorerLink/index.module.css'
+
 import { NftMetadata } from '@utils/nft'
 import { accountTruncate } from '@utils/wallet'
 import { ReactElement } from 'react'
@@ -59,9 +59,10 @@ export default function NftTooltip({
               href={openSeaUrl}
               target="_blank"
               rel="noreferrer"
-              className={explorerLinkStyles.link}
+              className="text-inherit hover:text-[var(--link-font-color)] focus:text-[var(--link-font-color)] transition-colors duration-200"
             >
-              View on OpenSea <External />
+              View on OpenSea{' '}
+              <External className="w-[0.6em] h-[0.6em] inline-block fill-current" />
             </a>
           )}
         </div>

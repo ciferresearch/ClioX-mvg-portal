@@ -1,7 +1,7 @@
 import AssetTeaser from '@shared/AssetTeaser'
 import { ReactElement, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import Pagination from '@shared/Pagination'
-import styles from './index.module.css'
 import AssetTitle from '@shared/AssetListTitle'
 import Table, { TableOceanColumn } from '../atoms/Table'
 import Price from '../Price'
@@ -12,69 +12,102 @@ import Time from '../atoms/Time'
 import Loader from '../atoms/Loader'
 import NetworkName from '../NetworkName'
 import { useUserPreferences } from '../../../@context/UserPreferences'
+import { IconCopy } from '@tabler/icons-react'
 
 const networkColumn: TableOceanColumn<AssetExtended> = {
   name: 'Network',
+  width: '1.5fr',
   selector: (row) => {
     const { chainId } = row
     return <NetworkName networkId={chainId} />
-  },
-  maxWidth: '10rem'
+  }
 }
 
 const tableColumns: TableOceanColumn<AssetExtended>[] = [
   {
     name: 'Dataset',
+    width: '3fr',
     selector: (row) => {
       const { metadata } = row
+      const did = row.id
+      // Show as many characters as possible, truncate only when necessary
+      const shortDid = did.length > 50 ? `${did.slice(0, 50)}...` : did
       return (
-        <div>
-          <AssetTitle title={metadata.name} asset={row} />
-          <p>{row.id}</p>
+        <div className="space-y-1 min-w-0">
+          {/* Title with Tooltip */}
+          <div className="relative group">
+            <div className="font-medium text-gray-900 truncate cursor-help">
+              {metadata.name}
+            </div>
+            {/* Tooltip for Title */}
+            <div className="absolute left-0 bottom-full mb-2 w-64 p-2 text-gray-800 text-xs rounded-lg shadow-lg z-50 backdrop-blur-2xl bg-white/80 border border-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+              {metadata.name}
+              <div className="absolute top-full left-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
+            </div>
+          </div>
+
+          {/* DID with Tooltip */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="relative group flex-1 min-w-0">
+              <div className="text-xs text-gray-500 font-mono truncate cursor-help">
+                {shortDid}
+              </div>
+              {/* Tooltip for DID */}
+              <div className="absolute left-0 bottom-full mb-2 w-80 p-2 text-gray-800 text-xs rounded-lg shadow-lg z-50 backdrop-blur-2xl bg-white/80 border border-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <div className="font-mono break-all">{did}</div>
+                <div className="absolute top-full left-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white"></div>
+              </div>
+            </div>
+            <button
+              onClick={() => navigator.clipboard.writeText(did)}
+              className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded flex-shrink-0"
+              title="Copy DID"
+            >
+              <IconCopy className="w-3 h-3 cursor-pointer" />
+            </button>
+          </div>
         </div>
       )
-    },
-    maxWidth: '35rem',
-    grow: 1
+    }
   },
   {
     name: 'Type',
+    width: '2fr',
     selector: (row) => {
       const { metadata } = row
       const isCompute = Boolean(getServiceByName(row, 'compute'))
       const accessType = isCompute ? 'compute' : 'access'
       return (
         <AssetType
-          className={styles.typeLabel}
+          className="text-xs"
           type={metadata?.additionalInformation?.saas ? 'saas' : metadata.type}
           accessType={
             metadata?.additionalInformation?.saas ? 'saas' : accessType
           }
         />
       )
-    },
-    maxWidth: '9rem'
+    }
   },
   {
     name: 'Price',
+    width: '1fr',
     selector: (row) => {
-      return <Price price={row.stats.price} size="small" />
-    },
-    maxWidth: '7rem'
+      return <Price price={row.stats.price} size="mini" />
+    }
   },
   {
     name: 'Sales',
+    width: '1fr',
     selector: (row) => {
       return <strong>{row.stats.orders < 0 ? 'N/A' : row.stats.orders}</strong>
-    },
-    maxWidth: '7rem'
+    }
   },
   {
     name: 'Published',
+    width: '1.5fr',
     selector: (row) => {
       return <Time date={row.nft.created} />
-    },
-    maxWidth: '7rem'
+    }
   }
 ]
 
@@ -112,10 +145,12 @@ export default function AssetList({
   const [columns, setColumns] = useState(tableColumns)
 
   useEffect(() => {
-    if (chainIds.length > 1) {
+    if (chainIds && chainIds.length > 1) {
       const [datasetColumn, ...otherColumns] = tableColumns
       setColumns([datasetColumn, networkColumn, ...otherColumns])
-    } else setColumns(tableColumns)
+    } else {
+      setColumns(tableColumns)
+    }
   }, [chainIds])
 
   const [activeAssetView, setActiveAssetView] = useState<AssetViewOptions>(
@@ -127,7 +162,29 @@ export default function AssetList({
     onPageChange(selected + 1)
   }
 
-  const styleClasses = `${styles.assetList} ${className || ''}`
+  const gridClasses = `
+    grid grid-cols-1 gap-6
+    sm:grid-cols-1 
+    lg:grid-cols-2 
+    xl:grid-cols-3
+    ${className || ''}
+  `
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.3,
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  }
 
   return isLoading ? (
     <Loader />
@@ -139,34 +196,57 @@ export default function AssetList({
           setActiveAssetView={setActiveAssetView}
         />
       )}
-      <div className={styleClasses}>
-        {assets?.length > 0 ? (
-          <>
-            {activeAssetView === AssetViewOptions.List && (
+
+      {assets?.length > 0 ? (
+        <>
+          {activeAssetView === AssetViewOptions.List && (
+            <div className="w-full">
               <Table
                 columns={columns}
                 data={assets}
                 pagination={false}
                 paginationPerPage={assets?.length}
                 dense
+                className="w-full"
               />
-            )}
+            </div>
+          )}
 
-            {activeAssetView === AssetViewOptions.Grid &&
-              assets?.map((asset) => (
-                <AssetTeaser
-                  asset={asset}
+          {activeAssetView === AssetViewOptions.Grid && (
+            <motion.div
+              className={gridClasses}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {assets?.map((asset, index) => (
+                <motion.div
                   key={asset.id}
-                  noPublisher={noPublisher}
-                  noDescription={noDescription}
-                  noPrice={noPrice}
-                />
+                  variants={itemVariants}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <AssetTeaser
+                    asset={asset}
+                    noPublisher={noPublisher}
+                    noDescription={noDescription}
+                    noPrice={noPrice}
+                  />
+                </motion.div>
               ))}
-          </>
-        ) : (
-          <div className={styles.empty}>No results found</div>
-        )}
-      </div>
+            </motion.div>
+          )}
+        </>
+      ) : (
+        <motion.div
+          className="text-gray-500 text-sm italic text-center py-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          No results found
+        </motion.div>
+      )}
+
       {showPagination && (
         <Pagination
           totalPages={totalPages}

@@ -1,9 +1,9 @@
 import { LoggerInstance } from '@oceanprotocol/lib'
 import { ReactElement, useEffect, useState } from 'react'
+import { motion } from 'motion/react'
 import AssetList from '@shared/AssetList'
 import { getPublishedAssets } from '@utils/aquarius'
 import { useUserPreferences } from '@context/UserPreferences'
-import styles from './PublishedList.module.css'
 import { useCancelToken } from '@hooks/useCancelToken'
 import Filter from '@components/Search/Filter'
 import { useMarketMetadata } from '@context/MarketMetadata'
@@ -84,11 +84,21 @@ export default function PublishedList({
   ])
 
   return accountId ? (
-    <div className={styles.container}>
-      <div className={styles.filterContainer}>
+    <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+      <motion.div
+        className="flex flex-row flex-wrap gap-2 w-full pr-6 lg:flex-col lg:w-60 lg:border-r lg:border-gray-200 lg:[&>div]:pb-6 lg:[&>div]:border-b lg:[&>div]:border-gray-200"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <Filter showPurgatoryOption={ownAccount} expanded />
-      </div>
-      <div className={styles.results}>
+      </motion.div>
+      <motion.div
+        className="w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <AssetList
           assets={queryResult?.results}
           isLoading={isLoading}
@@ -101,9 +111,15 @@ export default function PublishedList({
           noPublisher
           showAssetViewSelector
         />
-      </div>
+      </motion.div>
     </div>
   ) : (
-    <div>Please connect your wallet.</div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-center py-8 text-gray-600"
+    >
+      Please connect your wallet.
+    </motion.div>
   )
 }

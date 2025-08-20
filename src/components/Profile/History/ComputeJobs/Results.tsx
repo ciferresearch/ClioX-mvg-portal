@@ -8,7 +8,6 @@ import {
 import { ReactElement, useEffect, useState } from 'react'
 import { ListItem } from '@shared/atoms/Lists'
 import Button from '@shared/atoms/Button'
-import styles from './Results.module.css'
 import FormHelp from '@shared/FormInput/Help'
 import content from '../../../../../content/pages/history.json'
 import { useCancelToken } from '@hooks/useCancelToken'
@@ -90,39 +89,44 @@ export default function Results({
   }
 
   return (
-    <div className={styles.results}>
-      <h4 className={styles.title}>Results</h4>
+    <div className="mt-6">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
       {isFinished ? (
-        <ul>
+        <ul className="space-y-3">
           {job.results &&
             Array.isArray(job.results) &&
             job.results.map((jobResult, i) =>
               jobResult.filename ? (
-                <ListItem key={i}>
-                  <Button
-                    style="text"
-                    size="small"
-                    className={styles.downloadButton}
-                    onClick={() => {
-                      downloadResults(i)
-                    }}
-                    download
-                  >
-                    {`${getDownloadButtonValue(
-                      jobResult.type,
-                      jobResult.filename
-                    )} - ${prettySize(jobResult.filesize)}`}
-                  </Button>
-                </ListItem>
-              ) : (
-                <ListItem key={i}>No results found.</ListItem>
-              )
+                <div key={i} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {getDownloadButtonValue(
+                          jobResult.type,
+                          jobResult.filename
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Size: {prettySize(jobResult.filesize)}
+                      </div>
+                    </div>
+                    <Button
+                      size="small"
+                      onClick={() => downloadResults(i)}
+                      className="ml-4 hover:bg-blue-600 transition-colors duration-200"
+                    >
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              ) : null
             )}
         </ul>
       ) : (
-        <p> Waiting for results...</p>
+        <div className="text-center py-8 text-gray-500">
+          <FormHelp>Waiting for results...</FormHelp>
+        </div>
       )}
-      <FormHelp className={styles.help}>{content.compute.storage}</FormHelp>
     </div>
   )
 }

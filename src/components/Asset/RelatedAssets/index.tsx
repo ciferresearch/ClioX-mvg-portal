@@ -79,7 +79,7 @@ export default function RelatedAssets(): ReactElement {
 
   return (
     <section className={styles.section}>
-      <h3>Related Assets</h3>
+      <h3 className="mb-4">Related Assets</h3>
       <AssetList
         assets={relatedAssets}
         showPagination={false}
@@ -87,6 +87,7 @@ export default function RelatedAssets(): ReactElement {
         noDescription
         noPublisher
         noPrice
+        className="!flex !flex-col !gap-2"
       />
     </section>
   )

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { getAssetsNames } from '@utils/aquarius'
-import styles from './index.module.css'
 import axios from 'axios'
 import { Asset } from '@oceanprotocol/lib'
 import { useMarketMetadata } from '@context/MarketMetadata'
@@ -40,8 +40,22 @@ export default function AssetListTitle({
   }, [assetTitle, appConfig.metadataCacheUri, asset, did, title])
 
   return (
-    <h3 className={styles.title}>
-      <Link href={`/asset/${did || asset?.id}`}>{assetTitle}</Link>
-    </h3>
+    <motion.h3
+      className="inline m-0 leading-normal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Link
+        href={`/asset/${did || asset?.id}`}
+        className="
+          text-base text-gray-900 
+          hover:text-teal-700 hover:opacity-80
+          transition-colors duration-200
+        "
+      >
+        {assetTitle}
+      </Link>
+    </motion.h3>
   )
 }

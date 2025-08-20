@@ -1,11 +1,7 @@
 import { ReactElement } from 'react'
-import classNames from 'classnames/bind'
-import styles from './AssetViewSelector.module.css'
-import Button from '../atoms/Button'
+import { motion } from 'framer-motion'
 import GridViewIcon from '@images/grid-view-icon.svg'
 import ListViewIcon from '@images/list-view-icon.svg'
-
-const cx = classNames.bind(styles)
 
 export enum AssetViewOptions {
   Grid = 'grid',
@@ -25,21 +21,35 @@ export default function AssetViewSelector({
   setActiveAssetView: (activeView: AssetViewOptions) => void
 }): ReactElement {
   return (
-    <div className={styles.viewSelectorContainer}>
-      {assetViews.map((view) => {
-        const selectFilter = cx({
-          [styles.selected]: view.value === activeAssetView,
-          [styles.viewSelector]: true
-        })
+    <div className="flex justify-end gap-2 mb-2">
+      {assetViews.map((view, index) => {
+        const isSelected = view.value === activeAssetView
         return (
-          <Button
+          <motion.button
             key={view.value}
-            className={selectFilter}
+            className={`
+              p-0 bg-transparent border-none w-6 h-6 min-w-[1.5rem] 
+              cursor-pointer transition-colors duration-200 ease-in-out
+              ${
+                isSelected
+                  ? '[&_svg_path]:fill-current text-gray-900'
+                  : '[&_svg_path]:fill-current text-gray-400 hover:text-gray-700'
+              }
+            `}
             title={`Switch to ${view.value} view`}
             onClick={() => setActiveAssetView(view.value)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              opacity: { duration: 0.3, delay: index * 0.1 },
+              y: { duration: 0.3, delay: index * 0.1 },
+              scale: { duration: 0.1 }
+            }}
           >
-            {view.icon}
-          </Button>
+            <div className="w-6 h-6">{view.icon}</div>
+          </motion.button>
         )
       })}
     </div>

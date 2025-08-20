@@ -1,7 +1,7 @@
 import { ReactElement } from 'react'
+import { motion } from 'motion/react'
 import Markdown from '@shared/Markdown'
 import Tooltip from '@shared/atoms/Tooltip'
-import styles from './NumberUnit.module.css'
 
 interface NumberUnitProps {
   label: string | ReactElement
@@ -19,22 +19,37 @@ export default function NumberUnit({
   tooltip
 }: NumberUnitProps): ReactElement {
   return (
-    <div className={styles.unit}>
-      <div className={`${styles.number} ${small && styles.small}`}>
-        <>
-          {icon && icon}
-          {value}
-        </>
-      </div>
-      <span className={styles.label}>
+    <motion.div
+      className="text-center"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className={`text-2xl font-bold text-teal-800 mb-1 ${
+          small ? 'text-xl' : ''
+        }`}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        {icon && icon}
+        {value}
+      </motion.div>
+
+      <motion.span
+        className="text-xs font-medium text-gray-600 block"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
         {label}{' '}
         {tooltip && (
           <Tooltip
             content={<Markdown text={tooltip} />}
-            className={styles.tooltip}
+            className="inline-block ml-1 text-gray-400 hover:text-gray-600 transition-colors duration-200"
           />
         )}
-      </span>
-    </div>
+      </motion.span>
+    </motion.div>
   )
 }

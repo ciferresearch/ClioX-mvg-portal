@@ -3,13 +3,13 @@ import Tabs from '@shared/atoms/Tabs'
 import PublishedList from './PublishedList'
 import Downloads from './Downloads'
 import ComputeJobs from './ComputeJobs'
-import styles from './index.module.css'
 import { getComputeJobs } from '@utils/compute'
 import { useUserPreferences } from '@context/UserPreferences'
 import { useCancelToken } from '@hooks/useCancelToken'
 import { LoggerInstance } from '@oceanprotocol/lib'
 import { useAccount } from 'wagmi'
 import { useAutomation } from '../../../@context/Automation/AutomationProvider'
+import { motion } from 'motion/react'
 
 interface HistoryTab {
   title: string
@@ -152,11 +152,19 @@ export default function HistoryPage({
   )
 
   return (
-    <Tabs
-      items={tabs}
-      className={styles.tabs}
-      selectedIndex={tabIndex || 0}
-      onIndexSelected={setTabIndex}
-    />
+    <motion.div
+      className="mt-6 bg-white"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+    >
+      <Tabs
+        items={tabs}
+        className="bg-white"
+        selectedIndex={tabIndex || 0}
+        onIndexSelected={setTabIndex}
+        variant="modern"
+      />
+    </motion.div>
   )
 }

@@ -1,5 +1,4 @@
 import { ReactElement } from 'react'
-import styles from './index.module.css'
 import useNetworkMetadata, {
   getNetworkDataById,
   getNetworkDisplayName
@@ -21,13 +20,22 @@ export default function NetworkName({
 
   return (
     <span
-      className={`${styles.network} ${minimal ? styles.minimal : null} ${
-        className || ''
-      }`}
+      className={`
+        inline-flex items-center cursor-inherit capitalize
+        ${minimal ? 'relative' : ''}
+        ${className || ''}
+      `}
       title={networkName}
     >
       <NetworkIcon name={networkName} />
-      <span className={styles.name}>{networkName}</span>
+      <span
+        className={`
+        ${minimal ? 'opacity-0 w-0 2xl:opacity-100 2xl:w-auto' : ''}
+        transition-all duration-200
+      `}
+      >
+        {networkName}
+      </span>
     </span>
   )
 }
