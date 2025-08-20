@@ -2,9 +2,9 @@
 @import '../../public/static/fonts/fonts.css';
 
 :root {
-  --color-primary: var(--brand-clay);
-  --color-secondary: var(--brand-clay-darker);
-  --color-highlight: var(--brand-clay-light);
+  --color-primary: #059669;
+  --color-secondary: #0f766e;
+  --color-highlight: #10b981;
 
   /* Only use these vars for most color referencing for easy light/dark mode */
   --font-color-text: var(--brand-grey);
@@ -105,10 +105,10 @@
   --button-primary-hover-background: var(--color-highlight);
   --button-primary-hover-border-color: var(--color-primary);
   --button-secondary-font-color: var(--brand-black);
-  --button-secondary-background: var(--brand-clay-lightest);
-  --button-secondary-border-color: var(--brand-clay-lightest);
-  --button-secondary-hover-background: var(--brand-clay-lightest);
-  --button-secondary-hover-border-color: var(--brand-clay-lightest);
+  --button-secondary-background: var(--color-secondary);
+  --button-secondary-border-color: var(--color-secondary);
+  --button-secondary-hover-background: var(--color-secondary);
+  --button-secondary-hover-border-color: var(--color-secondary);
   --button-outline-font-color: var(--brand-grey);
   --button-outline-background: transparent;
   --button-outline-border-color: var(--brand-grey);

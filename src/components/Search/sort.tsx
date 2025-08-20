@@ -86,10 +86,7 @@ export default function Sort({
   return (
     <>
       {/* Side positioning - for desktop layout */}
-      <div
-        className="hidden lg:block pb-6 border-b"
-        style={{ borderBottomColor: 'var(--border-color)' }}
-      >
+      <div className="hidden lg:block pb-6 border-b border-gray-200">
         <Accordion title="Sort" defaultExpanded={expanded}>
           <div className={`space-y-4 pt-2`}>
             <motion.div
@@ -105,9 +102,9 @@ export default function Sort({
                 {sortItems.map((item) => (
                   <label
                     key={item.value}
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center cursor-pointer group"
                   >
-                    <div className="relative mr-2.5 flex items-center">
+                    <div className="relative flex items-center justify-center w-4 h-4 mr-3">
                       <input
                         className="sr-only"
                         type="radio"
@@ -120,15 +117,15 @@ export default function Sort({
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                           sort.sort === item.value
                             ? 'bg-emerald-500 border-gray-300'
-                            : 'bg-white border-gray-300'
+                            : 'bg-white border-gray-200 group-hover:border-emerald-400'
                         }`}
                       >
                         {sort.sort === item.value && (
-                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                         )}
                       </div>
                     </div>
-                    <span className="text-base font-semibold text-gray-700 leading-none">
+                    <span className="text-base font-medium text-gray-700 leading-none select-none">
                       {item.display}
                     </span>
                   </label>
@@ -149,9 +146,9 @@ export default function Sort({
                 {sortDirections.map((item) => (
                   <label
                     key={item.value}
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center cursor-pointer group"
                   >
-                    <div className="relative mr-2.5 flex items-center">
+                    <div className="relative flex items-center justify-center w-4 h-4 mr-3">
                       <input
                         className="sr-only"
                         type="radio"
@@ -164,11 +161,11 @@ export default function Sort({
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                           sort.sortOrder === item.value
                             ? 'bg-emerald-500 border-gray-300'
-                            : 'bg-white border-gray-300'
+                            : 'bg-white border-gray-200 group-hover:border-emerald-400'
                         }`}
                       >
                         {sort.sortOrder === item.value && (
-                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                         )}
                       </div>
                     </div>
@@ -178,7 +175,7 @@ export default function Sort({
                       ) : (
                         <IconArrowDown className="w-4 h-4 text-gray-600" />
                       )}
-                      <span className="text-base font-semibold text-gray-700 leading-none">
+                      <span className="text-base font-medium text-gray-700 leading-none select-none">
                         {item.display.replace(/[\u2191\u2193]/, '')}
                       </span>
                     </div>
@@ -203,9 +200,9 @@ export default function Sort({
               {sortItems.map((item) => (
                 <label
                   key={item.value}
-                  className="flex items-center cursor-pointer"
+                  className="flex items-center cursor-pointer group"
                 >
-                  <div className="relative mr-2.5 flex items-center">
+                  <div className="relative flex items-center justify-center w-4 h-4 mr-3">
                     <input
                       className="sr-only"
                       type="radio"
@@ -218,15 +215,15 @@ export default function Sort({
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                         sort.sort === item.value
                           ? 'bg-emerald-500 border-gray-300'
-                          : 'bg-white border-gray-300'
+                          : 'bg-white border-gray-200 group-hover:border-emerald-400'
                       }`}
                     >
                       {sort.sort === item.value && (
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                       )}
                     </div>
                   </div>
-                  <span className="text-base font-semibold text-gray-700 leading-none">
+                  <span className="text-base font-medium text-gray-700 leading-none select-none">
                     {item.display}
                   </span>
                 </label>
@@ -246,9 +243,9 @@ export default function Sort({
               {sortDirections.map((item) => (
                 <label
                   key={item.value}
-                  className="flex items-center cursor-pointer"
+                  className="flex items-center cursor-pointer group"
                 >
-                  <div className="relative mr-2.5 flex items-center">
+                  <div className="relative flex items-center justify-center w-4 h-4 mr-3">
                     <input
                       className="sr-only"
                       type="radio"
@@ -261,11 +258,11 @@ export default function Sort({
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                         sort.sortOrder === item.value
                           ? 'bg-emerald-500 border-gray-300'
-                          : 'bg-white border-gray-300'
+                          : 'bg-white border-gray-200 group-hover:border-emerald-400'
                       }`}
                     >
                       {sort.sortOrder === item.value && (
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
                       )}
                     </div>
                   </div>
@@ -275,7 +272,7 @@ export default function Sort({
                     ) : (
                       <IconArrowDown className="w-4 h-4 text-gray-600" />
                     )}
-                    <span className="text-base font-semibold text-gray-700 leading-none">
+                    <span className="text-base font-medium text-gray-700 leading-none select-none">
                       {item.display.replace(/[\u2191\u2193]/, '')}
                     </span>
                   </div>

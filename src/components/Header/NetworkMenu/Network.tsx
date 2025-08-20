@@ -54,7 +54,7 @@ export default function Network({
       >
         <NetworkName networkId={chain.id} minimal />
         {isTestnet && (
-          <div className="text-[10px] leading-none px-1 py-1 bg-emerald-100 text-emerald-700 rounded-md font-medium flex items-center justify-center h-4">
+          <div className="hidden 2xl:block text-[10px] leading-none px-1 py-1 bg-emerald-100 text-emerald-700 rounded-md font-medium flex items-center justify-center h-4">
             TEST
           </div>
         )}

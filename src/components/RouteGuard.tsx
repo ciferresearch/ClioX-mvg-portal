@@ -12,7 +12,6 @@ const COMING_SOON_ROUTES = [
   '/verify',
   '/partners',
   '/resources',
-  '/publish',
   '/faucet',
   '/intake',
   '/onboarding',
@@ -26,7 +25,9 @@ const ALLOWED_ROUTES = [
   '/404',
   '/profile',
   '/search',
-  '/bookmarks'
+  '/bookmarks',
+  '/asset',
+  '/publish'
 ]
 
 export default function RouteGuard({ children }: RouteGuardProps) {
@@ -45,6 +46,11 @@ export default function RouteGuard({ children }: RouteGuardProps) {
 
   if (shouldShowComingSoon) {
     return <ComingSoon />
+  }
+
+  // Allow asset detail pages (paths starting with /asset/)
+  if (pathname.startsWith('/asset/') || pathname.startsWith('/publish/')) {
+    return children
   }
 
   // All other pages show 404
