@@ -131,9 +131,15 @@ async function loadAcademyResources(): Promise<ResourceCard[]> {
 // Load events
 async function loadEvents(): Promise<ResourceCard[]> {
   try {
-    const eventsIndex = await import(
-      '../../content/resources/events/index.json'
-    )
+    // Use development data if NODE_ENV is development or if explicitly set
+    const isDevelopment =
+      process.env.NODE_ENV === 'development' ||
+      process.env.NEXT_PUBLIC_USE_DEV_DATA === 'true'
+
+    const eventsIndex = isDevelopment
+      ? await import('../../content/resources/events/index-dev.json')
+      : await import('../../content/resources/events/index.json')
+
     return eventsIndex.events || []
   } catch (error) {
     console.error('Error loading events:', error)

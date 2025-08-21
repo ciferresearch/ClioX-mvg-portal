@@ -117,8 +117,16 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   useEffect(() => {
     const loadFromJson = async () => {
       try {
+        // Use development data if NODE_ENV is development or if explicitly set
+        const isDevelopment =
+          process.env.NODE_ENV === 'development' ||
+          process.env.NEXT_PUBLIC_USE_DEV_DATA === 'true'
+
         // Use dynamic import so JSON is bundled and available client-side
-        const mod = await import('../../../content/resources/events/index.json')
+        const mod = isDevelopment
+          ? await import('../../../content/resources/events/index-dev.json')
+          : await import('../../../content/resources/events/index.json')
+
         const dataModule = mod as unknown as
           | { default: { events?: EventsJsonItem[] } }
           | { events?: EventsJsonItem[] }
