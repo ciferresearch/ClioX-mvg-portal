@@ -1,6 +1,17 @@
 import { motion } from 'motion/react'
+import { useRouter } from 'next/router'
 
 export default function HeroSection() {
+  const router = useRouter()
+
+  const handleGetStarted = () => {
+    router.push('/search?sort=nft.created&sortOrder=desc')
+  }
+
+  const handleExploreSolution = () => {
+    router.push('/resources')
+  }
+
   return (
     <section className="min-h-screen grid lg:grid-cols-2 overflow-hidden">
       {/* Left Side - Content */}
@@ -31,10 +42,16 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
           >
-            <button className="bg-white text-teal-800 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer">
+            <button
+              onClick={handleGetStarted}
+              className="bg-white text-teal-800 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+            >
               Get started
             </button>
-            <button className="border-2 border-white/40 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer">
+            <button
+              onClick={handleExploreSolution}
+              className="border-2 border-white/40 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer"
+            >
               Explore our solution
             </button>
           </motion.div>
