@@ -27,11 +27,25 @@ export default class MyDocument extends Document<{
   static async getInitialProps(ctx: DocumentContext) {
     const initialProps = await Document.getInitialProps(ctx)
 
-    const nextData = (initialProps as any).__NEXT_DATA__ || {}
-    const page = nextData.page as string
-    const query = (nextData.query || {}) as Record<string, any>
+    // Prefer ctx.pathname/ctx.query which are available during SSG/SSR
+    const pageFromCtx = (ctx as any).pathname as string
+    const queryFromCtx = ((ctx as any).query || {}) as Record<string, any>
 
-    const resolvedPath = resolvePathFromNextData(page, query)
+    let resolvedPath = resolvePathFromNextData(pageFromCtx, queryFromCtx)
+
+    // Fallback to __NEXT_DATA__ if needed
+    if (!resolvedPath || resolvedPath === '/') {
+      const nextData = (initialProps as any).__NEXT_DATA__ || {}
+      resolvedPath = resolvePathFromNextData(
+        nextData.page as string,
+        (nextData.query || {}) as Record<string, any>
+      )
+    }
+
+    // Final fallback to request URL (SSR only)
+    if ((!resolvedPath || resolvedPath === '/') && ctx.req?.url) {
+      resolvedPath = ctx.req.url.split('?')[0].split('#')[0]
+    }
     const normalizedPath = resolvedPath === '/' ? '' : resolvedPath
     const canonical = `${site.siteUrl}${normalizedPath}`.replace(/\/$/, '')
 
@@ -43,16 +57,8 @@ export default class MyDocument extends Document<{
   }
 
   render() {
-    const nextData = (this.props as any).__NEXT_DATA__ || {}
-    const providedPath = (this.props as any).pagePath as string
-    const computedPath = resolvePathFromNextData(
-      nextData.page as string,
-      (nextData.query || {}) as Record<string, any>
-    )
-    const pagePath = providedPath || computedPath || '/'
-    const canonical = `${(site as any).siteUrl}${
-      pagePath === '/' ? '' : pagePath
-    }`.replace(/\/$/, '')
+    const pagePath = (this.props as any).pagePath as string
+    const canonical = (this.props as any).canonical as string
     const isHome = !pagePath || pagePath === '/'
     const robots =
       process.env.VERCEL_ENV === 'production' ||
