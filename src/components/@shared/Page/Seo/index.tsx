@@ -3,7 +3,7 @@ import Head from 'next/head'
 
 import { isBrowser } from '@utils/index'
 import { useMarketMetadata } from '@context/MarketMetadata'
-import { DatasetSchema } from './DatasetSchema'
+import { SchemaManager } from './SchemaManager'
 
 export default function Seo({
   title,
@@ -32,7 +32,15 @@ export default function Seo({
     siteContent?.siteTagline ||
     'Building a sustainable and ethical future for digital archives and cultural heritage'
 
-  const datasetSchema = DatasetSchema()
+  // Determine page type for schema
+  const getPageType = (): 'home' | 'article' | 'resource' | 'page' => {
+    if (uri === '/') return 'home'
+    if (uri.startsWith('/articles/')) return 'article'
+    if (uri.startsWith('/resources')) return 'resource'
+    return 'page'
+  }
+
+  const pageType = getPageType()
 
   return (
     <Head>
@@ -77,11 +85,18 @@ export default function Seo({
       <meta name="twitter:title" content={title || siteContent?.siteTitle} />
       <meta name="twitter:description" content={pageDescription} />
 
-      {datasetSchema && (
-        <script type="application/ld+json" id="datasetSchema">
-          {JSON.stringify(datasetSchema).replace(/</g, '\\u003c')}
-        </script>
-      )}
+      <SchemaManager
+        type={pageType}
+        title={title}
+        description={pageDescription}
+        url={canonical}
+        author="ClioX Team"
+        publishDate={new Date().toISOString()}
+        modifiedDate={new Date().toISOString()}
+        image={`${siteContent?.siteUrl}${siteContent?.siteImage}`}
+        tags={['digital heritage', 'cultural archives', 'web3', 'gaia-x']}
+      />
+
       <script
         defer
         data-domain="cliox.org"
