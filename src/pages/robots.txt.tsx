@@ -5,8 +5,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
 # We prioritize user privacy while maintaining search engine visibility
 
 User-agent: *
-# Default crawl delay to reduce server load
-Crawl-delay: 2
 
 # Sitemap for public content discovery
 Sitemap: https://cliox.org/sitemap.xml
@@ -50,7 +48,6 @@ Disallow: /content/
 # === SEARCH ENGINE OPTIMIZATION ===
 # Allow major search engines with reasonable limits
 User-agent: Googlebot
-Crawl-delay: 1
 Allow: /
 Disallow: /api/
 Disallow: /profile/
@@ -62,7 +59,6 @@ Disallow: /verify
 Disallow: /faucet
 
 User-agent: Bingbot
-Crawl-delay: 1
 Allow: /
 Disallow: /api/
 Disallow: /profile/
@@ -77,27 +73,21 @@ Disallow: /faucet
 # Block all AI training data collection
 User-agent: GPTBot
 Disallow: /
-Crawl-delay: 999
 
 User-agent: ChatGPT-User
 Disallow: /
-Crawl-delay: 999
 
 User-agent: CCBot
 Disallow: /
-Crawl-delay: 999
 
 User-agent: anthropic-ai
 Disallow: /
-Crawl-delay: 999
 
 User-agent: Claude-Web
 Disallow: /
-Crawl-delay: 999
 
 User-agent: Omgilibot
 Disallow: /
-Crawl-delay: 999
 
 # === SOCIAL MEDIA BOTS - RESTRICTED ===
 # Allow basic preview, block deep crawling
@@ -106,27 +96,24 @@ Allow: /
 Disallow: /api/
 Disallow: /profile/
 Disallow: /search
-Crawl-delay: 5
 
 User-agent: Twitterbot
 Allow: /
 Disallow: /api/
 Disallow: /profile/
 Disallow: /search
-Crawl-delay: 5
 
 User-agent: LinkedInBot
 Allow: /
 Disallow: /api/
 Disallow: /profile/
 Disallow: /search
-Crawl-delay: 5
 
 # === PRIVACY STATEMENT ===
 # This robots.txt balances privacy protection with search visibility
 # We allow search engines to index public content
 # We block AI training bots and protect user data
-# Contact: privacy@cliox.org
+# Contact: info@cliox.org
 `
 
   res.setHeader('Content-Type', 'text/plain')
