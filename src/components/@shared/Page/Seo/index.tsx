@@ -26,6 +26,12 @@ export default function Seo({
       ? `${title} - ${siteContent?.siteTitle}`
       : `${siteContent?.siteTitle} — ${siteContent?.siteTagline}`
 
+  // Provide fallback description if none is provided
+  const pageDescription =
+    description ||
+    siteContent?.siteTagline ||
+    'Building a sustainable and ethical future for digital archives and cultural heritage'
+
   const datasetSchema = DatasetSchema()
 
   return (
@@ -49,9 +55,9 @@ export default function Seo({
       <link rel="manifest" href="/site.webmanifest" />
       <meta name="theme-color" content="var(--background-content)" />
 
-      <meta name="description" content={description} />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
+      <meta name="description" content={pageDescription} />
+      <meta property="og:title" content={title || siteContent?.siteTitle} />
+      <meta property="og:description" content={pageDescription} />
       <meta property="og:url" content={canonical} />
 
       <meta
@@ -68,6 +74,8 @@ export default function Seo({
         <meta name="twitter:creator" content="@ClioX" />
       )}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title || siteContent?.siteTitle} />
+      <meta name="twitter:description" content={pageDescription} />
 
       {datasetSchema && (
         <script type="application/ld+json" id="datasetSchema">
