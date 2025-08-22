@@ -3,7 +3,7 @@ import Head from 'next/head'
 
 import { isBrowser } from '@utils/index'
 import { useMarketMetadata } from '@context/MarketMetadata'
-import { DatasetSchema } from './DatasetSchema'
+import { SchemaManager } from './SchemaManager'
 
 export default function Seo({
   title,
@@ -26,7 +26,21 @@ export default function Seo({
       ? `${title} - ${siteContent?.siteTitle}`
       : `${siteContent?.siteTitle} — ${siteContent?.siteTagline}`
 
-  const datasetSchema = DatasetSchema()
+  // Provide fallback description if none is provided
+  const pageDescription =
+    description ||
+    siteContent?.siteTagline ||
+    'Building a sustainable and ethical future for digital archives and cultural heritage'
+
+  // Determine page type for schema
+  const getPageType = (): 'home' | 'article' | 'resource' | 'page' => {
+    if (uri === '/') return 'home'
+    if (uri.startsWith('/articles/')) return 'article'
+    if (uri.startsWith('/resources')) return 'resource'
+    return 'page'
+  }
+
+  const pageType = getPageType()
 
   return (
     <Head>
@@ -49,9 +63,9 @@ export default function Seo({
       <link rel="manifest" href="/site.webmanifest" />
       <meta name="theme-color" content="var(--background-content)" />
 
-      <meta name="description" content={description} />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
+      <meta name="description" content={pageDescription} />
+      <meta property="og:title" content={title || siteContent?.siteTitle} />
+      <meta property="og:description" content={pageDescription} />
       <meta property="og:url" content={canonical} />
 
       <meta
@@ -68,12 +82,21 @@ export default function Seo({
         <meta name="twitter:creator" content="@ClioX" />
       )}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title || siteContent?.siteTitle} />
+      <meta name="twitter:description" content={pageDescription} />
 
-      {datasetSchema && (
-        <script type="application/ld+json" id="datasetSchema">
-          {JSON.stringify(datasetSchema).replace(/</g, '\\u003c')}
-        </script>
-      )}
+      <SchemaManager
+        type={pageType}
+        title={title}
+        description={pageDescription}
+        url={canonical}
+        author="ClioX Team"
+        publishDate={new Date().toISOString()}
+        modifiedDate={new Date().toISOString()}
+        image={`${siteContent?.siteUrl}${siteContent?.siteImage}`}
+        tags={['digital heritage', 'cultural archives', 'web3', 'gaia-x']}
+      />
+
       <script
         defer
         data-domain="cliox.org"
