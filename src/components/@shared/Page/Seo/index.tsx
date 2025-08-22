@@ -48,9 +48,13 @@ export default function Seo({
 
       <title>{pageTitle}</title>
 
-      {isBrowser && window?.location?.hostname !== 'cliox.org' && (
-        <meta name="robots" content="noindex,nofollow" />
-      )}
+      {isBrowser &&
+        (() => {
+          const hostname = window?.location?.hostname || ''
+          const isProdHost =
+            hostname === 'cliox.org' || hostname === 'www.cliox.org'
+          return !isProdHost
+        })() && <meta name="robots" content="noindex,nofollow" />}
 
       <link rel="canonical" href={canonical} />
       <link rel="icon" href="/favicon.ico" sizes="any" />
