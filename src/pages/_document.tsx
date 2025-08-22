@@ -43,7 +43,16 @@ export default class MyDocument extends Document<{
   }
 
   render() {
-    const { canonical, pagePath } = this.props as any
+    const nextData = (this.props as any).__NEXT_DATA__ || {}
+    const providedPath = (this.props as any).pagePath as string
+    const computedPath = resolvePathFromNextData(
+      nextData.page as string,
+      (nextData.query || {}) as Record<string, any>
+    )
+    const pagePath = providedPath || computedPath || '/'
+    const canonical = `${(site as any).siteUrl}${
+      pagePath === '/' ? '' : pagePath
+    }`.replace(/\/$/, '')
     const isHome = !pagePath || pagePath === '/'
     const robots =
       process.env.VERCEL_ENV === 'production' ||
