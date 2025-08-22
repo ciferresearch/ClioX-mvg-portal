@@ -14,8 +14,7 @@ Sitemap: https://cliox.org/sitemap.xml
 Allow: /
 Allow: /resources
 Allow: /articles
-Allow: /privacy
-Allow: /gdpr
+Allow: /privacy/en
 Allow: /terms
 Allow: /imprint
 

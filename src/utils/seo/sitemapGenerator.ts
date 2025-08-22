@@ -17,8 +17,7 @@ export class SitemapGenerator {
     const staticPages: SitemapPage[] = [
       { url: '/', changefreq: 'daily', priority: 1.0 },
       { url: '/resources', changefreq: 'weekly', priority: 0.8 },
-      { url: '/privacy', changefreq: 'monthly', priority: 0.3 },
-      { url: '/gdpr', changefreq: 'monthly', priority: 0.3 },
+      { url: '/privacy/en', changefreq: 'monthly', priority: 0.3 },
       { url: '/terms', changefreq: 'monthly', priority: 0.3 },
       { url: '/imprint', changefreq: 'monthly', priority: 0.3 }
     ]
