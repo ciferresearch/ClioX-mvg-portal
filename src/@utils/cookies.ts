@@ -6,8 +6,23 @@ export enum SAME_SITE_OPTIONS {
   NONE = 'none'
 }
 
-export const DEFAULT_COOKIE_OPTIONS = {
+interface CookieOptions {
+  expires?: number | Date
+  sameSite?: SAME_SITE_OPTIONS
+}
+
+export const DEFAULT_COOKIE_OPTIONS: CookieOptions = {
   expires: 365,
+  sameSite: SAME_SITE_OPTIONS.STRICT
+}
+
+export const SESSION_COOKIE_OPTIONS: CookieOptions = {
+  expires: undefined,
+  sameSite: SAME_SITE_OPTIONS.STRICT
+}
+
+export const TWO_MONTHS_COOKIE_OPTIONS: CookieOptions = {
+  expires: 60,
   sameSite: SAME_SITE_OPTIONS.STRICT
 }
 
@@ -32,7 +47,10 @@ export function setCookie(
   cookieValue: string | boolean,
   cookieOptions = DEFAULT_COOKIE_OPTIONS
 ): void {
-  const cookieSecurity = location ? location.protocol === 'https:' : true
+  const cookieSecurity =
+    typeof window !== 'undefined' && location
+      ? location.protocol === 'https:'
+      : true
 
   const options = { ...cookieOptions, security: cookieSecurity }
 

@@ -35,9 +35,21 @@ export default function UrqlClientProvider({
   // Throughout code base this client is then used and altered by passing
   // a new queryContext holding different subgraph URLs.
   //
-  const [client, setClient] = useState<Client>()
+  const [client, setClient] = useState<Client>(() => {
+    // Create default client on initial render to avoid hydration mismatch
+    const oceanConfig = getOceanConfig(1)
+    if (oceanConfig?.subgraphUri) {
+      const defaultClient = createUrqlClient(oceanConfig.subgraphUri)
+      urqlClient = defaultClient
+      return defaultClient
+    }
+    return null
+  })
 
   useEffect(() => {
+    // Only run if client wasn't created during initialization
+    if (client) return
+
     const oceanConfig = getOceanConfig(1)
 
     if (!oceanConfig?.subgraphUri) {
@@ -51,9 +63,10 @@ export default function UrqlClientProvider({
     urqlClient = newClient
     setClient(newClient)
     LoggerInstance.log(`[URQL] Client connected to ${oceanConfig.subgraphUri}`)
-  }, [])
+  }, [client])
 
-  return client ? <Provider value={client}>{children}</Provider> : <></>
+  // Always render Provider to avoid hydration mismatch, even with null client
+  return <Provider value={client}>{children}</Provider>
 }
 
 export { UrqlClientProvider }
