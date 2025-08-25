@@ -6,17 +6,13 @@ The application can now dynamically choose between production and development ev
 
 ### How it works
 
-Both `loadResources.ts` and the `Events` component will automatically load:
+Both `loadResources.ts` and the `Events` component will load:
 
-- `index-dev.json` when in development mode
-- `index.json` for production
+- `index.json` for all environments
 
 ### Configuration
 
-The system checks for either of these conditions to use development data:
-
-1. `NODE_ENV === 'development'`
-2. `NEXT_PUBLIC_USE_DEV_DATA === 'true'` (environment variable)
+The system now uses a single data source for all environments.
 
 ### Files Modified
 
@@ -25,26 +21,37 @@ The system checks for either of these conditions to use development data:
 
 ### Usage
 
-**For development:**
+The application now uses the same data source regardless of environment:
 
 ```bash
-# Automatically uses dev data when NODE_ENV=development
+# All environments use index.json
 npm run dev
-
-# Or explicitly set the flag
-NEXT_PUBLIC_USE_DEV_DATA=true npm run dev
-```
-
-**For production:**
-
-```bash
-# Uses production data (index.json)
 npm run build && npm start
 ```
 
 ### Data Files
 
-- `content/resources/events/index.json` - Production events (1 event)
-- `content/resources/events/index-dev.json` - Development events (6 events)
+- `content/resources/events/index.json` - Events data for all environments
 
-The development file contains more test events for better testing and development experience.
+### Map Configuration
+
+The application supports various map configuration options through environment variables:
+
+#### Map Style & Appearance
+
+- `NEXT_PUBLIC_MAP_STYLE_URL` - Map tile style URL (default: OpenFreeMap bright)
+- `NEXT_PUBLIC_MAP_MARKER_COLOR` - Marker color (default: #0ea5e9)
+- `NEXT_PUBLIC_MAP_MARKER_SIZE` - Marker size in pixels (default: 28)
+
+#### Map Focus & Zoom
+
+- `NEXT_PUBLIC_MAP_FOCUS_ZOOM` - Zoom level when focusing on a specific event (default: 16)
+
+#### Map Tour Settings
+
+- `NEXT_PUBLIC_MAP_TOUR_START_MS` - Delay before starting tour (default: 3000ms)
+- `NEXT_PUBLIC_MAP_TOUR_FLY_MS` - Duration of fly animation (default: 900ms)
+- `NEXT_PUBLIC_MAP_TOUR_HOLD_MS` - Time to hold on each marker (default: 4500ms)
+- `NEXT_PUBLIC_MAP_TOUR_RESUME_MS` - Delay before resuming tour (default: 10000ms)
+- `NEXT_PUBLIC_MAP_TOUR_ZOOM` - Zoom level during tour (default: 15)
+- `NEXT_PUBLIC_MAP_TOUR_SEARCH_IDLE_MS` - Search idle timeout (default: 4000ms)

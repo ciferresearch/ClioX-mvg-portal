@@ -55,6 +55,7 @@ export default function Resources({
   const [resourceCards, setResourceCards] =
     useState<ResourceCard[]>(initialArticles)
   const [allResourceCards, setAllResourceCards] = useState<ResourceCard[]>([])
+  const [academyResources, setAcademyResources] = useState<ResourceCard[]>([])
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const router = useRouter()
@@ -112,6 +113,11 @@ export default function Resources({
         for (const tab of tabs.filter((t) => t.id !== 'articles')) {
           const resources = await loadResourcesByCategory(tab.id)
           allResources.push(...resources)
+
+          // Store academy resources separately for the Academy component
+          if (tab.id === 'academy') {
+            setAcademyResources(resources)
+          }
         }
 
         setAllResourceCards(allResources)
@@ -549,7 +555,7 @@ export default function Resources({
           </div>
         ) : activeTab === 'academy' ? (
           <div className="pb-16">
-            <Academy />
+            <Academy lessons={academyResources} />
           </div>
         ) : activeTab === 'events' ? (
           <div className="pb-16">

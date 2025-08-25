@@ -166,9 +166,10 @@ export default function MapLibreClientMap({
 
     // If there's a specific focus, override auto-fit behavior
     if (focus) {
+      const focusZoom = Number(process.env.NEXT_PUBLIC_MAP_FOCUS_ZOOM || '14')
       map.flyTo({
         center: [focus.lng, focus.lat],
-        zoom: 12,
+        zoom: focusZoom,
         duration: 900,
         essential: true
       })
@@ -178,9 +179,10 @@ export default function MapLibreClientMap({
   useEffect(() => {
     const map = mapRef.current
     if (!map || !focus) return
+    const focusZoom = Number(process.env.NEXT_PUBLIC_MAP_FOCUS_ZOOM || '14')
     map.flyTo({
       center: [focus.lng, focus.lat],
-      zoom: 12,
+      zoom: focusZoom,
       duration: 900,
       essential: true
     })

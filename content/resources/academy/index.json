@@ -3,24 +3,40 @@
     {
       "id": "academy-1",
       "category": "academy",
-      "tag": "ACADEMY",
+      "tag": "BLOCKCHAIN",
       "title": "Blockchain From an Archival Science Perspective",
       "description": "Video lesson on blockchain viewed through archival science.",
       "image": "/content/resources/academy/placeholder.jpg",
       "link": "https://www.youtube.com/watch?v=EmHBY3BuzLE",
       "content": "video lesson blockchain archival science",
-      "tags": ["blockchain", "archives", "lesson"]
+      "tags": ["Blockchain", "Featured Lessons", "Popular Lessons"]
     },
     {
       "id": "academy-2",
       "category": "academy",
-      "tag": "ACADEMY",
+      "tag": "BLOCKCHAIN",
       "title": "The Blockchain Genesis Story",
       "description": "Video lesson covering the origin of blockchain.",
       "image": "/content/resources/academy/placeholder.jpg",
       "link": "https://www.youtube.com/watch?v=dX-x4RQdI14",
       "content": "video lesson blockchain genesis story",
-      "tags": ["blockchain", "history", "lesson"]
+      "tags": ["Blockchain", "Featured Lessons", "Popular Lessons"]
+    },
+    {
+      "id": "academy-3",
+      "category": "academy",
+      "tag": "INFORMATION VISUALIZATION",
+      "title": "Data Visualization & Distant Reading with Clio-X VizHub",
+      "description": "In this explainer video, we demonstrate how to use the VizHub feature in Clio-X for analyzing and visualizing text data. With these tools, you can quickly uncover patterns and insights from large text collections. You'll be able to: Viewing distributions of emails over time, Exploring sentiment trends with positive, neutral, and negative breakdowns, Interactively focusing on specific time periods, Creating and customizing word clouds with stop lists and sliders, Generating summaries of your data corpus. Whether you're exploring large-scale datasets or conducting digital archival research, Clio-X makes it easy to uncover meaningful patterns in your text. Learn more at cliox.org.",
+      "image": "/content/resources/academy/placeholder.jpg",
+      "link": "https://youtu.be/KtJ-UYokDyw?feature=shared",
+      "content": "data visualization distant reading vizhub text analysis word clouds sentiment analysis email distribution",
+      "tags": [
+        "Featured Lessons",
+        "Data",
+        "Information Visualization",
+        "Text Analytics"
+      ]
     }
   ]
 }
