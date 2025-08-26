@@ -61,7 +61,10 @@ interface ChatbotUseCaseData {
 }
 
 class ChatbotApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+  private baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://155.248.219.86:8001' ||
+    'http://localhost:8001'
   private sessionId = this.generateSessionId()
 
   async uploadKnowledge(
@@ -71,6 +74,7 @@ class ChatbotApiService {
       const allChunks = this.extractKnowledgeChunks(chatbotData)
       const domains = this.extractDomains(chatbotData)
 
+      console.log('backend api call:', this.baseUrl)
       const response = await fetch(
         `${this.baseUrl}/api/v1/session/knowledge/upload`,
         {

@@ -358,7 +358,7 @@ export default function ChatInterface(): ReactElement {
           {hasKnowledge && (
             <div className="mt-2 text-xs text-green-600">
               📚 {knowledgeStatus.chunk_count} chunks from domains:{' '}
-              {knowledgeStatus.domains.join(', ')}
+              {knowledgeStatus.domains?.join(', ') || 'No domains specified'}
             </div>
           )}
           {!hasKnowledge && (
