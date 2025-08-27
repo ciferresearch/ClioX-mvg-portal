@@ -3,24 +3,22 @@ import Page from '@shared/Page'
 import { useRouter } from 'next/router'
 import content from '../../../content/pages/chatbot.json'
 import Chatbot from '../../components/Chatbot'
-import { useDataStore } from '../../components/@shared/VizHub/store/dataStore'
-import { useUseCases } from '../../@context/UseCases'
 
 export default function PageChatbot(): ReactElement {
   const router = useRouter()
-  const { clearAllData } = useDataStore()
-  // TODO: Add clearChatbot when database integration is ready
-  const { clearTextAnalysis } = useUseCases()
 
   const { title, description } = content
 
   // Clear both VizHub localStorage data and IndexedDB data when leaving the page
   useEffect(() => {
     return () => {
-      // Clear VizHub localStorage data
-      clearAllData()
-      // TODO: Clear IndexedDB Chatbot data when ready
-      // clearChatbot()
+      const shouldClearOnUnmount =
+        process.env.NEXT_PUBLIC_CLEAR_ON_UNMOUNT !== 'false'
+
+      if (shouldClearOnUnmount) {
+        // No persisted chatbot storage to clear yet.
+        // If Chatbot adds IndexedDB or other persistence, clear it here.
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

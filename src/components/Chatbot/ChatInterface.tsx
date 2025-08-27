@@ -2,7 +2,7 @@ import { ReactElement, useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 import { ChatMessage, KnowledgeBase } from './_types'
-import { chatbotApi, KnowledgeStatus } from '../../services/chatbotApi'
+import { chatbotApi, KnowledgeStatus } from '../../@utils/chatbot'
 
 interface ChatInterfaceProps {
   // Remove unused knowledgeBase prop

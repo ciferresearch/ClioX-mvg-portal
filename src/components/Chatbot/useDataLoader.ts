@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ChatbotResult, KnowledgeBase } from './_types'
-import { ChatbotUseCaseData } from '../../services/chatbotApi'
+import { ChatbotUseCaseData } from '../../@utils/chatbot'
 
 export interface DataLoadingState {
   knowledgeBase: KnowledgeBase | null

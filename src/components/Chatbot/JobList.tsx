@@ -11,7 +11,7 @@ import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
 import { CHATBOT_ALGO_DIDS, CHATBOT_RESULT_ZIP } from './_constants'
 import { ChatbotResult } from './_types'
-import { chatbotApi, ChatbotUseCaseData } from '../../services/chatbotApi'
+import { chatbotApi, ChatbotUseCaseData } from '../../@utils/chatbot'
 
 import { getAsset } from '../../@utils/aquarius'
 import { getComputeJobs } from '../../@utils/compute'

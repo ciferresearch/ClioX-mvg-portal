@@ -82,7 +82,7 @@ class ChatbotApiService {
           body: JSON.stringify({
             session_id: this.sessionId,
             knowledge_chunks: allChunks,
-            domains: domains
+            domains
           })
         }
       )
@@ -100,11 +100,14 @@ class ChatbotApiService {
     }
   }
 
-  async chat(message: string, config: any = {}): Promise<ChatResponse> {
+  async chat(
+    message: string,
+    config: { maxTokens?: number; temperature?: number; model?: string } = {}
+  ): Promise<ChatResponse> {
     try {
       const requestBody = {
         session_id: this.sessionId,
-        message: message,
+        message,
         config: {
           max_tokens: config.maxTokens || 500,
           temperature: config.temperature || 0.7,
@@ -162,7 +165,7 @@ class ChatbotApiService {
     }
   }
 
-  async healthCheck(): Promise<any> {
+  async healthCheck(): Promise<{ status: string; ollama_connected?: boolean }> {
     try {
       const response = await fetch(`${this.baseUrl}/api/health`)
       if (!response.ok) {
