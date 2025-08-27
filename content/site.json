@@ -27,6 +27,10 @@
         {
           "name": "Cameroon Gazette Analysis",
           "link": "/usecases/cameroonGazette"
+        },
+        {
+          "name": "AI Chatbot Assistant",
+          "link": "/usecases/chatbot"
         }
       ]
     },
