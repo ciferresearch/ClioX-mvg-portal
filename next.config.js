@@ -3,6 +3,9 @@ module.exports = (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
+    env: {
+      CHATBOT_API_URL: process.env.CHATBOT_API_URL
+    },
     webpack: (config, options) => {
       config.module.rules.push(
         {

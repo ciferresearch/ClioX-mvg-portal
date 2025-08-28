@@ -61,7 +61,8 @@ interface ChatbotUseCaseData {
 }
 
 class ChatbotApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+  // Use relative URLs to call our internal API routes
+  private baseUrl = '/api/chatbot'
   private sessionId = this.generateSessionId()
 
   async uploadKnowledge(
@@ -71,21 +72,18 @@ class ChatbotApiService {
       const allChunks = this.extractKnowledgeChunks(chatbotData)
       const domains = this.extractDomains(chatbotData)
 
-      const response = await fetch(
-        `${this.baseUrl}/api/v1/session/knowledge/upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Session-ID': this.sessionId
-          },
-          body: JSON.stringify({
-            session_id: this.sessionId,
-            knowledge_chunks: allChunks,
-            domains
-          })
-        }
-      )
+      const response = await fetch(`${this.baseUrl}/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-ID': this.sessionId
+        },
+        body: JSON.stringify({
+          sessionId: this.sessionId,
+          knowledgeChunks: allChunks,
+          domains
+        })
+      })
 
       if (!response.ok) {
         throw new Error(
@@ -106,7 +104,7 @@ class ChatbotApiService {
   ): Promise<ChatResponse> {
     try {
       const requestBody = {
-        session_id: this.sessionId,
+        sessionId: this.sessionId,
         message,
         config: {
           max_tokens: config.maxTokens || 500,
@@ -115,7 +113,7 @@ class ChatbotApiService {
         }
       }
 
-      const response = await fetch(`${this.baseUrl}/api/v1/session/chat`, {
+      const response = await fetch(`${this.baseUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,12 +143,9 @@ class ChatbotApiService {
 
   async getKnowledgeStatus(): Promise<KnowledgeStatus> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/api/v1/session/knowledge/status`,
-        {
-          headers: { 'X-Session-ID': this.sessionId }
-        }
-      )
+      const response = await fetch(`${this.baseUrl}/status`, {
+        headers: { 'X-Session-ID': this.sessionId }
+      })
 
       if (!response.ok) {
         throw new Error(
@@ -167,7 +162,7 @@ class ChatbotApiService {
 
   async healthCheck(): Promise<{ status: string; ollama_connected?: boolean }> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/health`)
+      const response = await fetch(`${this.baseUrl}/health`)
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.status}`)
       }
