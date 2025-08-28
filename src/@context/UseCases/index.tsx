@@ -10,11 +10,13 @@ import {
   CAMEROON_GAZETTE_TABLE,
   CameroonGazetteUseCaseData
 } from './models/CameroonGazette.model'
+import { CHATBOT_TABLE, ChatbotUseCaseData } from './models/Chatbot.model'
 import { LoggerInstance } from '@oceanprotocol/lib'
 
 export class UseCaseDB extends Dexie {
   textAnalysises!: Table<TextAnalysisUseCaseData>
   cameroonGazettes!: Table<CameroonGazetteUseCaseData>
+  chatbots!: Table<ChatbotUseCaseData>
   constructor() {
     super(DATABASE_NAME)
 
@@ -22,7 +24,8 @@ export class UseCaseDB extends Dexie {
 
     this.version(DATABASE_VERSION).stores({
       ...TEXT_ANALYSIS_TABLE,
-      ...CAMEROON_GAZETTE_TABLE
+      ...CAMEROON_GAZETTE_TABLE,
+      ...CHATBOT_TABLE
     })
   }
 }
@@ -49,6 +52,12 @@ interface UseCasesValue {
   ) => Promise<IndexableType>
   deleteCameroonGazette: (id: number) => Promise<void>
   clearCameroonGazette: () => Promise<void>
+  // Chatbot store
+  createOrUpdateChatbot: (chatbot: ChatbotUseCaseData) => Promise<IndexableType>
+  chatbotList: ChatbotUseCaseData[] | undefined
+  updateChatbot: (chatbots: ChatbotUseCaseData[]) => Promise<IndexableType>
+  deleteChatbot: (id: number) => Promise<void>
+  clearChatbot: () => Promise<void>
 }
 
 const UseCasesContext = createContext<UseCasesValue | null>(null)
@@ -58,6 +67,7 @@ function UseCasesProvider({ children }: { children: ReactNode }): ReactElement {
   const cameroonGazetteList = useLiveQuery(() =>
     database.cameroonGazettes.toArray()
   )
+  const chatbotList = useLiveQuery(() => database.chatbots.toArray())
 
   // TESTLOG
 
@@ -170,6 +180,59 @@ function UseCasesProvider({ children }: { children: ReactNode }): ReactElement {
     LoggerInstance.log(`[UseCases]: cleared CameroonGazette table`)
   }
 
+  // Chatbot CRUD
+  const createOrUpdateChatbot = async (chatbot: ChatbotUseCaseData) => {
+    if (!chatbot.job || !chatbot.job.jobId) {
+      LoggerInstance.error(
+        `[UseCases] cannot insert Chatbot without job or result data!`
+      )
+      return
+    }
+
+    const exists = chatbotList?.find(
+      (row) => chatbot.job.jobId === row.job.jobId
+    )
+
+    const updated = await database.chatbots.put(
+      {
+        ...chatbot
+      },
+      exists?.id
+    )
+
+    LoggerInstance.log(`[UseCases]: create or update chatbot table`, {
+      chatbot,
+      updated
+    })
+
+    return updated
+  }
+
+  const updateChatbot = async (
+    chatbots: ChatbotUseCaseData[]
+  ): Promise<IndexableType> => {
+    const updated = await database.chatbots.bulkPut(chatbots)
+
+    LoggerInstance.log(`[UseCases]: update chatbot table`, {
+      chatbots,
+      updated
+    })
+
+    return updated
+  }
+
+  const deleteChatbot = async (id: number) => {
+    await database.chatbots.delete(id)
+
+    LoggerInstance.log(`[UseCases]: deleted #${id} from chatbot table`)
+  }
+
+  const clearChatbot = async () => {
+    await database.chatbots.clear()
+
+    LoggerInstance.log(`[UseCases]: cleared chatbot table`)
+  }
+
   return (
     <UseCasesContext.Provider
       value={
@@ -184,7 +247,13 @@ function UseCasesProvider({ children }: { children: ReactNode }): ReactElement {
           cameroonGazetteList,
           updateCameroonGazette,
           deleteCameroonGazette,
-          clearCameroonGazette
+          clearCameroonGazette,
+          // Chatbot
+          createOrUpdateChatbot,
+          chatbotList,
+          updateChatbot,
+          deleteChatbot,
+          clearChatbot
         } satisfies UseCasesValue
       }
     >

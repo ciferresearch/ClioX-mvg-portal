@@ -63,7 +63,29 @@ interface ChatbotUseCaseData {
 class ChatbotApiService {
   // Use relative URLs to call our internal API routes
   private baseUrl = '/api/chatbot'
-  private sessionId = this.generateSessionId()
+  private sessionId: string
+
+  constructor() {
+    // Restore sessionId from sessionStorage, or generate new one
+    this.sessionId = this.getOrCreateSessionId()
+  }
+
+  private getOrCreateSessionId(): string {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      // Server-side rendering, generate a temporary session ID
+      return this.generateSessionId()
+    }
+
+    const storedSessionId = sessionStorage.getItem('chatbot_session_id')
+    if (storedSessionId) {
+      return storedSessionId
+    }
+
+    const newSessionId = this.generateSessionId()
+    sessionStorage.setItem('chatbot_session_id', newSessionId)
+    return newSessionId
+  }
 
   async uploadKnowledge(
     chatbotData: ChatbotUseCaseData[]
@@ -203,12 +225,21 @@ class ChatbotApiService {
     return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   }
 
-  getBaseUrl(): string {
-    return this.baseUrl
+  // Add method to manually clear session
+  clearSession(): void {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('chatbot_session_id')
+    }
+    this.sessionId = this.getOrCreateSessionId()
   }
 
+  // Get current sessionId
   getSessionId(): string {
     return this.sessionId
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl
   }
 }
 

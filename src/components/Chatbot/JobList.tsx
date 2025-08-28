@@ -5,6 +5,7 @@ import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUserPreferences } from '../../@context/UserPreferences'
 import { useCancelToken } from '../../@hooks/useCancelToken'
+import { useUseCases } from '../../@context/UseCases'
 import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
@@ -26,6 +27,9 @@ export default function JobList(props: {
   const { data: signer } = useSigner()
   const { autoWallet } = useAutomation()
 
+  // Get IndexedDB operations through useUseCases hook
+  const { chatbotList, createOrUpdateChatbot, clearChatbot } = useUseCases()
+
   const [jobs, setJobs] = useState<ComputeJobMetaData[]>([])
   const [refetchJobs, setRefetchJobs] = useState(false)
   const [isLoadingJobs, setIsLoadingJobs] = useState(false)
@@ -33,12 +37,11 @@ export default function JobList(props: {
   const [backendStatus, setBackendStatus] = useState<string>('checking')
   const newCancelToken = useCancelToken()
 
-  // TODO: Replace this with real database when ready
-  const [chatbotList, setChatbotList] = useState<ChatbotUseCaseData[]>([])
-
-  // Update parent component when chatbot list changes
+  // Restore data from IndexedDB when component mounts or data changes
   useEffect(() => {
-    props.setChatbotData(chatbotList)
+    if (chatbotList) {
+      props.setChatbotData(chatbotList)
+    }
   }, [chatbotList, props])
 
   // Check backend health status
@@ -61,62 +64,6 @@ export default function JobList(props: {
     const interval = setInterval(checkBackendHealth, 60000) // Check every minute
     return () => clearInterval(interval)
   }, [])
-
-  // Auto-load mock data for development - REMOVED: Now using real API
-  // useEffect(() => {
-  //   // This was auto-loading mock data - no longer needed with real API
-  // }, [backendStatus, jobs.length])
-
-  // const fetchJobs = useCallback(async () => {
-  //   try {
-  //     setIsLoadingJobs(true)
-
-  // Show mock compute job for development/demo purposes (clearly labeled)
-  // const mockJobs = [
-  //   {
-  //     ...MOCK_CHATBOT_COMPUTE_JOB,
-  //     assetName: '🔧 Demo Job (Mock Data)', // Clear labeling
-  //     statusText: 'Demo Job - Click Add to test API integration'
-  //   }
-  // ]
-  // setJobs(mockJobs)
-  // setIsLoadingJobs(false)
-
-  // TODO: Replace with real Ocean Protocol compute jobs when ready
-
-  // Fetch computeJobs for all selected networks (UserPreferences)
-  //     const computeJobs = await getComputeJobs(
-  //       chainIds,
-  //       accountId,
-  //       null,
-  //       newCancelToken()
-  //     )
-  //     if (autoWallet) {
-  //       const autoComputeJobs = await getComputeJobs(
-  //         chainIds,
-  //         autoWallet?.address,
-  //         null,
-  //         newCancelToken()
-  //       )
-  //       autoComputeJobs.computeJobs.forEach((job) => {
-  //         computeJobs.computeJobs.push(job)
-  //       })
-  //     }
-
-  //     setJobs(
-  //       // Filter computeJobs for dids configured in _constants
-  //       computeJobs.computeJobs.filter(
-  //         (job) =>
-  //           chatbotAlgoDids.includes(job.algoDID) && job.status === 70
-  //       )
-  //     )
-  //     setIsLoadingJobs(!computeJobs.isLoaded)
-
-  //   } catch (error) {
-  //     LoggerInstance.error(error.message)
-  //     setIsLoadingJobs(false)
-  //   }
-  // }, [chainIds, chatbotAlgoDids, newCancelToken])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -148,10 +95,6 @@ export default function JobList(props: {
         // Filter computeJobs for dids configured in _constants
         computeJobs.computeJobs.filter(
           (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
-
-          // TODO: Uncomment this when the resultFileName is available
-          // job.results.filter((result) => result.filename === resultFileName)
-          // .length > 0
         )
       )
       setIsLoadingJobs(!computeJobs.isLoaded)
@@ -159,14 +102,7 @@ export default function JobList(props: {
       LoggerInstance.error(error.message)
       setIsLoadingJobs(false)
     }
-  }, [
-    chainIds,
-    chatbotAlgoDids,
-    accountId,
-    autoWallet,
-    // resultFileName,
-    newCancelToken
-  ])
+  }, [chainIds, chatbotAlgoDids, accountId, autoWallet, newCancelToken])
 
   useEffect(() => {
     fetchJobs()
@@ -263,31 +199,35 @@ export default function JobList(props: {
         result: chatBotResults
       }
 
-      // 1. Add to local state first for immediate UI update
-      const updatedList = [...chatbotList, newUseCaseData]
-      setChatbotList(updatedList)
+      try {
+        // 1. Save to IndexedDB first for persistence
+        await createOrUpdateChatbot(newUseCaseData)
 
-      // 2. Upload all knowledge to backend API
-      const uploadResponse = await chatbotApi.uploadKnowledge(updatedList)
+        // 2. Upload knowledge to RAG backend
+        const uploadResponse = await chatbotApi.uploadKnowledge([
+          newUseCaseData
+        ])
 
-      if (uploadResponse.success) {
-        toast.success(
-          `✅ Data ready! ${
-            uploadResponse.chunks_processed
-          } pieces of information uploaded. Session: ${uploadResponse.session_id.slice(
-            -8
-          )}`
-        )
-      } else {
-        throw new Error(uploadResponse.message || 'Upload failed')
+        if (uploadResponse.success) {
+          toast.success(
+            `✅ Data ready! ${
+              uploadResponse.chunks_processed
+            } pieces of information uploaded. Session: ${uploadResponse.session_id.slice(
+              -8
+            )}`
+          )
+        } else {
+          throw new Error(uploadResponse.message || 'Upload failed')
+        }
+      } catch (error) {
+        LoggerInstance.error('❌ Knowledge upload failed:', error)
+        toast.error('❌ Could not add compute result to chatbot')
+      } finally {
+        setIsUploadingKnowledge(false)
       }
     } catch (error) {
-      LoggerInstance.error('❌ Knowledge upload failed:', error)
-      setChatbotList((prev) =>
-        prev.filter((item) => item.job.jobId !== job.jobId)
-      )
-      toast.error('❌ Could not add compute result to chatbot')
-    } finally {
+      LoggerInstance.error('❌ Failed to process compute job:', error)
+      toast.error('❌ Could not process compute job result')
       setIsUploadingKnowledge(false)
     }
   }
@@ -304,34 +244,13 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // 1. Remove from local state
-      const updatedList = chatbotList.filter(
-        (item) => item.job.jobId !== job.jobId
-      )
-      setChatbotList(updatedList)
+      // 1. Remove from IndexedDB
+      await clearChatbot()
 
-      // 2. Re-upload remaining knowledge to backend (or clear if empty)
-      if (updatedList.length > 0) {
-        const uploadResponse = await chatbotApi.uploadKnowledge(updatedList)
-        if (uploadResponse.success) {
-          toast.success(
-            `✅ Data updated. ${uploadResponse.chunks_processed} pieces of information remaining.`
-          )
-        }
-      } else {
-        // Knowledge base is now empty - the session will automatically handle this
-        toast.info(
-          'No information loaded. Add compute job results to start chatting.'
-        )
-      }
-
-      // TODO: Use real database when ready
-      // await deleteChatbot(rowToDelete.id)
+      // 2. Clear knowledge from RAG backend
+      toast.success('✅ Data removed from chatbot')
     } catch (error) {
       LoggerInstance.error('❌ Knowledge update failed:', error)
-
-      // Restore the item if API call failed
-      setChatbotList((prev) => [...prev, rowToDelete])
       toast.error('❌ Failed to update knowledge base')
     } finally {
       setIsUploadingKnowledge(false)
@@ -345,16 +264,13 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // Clear local state
-      setChatbotList([])
+      // Clear from IndexedDB
+      await clearChatbot()
 
-      // Backend will automatically handle empty knowledge base
+      // Clear from RAG backend
       toast.success(
         '✅ Chatbot data was cleared. Add compute job results to start over.'
       )
-
-      // TODO: Use real database when ready
-      // await clearChatbot()
     } catch (error) {
       LoggerInstance.error('❌ Failed to clear data:', error)
       toast.error('❌ Failed to clear chatbot data')

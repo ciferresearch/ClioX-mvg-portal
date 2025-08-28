@@ -1,2 +1,2 @@
 export const DATABASE_NAME = 'portal-clioX-indexed-db'
-export const DATABASE_VERSION = 2
+export const DATABASE_VERSION = 3
