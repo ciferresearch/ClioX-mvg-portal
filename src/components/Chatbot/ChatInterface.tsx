@@ -207,10 +207,10 @@ export default function ChatInterface(): ReactElement {
         // Check knowledge status
         const status = await chatbotApi.getKnowledgeStatus()
         setKnowledgeStatus(status)
-        setHasKnowledge(status.has_knowledge)
+        setHasKnowledge(status.has_knowledge || false)
       } catch (error) {
         console.error('❌ Backend or knowledge check failed:', error)
-        setBackendError(error.message)
+        setBackendError(error?.message || 'Unknown backend error')
         setHasKnowledge(false)
       }
     }
@@ -252,7 +252,7 @@ export default function ChatInterface(): ReactElement {
         temperature: 0.7
       })
 
-      if (apiResponse.success && apiResponse.response) {
+      if (apiResponse?.success && apiResponse?.response) {
         // Always use the backend response - let the LLM handle all types of questions
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -260,7 +260,8 @@ export default function ChatInterface(): ReactElement {
           content: apiResponse.response,
           timestamp: new Date(),
           metadata: {
-            sources: apiResponse.sources?.map((s) => s.source),
+            sources:
+              apiResponse.sources?.map((s) => s?.source).filter((s) => s) || [],
             confidence: apiResponse.metadata?.chunks_retrieved
           }
         }
@@ -268,13 +269,13 @@ export default function ChatInterface(): ReactElement {
         setMessages((prev) => [...prev, assistantMessage])
       } else {
         console.error('❌ API response failed or empty:', {
-          success: apiResponse.success,
-          response: apiResponse.response,
-          error: apiResponse.error,
-          message: apiResponse.message
+          success: apiResponse?.success,
+          response: apiResponse?.response,
+          error: apiResponse?.error,
+          message: apiResponse?.message
         })
         throw new Error(
-          apiResponse.message || apiResponse.error || 'Unknown API error'
+          apiResponse?.message || apiResponse?.error || 'Unknown API error'
         )
       }
     } catch (error) {
@@ -283,13 +284,15 @@ export default function ChatInterface(): ReactElement {
       let errorContent =
         'Sorry, I encountered an error processing your message.'
 
-      if (error.message.includes('no_knowledge')) {
+      const errorMsg = error?.message || 'Unknown error'
+
+      if (errorMsg.includes('no_knowledge')) {
         errorContent =
           "I don't have access to any information for this session. Please add some compute job results first."
-      } else if (error.message.includes('Cannot connect')) {
+      } else if (errorMsg.includes('Cannot connect')) {
         errorContent =
           'Cannot connect to the chatbot backend. Please ensure the backend server is running on port 8001.'
-      } else if (error.message.includes('fetch')) {
+      } else if (errorMsg.includes('fetch')) {
         errorContent =
           'Network error: Unable to reach the chatbot backend. Please check your connection.'
       }
@@ -352,13 +355,15 @@ export default function ChatInterface(): ReactElement {
                   : 'bg-yellow-100 text-yellow-600'
               }`}
             >
-              Session: {chatbotApi.getSessionId().slice(-8)}
+              Session: {chatbotApi.getSessionId()?.slice(-8) || 'Unknown'}
             </span>
           </div>
           {hasKnowledge && (
             <div className="mt-2 text-xs text-green-600">
-              📚 {knowledgeStatus.chunk_count} chunks from domains:{' '}
-              {knowledgeStatus.domains.join(', ')}
+              📚 {knowledgeStatus.chunk_count || 0} chunks from domains:{' '}
+              {knowledgeStatus.domains && knowledgeStatus.domains.length > 0
+                ? knowledgeStatus.domains.join(', ')
+                : 'No specific domains'}
             </div>
           )}
           {!hasKnowledge && (

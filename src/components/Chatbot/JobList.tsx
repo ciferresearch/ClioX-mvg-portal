@@ -198,7 +198,26 @@ export default function JobList(props: {
       )
 
       const response = await fetch(url)
+
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const fileContent = await response.text()
+
+      // Check if the content looks like a traceback or error message
+      if (
+        fileContent.trim().startsWith('Traceback') ||
+        fileContent.trim().startsWith('Error') ||
+        fileContent.trim().startsWith('Exception') ||
+        fileContent.includes('Traceback (most recent call last)')
+      ) {
+        console.error('❌ Compute job returned error/traceback:', fileContent)
+        toast.error('❌ Compute job failed - check job status')
+        setIsUploadingKnowledge(false)
+        return
+      }
 
       let chatBotResults: ChatbotResult[] = []
       try {
@@ -228,7 +247,13 @@ export default function JobList(props: {
         ]
       } catch (e) {
         console.error('❌ JSON parsing failed:', e)
-        toast.error('❌ fail to parse json file')
+        console.error(
+          '❌ File content that failed to parse:',
+          fileContent.substring(0, 500)
+        )
+        toast.error(
+          '❌ Failed to parse compute job result - invalid JSON format'
+        )
         setIsUploadingKnowledge(false)
         return
       }
