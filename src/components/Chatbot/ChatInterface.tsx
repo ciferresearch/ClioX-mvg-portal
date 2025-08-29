@@ -1,11 +1,50 @@
 import { ReactElement, useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
-import { ChatMessage, KnowledgeBase } from './_types'
+import { ChatMessage } from './_types'
 import { chatbotApi, KnowledgeStatus } from '../../@utils/chatbot'
 
 interface ChatInterfaceProps {
-  // Remove unused knowledgeBase prop
+  status:
+    | 'connecting'
+    | 'backend-error'
+    | 'uploading'
+    | 'processing'
+    | 'ready'
+    | 'no-knowledge'
+  knowledgeStatus: KnowledgeStatus | null
+  backendError: string | null
+}
+
+// Smart scroll hook: keeps chat pinned to bottom unless user scrolls up
+function useSmartScroll(triggerCount: number) {
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+  // Only auto-scroll on new messages when the user is at the bottom
+  useEffect(() => {
+    if (!shouldAutoScroll) return
+    const container = messagesEndRef.current?.parentElement
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  }, [triggerCount, shouldAutoScroll])
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 10
+    setShouldAutoScroll(isAtBottom)
+  }
+
+  const scrollToBottom = () => {
+    setShouldAutoScroll(true)
+    const container = messagesEndRef.current?.parentElement
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  }
+
+  return { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom }
 }
 
 // Animated typing indicator
@@ -175,7 +214,11 @@ function ChatInput({
   )
 }
 
-export default function ChatInterface(): ReactElement {
+export default function ChatInterface({
+  status,
+  knowledgeStatus,
+  backendError
+}: ChatInterfaceProps): ReactElement {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -185,42 +228,10 @@ export default function ChatInterface(): ReactElement {
     }
   ])
   const [isTyping, setIsTyping] = useState(false)
-  const [knowledgeStatus, setKnowledgeStatus] =
-    useState<KnowledgeStatus | null>(null)
-  const [hasKnowledge, setHasKnowledge] = useState(false)
-  const [backendError, setBackendError] = useState<string | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Auto-scroll to bottom when new messages are added
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  // Check knowledge status and backend health
-  useEffect(() => {
-    const checkKnowledgeAndHealth = async () => {
-      try {
-        // Check backend health first
-        await chatbotApi.healthCheck()
-        setBackendError(null)
-
-        // Check knowledge status
-        const status = await chatbotApi.getKnowledgeStatus()
-        setKnowledgeStatus(status)
-        setHasKnowledge(status.has_knowledge || false)
-      } catch (error) {
-        console.error('❌ Backend or knowledge check failed:', error)
-        setBackendError(error?.message || 'Unknown backend error')
-        setHasKnowledge(false)
-      }
-    }
-
-    checkKnowledgeAndHealth()
-
-    // Check periodically (every 30 seconds)
-    const interval = setInterval(checkKnowledgeAndHealth, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  const hasKnowledge =
+    status === 'ready' || (knowledgeStatus?.has_knowledge ?? false)
+  const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
+    useSmartScroll(messages.length)
 
   const handleSendMessage = async (userMessage: string) => {
     // Check if knowledge is available
@@ -328,37 +339,61 @@ export default function ChatInterface(): ReactElement {
       )
     }
 
-    if (knowledgeStatus) {
+    // Status-based rendering
+    if (status === 'uploading') {
       return (
-        <div
-          className={`border rounded-lg p-3 ${
-            hasKnowledge
-              ? 'bg-green-50 border-green-200'
-              : 'bg-yellow-50 border-yellow-200'
-          }`}
-        >
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span>{hasKnowledge ? '✅' : '⚠️'}</span>
-              <span
-                className={`text-sm font-medium ${
-                  hasKnowledge ? 'text-green-700' : 'text-yellow-700'
-                }`}
-              >
-                {hasKnowledge ? `AI Assistant Ready` : 'No Information Loaded'}
+              <span>📤</span>
+              <span className="text-sm font-medium text-orange-700">
+                Uploading Knowledge...
               </span>
             </div>
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                hasKnowledge
-                  ? 'bg-green-100 text-green-600'
-                  : 'bg-yellow-100 text-yellow-600'
-              }`}
-            >
+            <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700">
               Session: {chatbotApi.getSessionId()?.slice(-8) || 'Unknown'}
             </span>
           </div>
-          {hasKnowledge && (
+        </div>
+      )
+    }
+
+    if (status === 'processing') {
+      return (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>⚙️</span>
+              <span className="text-sm font-medium text-yellow-700">
+                Processing Knowledge...
+              </span>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+              Session: {chatbotApi.getSessionId()?.slice(-8) || 'Unknown'}
+            </span>
+          </div>
+          <p className="text-yellow-600 text-xs mt-1">
+            Please wait until processing is complete.
+          </p>
+        </div>
+      )
+    }
+
+    if (status === 'ready') {
+      return (
+        <div className="border rounded-lg p-3 bg-green-50 border-green-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>✅</span>
+              <span className="text-sm font-medium text-green-700">
+                AI Assistant Ready
+              </span>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">
+              Session: {chatbotApi.getSessionId()?.slice(-8) || 'Unknown'}
+            </span>
+          </div>
+          {knowledgeStatus && (
             <div className="mt-2 text-xs text-green-600">
               📚 {knowledgeStatus.chunk_count || 0} chunks from domains:{' '}
               {knowledgeStatus.domains && knowledgeStatus.domains.length > 0
@@ -366,15 +401,32 @@ export default function ChatInterface(): ReactElement {
                 : 'No specific domains'}
             </div>
           )}
-          {!hasKnowledge && (
-            <p className="text-yellow-600 text-xs mt-1">
-              Add compute job results above to enable enhanced chat features
-            </p>
-          )}
         </div>
       )
     }
 
+    if (status === 'no-knowledge') {
+      return (
+        <div className="border rounded-lg p-3 bg-yellow-50 border-yellow-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span>⚠️</span>
+              <span className="text-sm font-medium text-yellow-700">
+                No Information Loaded
+              </span>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+              Session: {chatbotApi.getSessionId()?.slice(-8) || 'Unknown'}
+            </span>
+          </div>
+          <p className="text-yellow-600 text-xs mt-1">
+            Add compute job results above to enable enhanced chat features
+          </p>
+        </div>
+      )
+    }
+
+    // connecting
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="flex items-center space-x-2">
@@ -389,7 +441,7 @@ export default function ChatInterface(): ReactElement {
 
   return (
     <motion.div
-      className="flex flex-col h-[700px] bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+      className="relative flex flex-col h-[700px] bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
@@ -413,7 +465,10 @@ export default function ChatInterface(): ReactElement {
       </motion.div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 bg-gradient-to-b from-gray-50 to-white relative">
+      <div
+        className="flex-1 overflow-y-auto px-6 py-4 bg-gradient-to-b from-gray-50 to-white relative"
+        onScroll={handleScroll}
+      >
         {/* Subtle background pattern */}
         <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,_rgb(0,0,0)_1px,_transparent_0)] bg-[length:24px_24px]"></div>
 
@@ -429,6 +484,34 @@ export default function ChatInterface(): ReactElement {
 
         <AnimatePresence>{isTyping && <TypingIndicator />}</AnimatePresence>
 
+        {/* Scroll to bottom button - centered above input, anchored to container */}
+        {!shouldAutoScroll && (
+          <motion.button
+            onClick={scrollToBottom}
+            className="absolute left-1/2 -translate-x-1/2 bottom-20 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-colors z-20"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label="Scroll to latest"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </motion.button>
+        )}
+
         <motion.div
           ref={messagesEndRef}
           layout
@@ -439,7 +522,14 @@ export default function ChatInterface(): ReactElement {
       {/* Input area */}
       <ChatInput
         onSendMessage={handleSendMessage}
-        disabled={isTyping || backendError !== null}
+        disabled={
+          isTyping ||
+          backendError !== null ||
+          status === 'connecting' ||
+          status === 'uploading' ||
+          status === 'processing' ||
+          status === 'backend-error'
+        }
       />
     </motion.div>
   )

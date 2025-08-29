@@ -1,13 +1,104 @@
-import { ReactElement, useState, useEffect } from 'react'
+import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 import JobList from './JobList'
-import ChatInterface from './ChatInterface'
+import ChatShell from './ChatShell'
 import { ChatbotUseCaseData } from '../../@context/UseCases/models/Chatbot.model'
 import { useUseCases } from '../../@context/UseCases'
+import { chatbotApi, KnowledgeStatus } from '../../@utils/chatbot'
 
 export default function ChatbotViz(): ReactElement {
   // Get chatbot data from IndexedDB through useUseCases hook
   const { chatbotList } = useUseCases()
-  const [chatbotData, setChatbotData] = useState<ChatbotUseCaseData[]>([])
+  const [, setChatbotData] = useState<ChatbotUseCaseData[]>([])
+
+  type AssistantState =
+    | 'connecting'
+    | 'backend-error'
+    | 'uploading'
+    | 'processing'
+    | 'ready'
+    | 'no-knowledge'
+
+  const [assistantStatus, setAssistantStatus] =
+    useState<AssistantState>('connecting')
+  const [knowledgeStatus, setKnowledgeStatus] =
+    useState<KnowledgeStatus | null>(null)
+  const [backendError, setBackendError] = useState<string | null>(null)
+
+  // Poller controls
+  const inFlightRef = useRef<boolean>(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const processingBackoffMsRef = useRef<number>(2000)
+  const assistantStatusRef = useRef<AssistantState>('connecting')
+  const backendErrorRef = useRef<string | null>(null)
+
+  const pollOnce = useCallback(async () => {
+    if (inFlightRef.current) return
+    inFlightRef.current = true
+
+    let nextDelay = 30000 // default cadence
+
+    try {
+      // Always verify backend health first
+      await chatbotApi.healthCheck()
+      if (backendErrorRef.current) setBackendError(null)
+
+      const status = await chatbotApi.getKnowledgeStatus()
+      setKnowledgeStatus(status)
+
+      const hasKnowledge = Boolean(status?.has_knowledge)
+
+      // Derive assistant state
+      if (
+        assistantStatusRef.current === 'uploading' ||
+        assistantStatusRef.current === 'processing'
+      ) {
+        setAssistantStatus(hasKnowledge ? 'ready' : 'processing')
+      } else {
+        setAssistantStatus(hasKnowledge ? 'ready' : 'no-knowledge')
+      }
+
+      // Adjust delay while processing (exponential backoff, capped at 30s)
+      if (
+        assistantStatusRef.current === 'uploading' ||
+        assistantStatusRef.current === 'processing'
+      ) {
+        nextDelay = processingBackoffMsRef.current
+        processingBackoffMsRef.current = Math.min(
+          processingBackoffMsRef.current * 2,
+          30000
+        )
+      } else {
+        nextDelay = 30000
+        processingBackoffMsRef.current = 2000
+      }
+    } catch (error: unknown) {
+      const message = (error as Error)?.message || ''
+
+      // 429 handling
+      if (message.includes('429')) {
+        nextDelay = 60000
+      } else {
+        // Other errors -> mark backend error but do not spam requests
+        setBackendError(message || 'Unknown backend error')
+        setAssistantStatus('backend-error')
+        nextDelay = 30000
+      }
+    } finally {
+      inFlightRef.current = false
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => {
+        pollOnce()
+      }, nextDelay)
+    }
+  }, [])
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    assistantStatusRef.current = assistantStatus
+  }, [assistantStatus])
+  useEffect(() => {
+    backendErrorRef.current = backendError
+  }, [backendError])
 
   // Restore data from IndexedDB when component mounts or data changes
   useEffect(() => {
@@ -16,11 +107,36 @@ export default function ChatbotViz(): ReactElement {
     }
   }, [chatbotList])
 
+  // Initialize connection and start poller
+  useEffect(() => {
+    setAssistantStatus('connecting')
+    processingBackoffMsRef.current = 2000
+    pollOnce()
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [pollOnce])
+
   return (
     <div className="flex flex-col gap-6">
-      <JobList setChatbotData={setChatbotData} />
+      <JobList
+        setChatbotData={setChatbotData}
+        onStatusChange={(s: AssistantState) => {
+          setAssistantStatus(s)
+          // When switching to processing, kick the poller immediately
+          if (s === 'processing' || s === 'uploading') {
+            processingBackoffMsRef.current = 2000
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
+            pollOnce()
+          }
+        }}
+      />
       <div className="bg-gray-50 rounded-lg shadow-sm">
-        <ChatInterface />
+        <ChatShell
+          status={assistantStatus}
+          knowledgeStatus={knowledgeStatus}
+          backendError={backendError}
+        />
       </div>
     </div>
   )

@@ -17,8 +17,17 @@ import { chatbotApi, ChatbotUseCaseData } from '../../@utils/chatbot'
 import { getAsset } from '../../@utils/aquarius'
 import { getComputeJobs } from '../../@utils/compute'
 
+type AssistantState =
+  | 'connecting'
+  | 'backend-error'
+  | 'uploading'
+  | 'processing'
+  | 'ready'
+  | 'no-knowledge'
+
 export default function JobList(props: {
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
+  onStatusChange?: (s: AssistantState) => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
   const chatbotAlgoDids: string[] = Object.values(CHATBOT_ALGO_DIDS)
@@ -34,7 +43,6 @@ export default function JobList(props: {
   const [refetchJobs, setRefetchJobs] = useState(false)
   const [isLoadingJobs, setIsLoadingJobs] = useState(false)
   const [isUploadingKnowledge, setIsUploadingKnowledge] = useState(false)
-  const [backendStatus, setBackendStatus] = useState<string>('checking')
   const newCancelToken = useCancelToken()
 
   // Restore data from IndexedDB when component mounts or data changes
@@ -43,27 +51,6 @@ export default function JobList(props: {
       props.setChatbotData(chatbotList)
     }
   }, [chatbotList, props])
-
-  // Check backend health status
-  useEffect(() => {
-    const checkBackendHealth = async () => {
-      try {
-        const health = await chatbotApi.healthCheck()
-        if (health.status === 'healthy' && health.ollama_connected) {
-          setBackendStatus('healthy')
-        } else {
-          setBackendStatus('degraded')
-        }
-      } catch (error) {
-        console.error('❌ Backend health check failed:', error)
-        setBackendStatus('error')
-      }
-    }
-
-    checkBackendHealth()
-    const interval = setInterval(checkBackendHealth, 60000) // Check every minute
-    return () => clearInterval(interval)
-  }, [])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -118,6 +105,7 @@ export default function JobList(props: {
 
     try {
       setIsUploadingKnowledge(true)
+      props.onStatusChange?.('uploading')
 
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -209,6 +197,8 @@ export default function JobList(props: {
         ])
 
         if (uploadResponse.success) {
+          // Switch to processing state; parent poller will move to ready when done
+          props.onStatusChange?.('processing')
           toast.success(
             `✅ Data ready! ${
               uploadResponse.chunks_processed
@@ -222,6 +212,7 @@ export default function JobList(props: {
       } catch (error) {
         LoggerInstance.error('❌ Knowledge upload failed:', error)
         toast.error('❌ Could not add compute result to chatbot')
+        props.onStatusChange?.('no-knowledge')
       } finally {
         setIsUploadingKnowledge(false)
       }
@@ -229,6 +220,7 @@ export default function JobList(props: {
       LoggerInstance.error('❌ Failed to process compute job:', error)
       toast.error('❌ Could not process compute job result')
       setIsUploadingKnowledge(false)
+      props.onStatusChange?.('no-knowledge')
     }
   }
 
@@ -249,6 +241,7 @@ export default function JobList(props: {
 
       // 2. Clear knowledge from RAG backend
       toast.success('✅ Data removed from chatbot')
+      props.onStatusChange?.('no-knowledge')
     } catch (error) {
       LoggerInstance.error('❌ Knowledge update failed:', error)
       toast.error('❌ Failed to update knowledge base')
@@ -271,6 +264,7 @@ export default function JobList(props: {
       toast.success(
         '✅ Chatbot data was cleared. Add compute job results to start over.'
       )
+      props.onStatusChange?.('no-knowledge')
     } catch (error) {
       LoggerInstance.error('❌ Failed to clear data:', error)
       toast.error('❌ Failed to clear chatbot data')
@@ -311,40 +305,6 @@ export default function JobList(props: {
   return (
     <div className={styles.accordionWrapper}>
       <Accordion title="Compute Jobs" defaultExpanded>
-        {/* Backend status indicator */}
-        <div
-          className={`mb-4 p-3 rounded-lg ${
-            backendStatus === 'healthy'
-              ? 'bg-green-50 border border-green-200'
-              : backendStatus === 'degraded'
-              ? 'bg-yellow-50 border border-yellow-200'
-              : backendStatus === 'error'
-              ? 'bg-red-50 border border-red-200'
-              : 'bg-gray-50 border border-gray-200'
-          }`}
-        >
-          <p
-            className={`text-sm ${
-              backendStatus === 'healthy'
-                ? 'text-green-600'
-                : backendStatus === 'degraded'
-                ? 'text-yellow-600'
-                : backendStatus === 'error'
-                ? 'text-red-600'
-                : 'text-gray-600'
-            }`}
-          >
-            {backendStatus === 'healthy' &&
-              '✅ Chatbot backend connected (port 8001)'}
-            {backendStatus === 'degraded' &&
-              '⚠️ Backend connected but Ollama may be offline'}
-            {backendStatus === 'error' &&
-              '❌ Cannot connect to chatbot backend. Check if server is running on port 8001.'}
-            {backendStatus === 'checking' &&
-              '🔄 Checking backend connection...'}
-          </p>
-        </div>
-
         {/* Knowledge upload status */}
         {isUploadingKnowledge && (
           <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
@@ -363,10 +323,7 @@ export default function JobList(props: {
         />
 
         <div className={styles.actions}>
-          <Button
-            onClick={() => clearData()}
-            disabled={isUploadingKnowledge || backendStatus === 'error'}
-          >
+          <Button onClick={() => clearData()} disabled={isUploadingKnowledge}>
             Clear Data
           </Button>
         </div>
