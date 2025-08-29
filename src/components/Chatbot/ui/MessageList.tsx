@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'motion/react'
 import type { ChatMessage } from '../_types'
 import MessageItem from './MessageItem'
 import TypingIndicator from './TypingIndicator'

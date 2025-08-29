@@ -1,5 +1,5 @@
 import { ReactElement, useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 import { ChatMessage } from './_types'
 import { chatbotApi, KnowledgeStatus } from '../../@utils/chatbot'

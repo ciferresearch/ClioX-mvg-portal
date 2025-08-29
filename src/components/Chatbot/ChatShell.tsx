@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { KnowledgeStatus } from '../../@utils/chatbot'
 import { useSmartScroll } from './hooks/useSmartScroll'
 import { useChat, AssistantState } from './hooks/useChat'
@@ -25,8 +25,8 @@ export default function ChatShell({
 
   return (
     <motion.div
-      className={`relative flex flex-col ${
-        isHero ? 'h-[460px]' : 'h-[700px]'
+      className={`relative flex flex-col w-[820px] mx-auto max-h-[1080px] ${
+        isHero ? 'min-h-[460px]' : 'min-h-[700px]'
       } bg-transparent rounded-2xl overflow-hidden`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}

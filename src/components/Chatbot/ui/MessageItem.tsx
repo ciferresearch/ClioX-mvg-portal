@@ -1,5 +1,5 @@
 import { ReactElement, memo } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import type { ChatMessage } from '../_types'
 
 function MessageItem({
@@ -19,13 +19,13 @@ function MessageItem({
       }`}
     >
       <div
-        className={`max-w-[80%] px-6 py-4 rounded-2xl shadow-sm border ${
+        className={`max-w-[80%] p-2 rounded-2xl border ${
           message.role === 'user'
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md'
-            : 'bg-white text-gray-800 rounded-bl-md border-gray-200'
+            ? 'bg-[#c8794d] text-white rounded-br-md'
+            : 'text-[#2b2e3b] border-none'
         }`}
       >
-        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+        <div className="text-[16px] leading-relaxed whitespace-pre-wrap">
           {message.content}
         </div>
       </div>
