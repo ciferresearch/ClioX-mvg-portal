@@ -9,8 +9,7 @@ export default function TypingIndicator(): ReactElement {
       exit={{ opacity: 0, y: -10 }}
       className="flex justify-start mb-4"
     >
-      <div className="flex items-center space-x-2 bg-white shadow-sm px-4 py-3 rounded-2xl rounded-bl-md border border-gray-200">
-        <span className="text-sm text-gray-600">Assistant is typing</span>
+      <div className="flex items-center space-x-2 px-4 py-3">
         <div className="flex space-x-1">
           {[0, 1, 2].map((i) => (
             <motion.div

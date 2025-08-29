@@ -9,7 +9,7 @@ export default function ScrollToBottom({
   return (
     <motion.button
       onClick={onClick}
-      className="absolute left-1/2 -translate-x-1/2 bottom-30 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-colors z-20"
+      className="absolute left-1/2 -translate-x-1/2 bottom-40 bg-white/90 backdrop-blur-sm text-gray-600 p-3 rounded-full shadow-lg hover:bg-white hover:text-gray-800 hover:shadow-xl border border-gray-200/50 transition-all duration-200 z-20 cursor-pointer"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
