@@ -313,12 +313,7 @@ export default function Composer({
 
   if (variant === 'hero') {
     return (
-      <motion.div
-        className="px-6 w-[820px] flex items-center min-h-[700px]"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-      >
+      <div className="px-6 w-[820px] flex items-center min-h-[700px]">
         <div className="w-full relative">
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none text-[28px] md:text-[40px] leading-tight font-serif text-[#2b2e3b] whitespace-nowrap">
             <span className="inline-block relative align-middle">
@@ -357,17 +352,12 @@ export default function Composer({
             isHero
           />
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   return (
-    <motion.div
-      className="relative bg-white"
-      initial={{ y: 50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.2 }}
-    >
+    <div className="relative bg-white">
       <InputContainer
         inputMessage={inputMessage}
         onInputChange={handleInputChange}
@@ -388,6 +378,6 @@ export default function Composer({
         backendError={backendError}
         isHero={false}
       />
-    </motion.div>
+    </div>
   )
 }
