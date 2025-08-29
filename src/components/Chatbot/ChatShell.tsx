@@ -54,6 +54,7 @@ export default function ChatShell({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
+              className="px-3"
             >
               <MessageList
                 messages={messages}
@@ -108,13 +109,15 @@ export default function ChatShell({
             status === 'connecting' ||
             status === 'uploading' ||
             status === 'processing' ||
-            status === 'backend-error'
+            status === 'backend-error' ||
+            !knowledgeStatus?.has_knowledge
           }
           variant={isHero ? 'hero' : 'default'}
           sessionId={sessionId}
           assistantStatus={status}
           knowledgeStatus={knowledgeStatus}
           backendError={backendError}
+          isTyping={isTyping}
         />
       </motion.div>
     </motion.div>

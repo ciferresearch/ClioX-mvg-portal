@@ -195,7 +195,8 @@ export default function Composer({
   sessionId,
   assistantStatus,
   knowledgeStatus,
-  backendError
+  backendError,
+  isTyping = false
 }: {
   onSendMessage: (message: string) => void
   disabled: boolean
@@ -204,6 +205,7 @@ export default function Composer({
   assistantStatus?: AssistantState
   knowledgeStatus?: KnowledgeStatus | null
   backendError?: string | null
+  isTyping?: boolean
 }): ReactElement {
   const [inputMessage, setInputMessage] = useState('')
   const [isHovered, setIsHovered] = useState(false)
@@ -225,6 +227,21 @@ export default function Composer({
   const isHeroVariant = variant === 'hero'
   const [cursorVisible, setCursorVisible] = useState(true)
   const [hideCursor, setHideCursor] = useState(false)
+
+  // Generate appropriate placeholder based on status
+  const getPlaceholder = () => {
+    if (backendError) return 'Service temporarily unavailable...'
+    if (isTyping) return 'Assistant is thinking...'
+    if (!knowledgeStatus?.has_knowledge)
+      return 'Please add a knowledge base to start chatting...'
+    if (assistantStatus === 'connecting') return 'Connecting to assistant...'
+    if (assistantStatus === 'uploading') return 'Uploading files...'
+    if (assistantStatus === 'processing') return 'Processing...'
+    if (assistantStatus === 'backend-error') return 'Assistant unavailable...'
+
+    // Default placeholders when everything is working
+    return isHeroVariant ? 'How can I help you today?' : 'Ask me anything...'
+  }
 
   useEffect(() => {
     // Pick a random greeting once on mount
@@ -335,11 +352,7 @@ export default function Composer({
             onKeyDown={onKeyDown}
             onSubmit={handleSubmit}
             disabled={disabled}
-            placeholder={
-              disabled
-                ? 'Assistant is thinking...'
-                : 'How can I help you today?'
-            }
+            placeholder={getPlaceholder()}
             isHovered={isHovered}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -364,9 +377,7 @@ export default function Composer({
         onKeyDown={onKeyDown}
         onSubmit={handleSubmit}
         disabled={disabled}
-        placeholder={
-          disabled ? 'Assistant is thinking...' : 'Ask me anything...'
-        }
+        placeholder={getPlaceholder()}
         isHovered={isHovered}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
