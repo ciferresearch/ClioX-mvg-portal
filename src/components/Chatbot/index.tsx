@@ -131,13 +131,11 @@ export default function ChatbotViz(): ReactElement {
           }
         }}
       />
-      <div className="bg-gray-50 rounded-lg shadow-sm">
-        <ChatShell
-          status={assistantStatus}
-          knowledgeStatus={knowledgeStatus}
-          backendError={backendError}
-        />
-      </div>
+      <ChatShell
+        status={assistantStatus}
+        knowledgeStatus={knowledgeStatus}
+        backendError={backendError}
+      />
     </div>
   )
 }

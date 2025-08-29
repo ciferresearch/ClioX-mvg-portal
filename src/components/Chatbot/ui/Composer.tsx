@@ -1,15 +1,33 @@
 import { ReactElement, useState } from 'react'
 import { motion } from 'framer-motion'
-import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
+import { IconSettings, IconSend } from '@tabler/icons-react'
 
 export default function Composer({
   onSendMessage,
-  disabled
+  disabled,
+  variant = 'default'
 }: {
   onSendMessage: (message: string) => void
   disabled: boolean
+  variant?: 'default' | 'hero'
 }): ReactElement {
   const [inputMessage, setInputMessage] = useState('')
+  const [isHovered, setIsHovered] = useState(false)
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value)
+    const textarea = e.target
+    textarea.style.height = 'auto'
+    const { scrollHeight } = textarea
+    const lineHeight = 24
+    const minHeight = lineHeight * 2
+    const maxHeight = lineHeight * 12
+
+    if (scrollHeight <= maxHeight) {
+      textarea.style.height = Math.max(scrollHeight, minHeight) + 'px'
+    } else {
+      textarea.style.height = maxHeight + 'px'
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,7 +37,9 @@ export default function Composer({
     }
   }
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       if (inputMessage.trim() && !disabled) {
@@ -27,6 +47,77 @@ export default function Composer({
         setInputMessage('')
       }
     }
+  }
+
+  if (variant === 'hero') {
+    return (
+      <motion.div
+        className="px-6 py-8 w-[720px]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <div className="w-full">
+          {/* Hero input with two-block layout */}
+          <div className="bg-[#F8F7F5] rounded-2xl shadow-lg p-6 space-y-4">
+            {/* Input Block */}
+            <form onSubmit={handleSubmit}>
+              <textarea
+                value={inputMessage}
+                onChange={handleInputChange}
+                onKeyDown={onKeyDown}
+                placeholder={
+                  disabled
+                    ? 'Assistant is thinking...'
+                    : 'How can I help you today?'
+                }
+                disabled={disabled}
+                className="w-full min-h-20 max-h-96 px-4 py-2 bg-white border-0 rounded-xl focus:outline-none resize-none overflow-y-auto transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                style={{
+                  height: '60px',
+                  minHeight: '60px',
+                  maxHeight: '288px'
+                }}
+              />
+            </form>
+
+            {/* Toolbar Block */}
+            <div className="flex justify-between items-center">
+              {/* Left Block - Settings Button */}
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                >
+                  <IconSettings className="h-4 w-4 text-gray-700" />
+                </button>
+              </div>
+
+              {/* Right Block - Send Button */}
+              <motion.button
+                type="submit"
+                disabled={disabled || !inputMessage.trim()}
+                className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={
+                  {
+                    backgroundColor:
+                      isHovered && !disabled ? '#b56a3e' : '#c8794d',
+                    '--tw-ring-color': '#c8794d'
+                  } as React.CSSProperties
+                }
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                whileHover={{ scale: disabled ? 1 : 1.05 }}
+                whileTap={{ scale: disabled ? 1 : 0.95 }}
+                aria-label="Send message"
+              >
+                <IconSend className="h-4 w-4" />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
   }
 
   return (
@@ -58,7 +149,7 @@ export default function Composer({
           whileTap={{ scale: disabled ? 1 : 0.95 }}
           aria-label="Send message"
         >
-          <PaperAirplaneIcon className="h-5 w-5" />
+          <IconSend className="h-4 w-4" />
         </motion.button>
       </form>
     </motion.div>

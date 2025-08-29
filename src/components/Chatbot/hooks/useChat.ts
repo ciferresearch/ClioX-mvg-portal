@@ -14,15 +14,7 @@ export function useChat(
   status: AssistantState,
   knowledgeStatus: KnowledgeStatus | null
 ) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content:
-        "Hello! 👋 I'm your AI assistant. I'm here to help answer questions and have conversations with you.\n\nHow can I help you today?",
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isTyping, setIsTyping] = useState(false)
 
   const hasKnowledge = useMemo(() => {
