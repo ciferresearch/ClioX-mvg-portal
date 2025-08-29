@@ -59,9 +59,9 @@ export default function Composer({
       >
         <div className="w-full">
           {/* Hero input with two-block layout */}
-          <div className="bg-[#F8F7F5] rounded-2xl shadow-lg p-6 space-y-4">
+          <div className="bg-[#F8F7F5] rounded-2xl shadow-lg p-3 space-y-4">
             {/* Input Block */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="mb-3">
               <textarea
                 value={inputMessage}
                 onChange={handleInputChange}
@@ -87,7 +87,7 @@ export default function Composer({
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <IconSettings className="h-4 w-4 text-gray-700" />
                 </button>
@@ -97,7 +97,7 @@ export default function Composer({
               <motion.button
                 type="submit"
                 disabled={disabled || !inputMessage.trim()}
-                className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 style={
                   {
                     backgroundColor:
@@ -107,7 +107,6 @@ export default function Composer({
                 }
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                whileHover={{ scale: disabled ? 1 : 1.05 }}
                 whileTap={{ scale: disabled ? 1 : 0.95 }}
                 aria-label="Send message"
               >
