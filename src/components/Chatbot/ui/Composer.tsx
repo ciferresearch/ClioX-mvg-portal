@@ -217,7 +217,7 @@ export default function Composer({
     'Curious today? Ask me anything.',
     'Ready when you are.',
     'How can I help you today?',
-    'What are we building today?',
+    'What are we exploring today?',
     "Bring your question—I'll fetch answers.",
     "Need a hand? I'm here.",
     "Let's get something done."
@@ -227,11 +227,19 @@ export default function Composer({
   const isHeroVariant = variant === 'hero'
   const [cursorVisible, setCursorVisible] = useState(true)
   const [hideCursor, setHideCursor] = useState(false)
+  const [typingPhase, setTypingPhase] = useState<'gathering' | 'preparing'>(
+    'gathering'
+  )
+  const [typingStartTime, setTypingStartTime] = useState<number | null>(null)
 
   // Generate appropriate placeholder based on status
   const getPlaceholder = () => {
     if (backendError) return 'Service temporarily unavailable...'
-    if (isTyping) return 'Assistant is thinking...'
+    if (isTyping) {
+      return typingPhase === 'gathering'
+        ? 'Gathering details to give you the best response...'
+        : 'Preparing your answer...'
+    }
     if (!knowledgeStatus?.has_knowledge)
       return 'Please add a knowledge base to start chatting...'
     if (assistantStatus === 'connecting') return 'Connecting to assistant...'
@@ -292,6 +300,33 @@ export default function Composer({
     }, 500)
     return () => clearInterval(id)
   }, [isHeroVariant, greetingTyped.length, greetingFull.length])
+
+  // Handle typing phase transitions
+  useEffect(() => {
+    if (isTyping && typingStartTime === null) {
+      // Starting to type - record start time and reset to gathering phase
+      setTypingStartTime(Date.now())
+      setTypingPhase('gathering')
+    } else if (!isTyping) {
+      // Stopped typing - reset state
+      setTypingStartTime(null)
+      setTypingPhase('gathering')
+    }
+  }, [isTyping, typingStartTime])
+
+  useEffect(() => {
+    if (!isTyping || typingStartTime === null) return
+
+    // Generate random delay between 10-15 seconds (10000-15000ms)
+    const randomDelay = Math.random() * 5000 + 10000
+
+    const timer = setTimeout(() => {
+      setTypingPhase('preparing')
+    }, randomDelay)
+
+    return () => clearTimeout(timer)
+  }, [isTyping, typingStartTime])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value)
     const textarea = e.target

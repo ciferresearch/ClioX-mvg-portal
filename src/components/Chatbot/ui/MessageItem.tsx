@@ -23,8 +23,8 @@ function MessageItem({
       <div
         className={`max-w-[80%] p-2 ${
           message.role === 'user'
-            ? 'bg-[#c8794d] text-white rounded-2xl rounded-br-md'
-            : 'text-[#2b2e3b] border-b border-[#d0d2dd]'
+            ? 'bg-[#E5E7EB] text-[#0d0d0d] rounded-2xl rounded-br-md'
+            : 'text-[#0d0d0d] border-b border-[#d0d2dd]'
         }`}
       >
         <div className="text-[16px] leading-relaxed whitespace-pre-wrap">
