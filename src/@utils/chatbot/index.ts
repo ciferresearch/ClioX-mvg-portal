@@ -241,6 +241,52 @@ class ChatbotApiService {
   getBaseUrl(): string {
     return this.baseUrl
   }
+
+  // Check if auto-sync is needed and trigger it
+  async checkAndAutoSync(): Promise<KnowledgeStatus> {
+    try {
+      // Get current backend status
+      const backendStatus = await this.getKnowledgeStatus()
+
+      // If backend already has knowledge, no sync needed
+      if (backendStatus.has_knowledge) {
+        return backendStatus
+      }
+
+      // Check if we have data in IndexedDB that needs syncing (browser-only)
+      if (typeof window === 'undefined') {
+        return backendStatus
+      }
+      const { database } = await import('../../@context/UseCases')
+      const chatbotData = await database.chatbots.toArray()
+
+      if (chatbotData && chatbotData.length > 0) {
+        // Extract knowledge chunks and domains
+        const knowledgeChunks = this.extractKnowledgeChunks(chatbotData)
+        const domains = this.extractDomains(chatbotData)
+
+        if (knowledgeChunks.length > 0) {
+          // Upload to backend
+          const uploadResult = await this.uploadKnowledge(chatbotData)
+
+          if (uploadResult.success) {
+            return {
+              has_knowledge: true,
+              chunk_count: uploadResult.chunks_processed,
+              domains: uploadResult.domains,
+              session_id: this.sessionId
+            }
+          }
+        }
+      }
+
+      // Return original status if no sync was possible
+      return backendStatus
+    } catch (error) {
+      console.error('❌ Auto-sync check failed:', error)
+      throw error
+    }
+  }
 }
 
 export const chatbotApi = new ChatbotApiService()

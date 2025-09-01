@@ -42,7 +42,9 @@ export default function ChatbotViz(): ReactElement {
       await chatbotApi.healthCheck()
       if (backendErrorRef.current) setBackendError(null)
 
-      const status = await chatbotApi.getKnowledgeStatus()
+      // Check knowledge status with auto-sync capability
+      // This will automatically upload IndexedDB data if backend has no knowledge
+      const status = await chatbotApi.checkAndAutoSync()
       setKnowledgeStatus(status)
 
       const hasKnowledge = Boolean(status?.has_knowledge)
