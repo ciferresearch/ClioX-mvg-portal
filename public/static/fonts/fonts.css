@@ -3,7 +3,7 @@
   font-weight: 400;
   font-display: swap;
   font-style: normal;
-  src: url('/static/fonts/IBMPlexSans-Regular.ttf') format('truetype');
+  src: url('./IBMPlexSans-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -11,7 +11,7 @@
   font-weight: 600;
   font-display: swap;
   font-style: normal;
-  src: url('/static/fonts/IBMPlexSans-SemiBold.ttf') format('truetype');
+  src: url('./IBMPlexSans-SemiBold.ttf') format('truetype');
 }
 
 @font-face {
@@ -19,7 +19,7 @@
   font-weight: 400;
   font-display: swap;
   font-style: normal;
-  src: url('/static/fonts/LibreBaskerville-Regular.ttf') format('truetype');
+  src: url('./LibreBaskerville-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -27,5 +27,5 @@
   font-weight: 700;
   font-display: swap;
   font-style: normal;
-  src: url('/static/fonts/LibreBaskerville-Bold.ttf') format('truetype');
+  src: url('./LibreBaskerville-Bold.ttf') format('truetype');
 }
