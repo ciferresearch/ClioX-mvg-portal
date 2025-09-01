@@ -12,43 +12,16 @@ export default function PageChatbot(): ReactElement {
 
   const { title, description } = content
 
-  // Only clear data when browser/tab is actually closed (not on refresh or navigation)
+  // Clear IndexedDB data when leaving the page
   useEffect(() => {
-    const shouldClearOnEnd =
-      process.env.NEXT_PUBLIC_CLEAR_ON_UNMOUNT !== 'false'
-
-    if (!shouldClearOnEnd) return
-
-    let isPageHidden = false
-
-    const handleVisibilityChange = () => {
-      isPageHidden = document.hidden
-    }
-
-    const endSession = () => {
-      try {
-        // Use a short delay to check if page comes back (refresh case)
-        setTimeout(() => {
-          // If document is still hidden after 100ms, it's likely a real close
-          if (document.hidden || isPageHidden) {
-            clearChatbot()
-            chatbotApi.clearSession()
-          }
-        }, 100)
-      } catch (_) {
-        // noop
-      }
-    }
-
-    // Track page visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    // Only clear on real browser/tab close
-    window.addEventListener('pagehide', endSession)
-
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('pagehide', endSession)
+      const shouldClearOnUnmount =
+        process.env.NEXT_PUBLIC_CLEAR_ON_UNMOUNT !== 'false'
+
+      if (shouldClearOnUnmount) {
+        clearChatbot()
+        chatbotApi.clearSession()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
