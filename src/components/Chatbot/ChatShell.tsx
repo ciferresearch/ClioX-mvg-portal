@@ -16,7 +16,10 @@ export default function ChatShell({
   knowledgeStatus: KnowledgeStatus | null
   backendError: string | null
 }): ReactElement {
-  const { messages, isTyping, sendMessage } = useChat(status, knowledgeStatus)
+  const { messages, isTyping, sendMessage, retryMessage } = useChat(
+    status,
+    knowledgeStatus
+  )
   const lastMessageContent = messages[messages.length - 1]?.content || ''
   const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
     useSmartScroll(messages.length, lastMessageContent)
@@ -61,9 +64,10 @@ export default function ChatShell({
                 messages={messages}
                 isTyping={isTyping}
                 animateItems={!suppressFirstMessageAnimation}
-                onRetry={(userMessage) => {
+                onRetry={(userMessage, assistantId) => {
                   if (!userMessage || isTyping) return
-                  sendMessage(userMessage)
+                  // reuse same assistant bubble, clear content and re-stream
+                  retryMessage(assistantId, userMessage)
                 }}
               />
             </motion.div>

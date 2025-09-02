@@ -13,7 +13,7 @@ export default function MessageList({
   messages: ChatMessage[]
   isTyping: boolean
   animateItems?: boolean
-  onRetry?: (userMessage: string) => void
+  onRetry?: (userMessage: string, assistantId: string) => void
 }): ReactElement {
   // Map each assistant message to its nearest previous user message content
   const assistantToPrevUser: Record<string, string> = useMemo(() => {
@@ -39,7 +39,7 @@ export default function MessageList({
               message.role === 'assistant' &&
               onRetry &&
               assistantToPrevUser[message.id]
-                ? () => onRetry(assistantToPrevUser[message.id])
+                ? () => onRetry(assistantToPrevUser[message.id], message.id)
                 : undefined
             }
           />

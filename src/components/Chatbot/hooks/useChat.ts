@@ -134,7 +134,88 @@ export function useChat(
     [hasKnowledge]
   )
 
-  return { messages, isTyping, sendMessage }
+  const retryMessage = useCallback(
+    async (assistantId: string, userMessage: string) => {
+      // Reset existing assistant message content and mark as incomplete
+      setIsTyping(true)
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? {
+                ...m,
+                content: '',
+                metadata: {
+                  ...(m.metadata || {}),
+                  isComplete: false,
+                  sources: [],
+                  confidence: undefined
+                }
+              }
+            : m
+        )
+      )
+
+      try {
+        let buffered = ''
+        let hasStartedStreaming = false
+
+        const result = await chatbotApi.streamChat(
+          userMessage,
+          { maxTokens: 500, temperature: 0.7 },
+          (evt) => {
+            if (typeof evt.content === 'string' && evt.content.length > 0) {
+              if (!hasStartedStreaming) {
+                hasStartedStreaming = true
+                setIsTyping(false)
+              }
+              buffered += evt.content
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId ? { ...m, content: buffered } : m
+                )
+              )
+            }
+          }
+        )
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? {
+                  ...m,
+                  content: result.fullResponse,
+                  metadata: {
+                    ...(m.metadata || {}),
+                    isComplete: true,
+                    sources: result.sources?.map((s) => s.source) || [],
+                    confidence: result.metadata?.chunks_retrieved
+                  }
+                }
+              : m
+          )
+        )
+      } catch (error) {
+        console.error('❌ Retry failed:', error)
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? {
+                  ...m,
+                  content:
+                    'Sorry, I encountered an error retrying the response. Please try again.',
+                  metadata: { ...(m.metadata || {}), isComplete: true }
+                }
+              : m
+          )
+        )
+      } finally {
+        setIsTyping(false)
+      }
+    },
+    []
+  )
+
+  return { messages, isTyping, sendMessage, retryMessage }
 }
 
 export default useChat
