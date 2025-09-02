@@ -36,6 +36,7 @@ export interface ChatMessage {
   metadata?: {
     sources?: string[]
     confidence?: number
+    isComplete?: boolean
   }
 }
 

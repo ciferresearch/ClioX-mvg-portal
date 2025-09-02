@@ -43,39 +43,64 @@ export function useChat(
         timestamp: new Date()
       }
       setMessages((prev) => [...prev, userChatMessage])
+
+      // Start typing indicator
       setIsTyping(true)
 
-      try {
-        const apiResponse = await chatbotApi.chat(userMessage, {
-          maxTokens: 500,
-          temperature: 0.7
-        })
+      // Create a placeholder assistant message for streaming updates
+      const assistantId = (Date.now() + 1).toString()
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          metadata: { isComplete: false }
+        }
+      ])
 
-        if (apiResponse?.success && apiResponse?.response) {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: apiResponse.response,
-            timestamp: new Date(),
-            metadata: {
-              sources:
-                apiResponse.sources?.map((s) => s?.source).filter((s) => s) ||
-                [],
-              confidence: apiResponse.metadata?.chunks_retrieved
+      try {
+        let buffered = ''
+        let hasStartedStreaming = false
+
+        const result = await chatbotApi.streamChat(
+          userMessage,
+          { maxTokens: 500, temperature: 0.7 },
+          (evt) => {
+            if (typeof evt.content === 'string' && evt.content.length > 0) {
+              if (!hasStartedStreaming) {
+                hasStartedStreaming = true
+                // Hide typing indicator once streaming starts
+                setIsTyping(false)
+              }
+              buffered += evt.content
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantId ? { ...m, content: buffered } : m
+                )
+              )
             }
           }
-          setMessages((prev) => [...prev, assistantMessage])
-        } else {
-          console.error('❌ API response failed or empty:', {
-            success: apiResponse?.success,
-            response: apiResponse?.response,
-            error: apiResponse?.error,
-            message: apiResponse?.message
-          })
-          throw new Error(
-            apiResponse?.message || apiResponse?.error || 'Unknown API error'
+        )
+
+        // Finalize assistant message with metadata (sources/confidence)
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? {
+                  ...m,
+                  content: result.fullResponse,
+                  metadata: {
+                    ...(m.metadata || {}),
+                    isComplete: true,
+                    sources: result.sources?.map((s) => s.source) || [],
+                    confidence: result.metadata?.chunks_retrieved
+                  }
+                }
+              : m
           )
-        }
+        )
       } catch (error: any) {
         console.error('❌ Chat message failed:', error)
 
@@ -102,6 +127,7 @@ export function useChat(
         }
         setMessages((prev) => [...prev, errorMessage])
       } finally {
+        // Ensure typing indicator is hidden
         setIsTyping(false)
       }
     },

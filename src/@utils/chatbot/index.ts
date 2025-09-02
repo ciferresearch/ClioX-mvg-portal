@@ -60,6 +60,22 @@ interface ChatbotUseCaseData {
   }>
 }
 
+export interface StreamProgressEvent {
+  content?: string
+  done?: boolean
+  sources?: Array<{
+    source: string
+    relevance_score: number
+    content_preview: string
+  }>
+  metadata?: {
+    chunks_retrieved: number
+    processing_time_ms: number
+    model_used: string
+  }
+  error?: string
+}
+
 class ChatbotApiService {
   // Use relative URLs to call our internal API routes
   private baseUrl = '/api/chatbot'
@@ -161,6 +177,87 @@ class ChatbotApiService {
       console.error('❌ Chat request failed:', error)
       throw error
     }
+  }
+
+  async streamChat(
+    message: string,
+    config: { maxTokens?: number; temperature?: number; model?: string } = {},
+    onProgress?: (event: StreamProgressEvent) => void
+  ): Promise<{
+    fullResponse: string
+    sources?: StreamProgressEvent['sources']
+    metadata?: StreamProgressEvent['metadata']
+  }> {
+    const requestBody = {
+      sessionId: this.sessionId,
+      message,
+      config: {
+        max_tokens: config.maxTokens || 500,
+        temperature: config.temperature || 0.7,
+        model: config.model || undefined
+      }
+    }
+
+    const response = await fetch(`${this.baseUrl}/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-ID': this.sessionId,
+        Accept: 'text/event-stream',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok || !response.body) {
+      const text = await response.text().catch(() => '')
+      throw new Error(text || `Stream request failed: ${response.status}`)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    let fullResponse = ''
+    let lastSources: StreamProgressEvent['sources'] | undefined
+    let lastMetadata: StreamProgressEvent['metadata'] | undefined
+    let sseBuffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value, { stream: true })
+      sseBuffer += chunk
+      const lines = sseBuffer.split('\n')
+      sseBuffer = lines.pop() || ''
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const payload = line.slice(6).trim()
+        if (!payload) continue
+        try {
+          const data: StreamProgressEvent = JSON.parse(payload)
+          if (data.error) throw new Error(data.error)
+          if (typeof data.content === 'string') {
+            fullResponse += data.content
+            onProgress?.({ content: data.content })
+          }
+          if (data.sources) lastSources = data.sources
+          if (data.metadata) lastMetadata = data.metadata
+          if (data.done) {
+            onProgress?.({
+              done: true,
+              sources: lastSources,
+              metadata: lastMetadata
+            })
+          }
+        } catch (err) {
+          // ignore parse errors of keep-alive comments or partial JSON
+        }
+      }
+    }
+
+    return { fullResponse, sources: lastSources, metadata: lastMetadata }
   }
 
   async getKnowledgeStatus(): Promise<KnowledgeStatus> {

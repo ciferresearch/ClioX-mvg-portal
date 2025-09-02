@@ -17,8 +17,9 @@ export default function ChatShell({
   backendError: string | null
 }): ReactElement {
   const { messages, isTyping, sendMessage } = useChat(status, knowledgeStatus)
+  const lastMessageContent = messages[messages.length - 1]?.content || ''
   const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
-    useSmartScroll(messages.length)
+    useSmartScroll(messages.length, lastMessageContent)
   const [isFirstInteraction, setIsFirstInteraction] = useState(false)
   const [suppressFirstMessageAnimation, setSuppressFirstMessageAnimation] =
     useState(false)
@@ -60,6 +61,10 @@ export default function ChatShell({
                 messages={messages}
                 isTyping={isTyping}
                 animateItems={!suppressFirstMessageAnimation}
+                onRetry={(userMessage) => {
+                  if (!userMessage || isTyping) return
+                  sendMessage(userMessage)
+                }}
               />
             </motion.div>
           </AnimatePresence>
