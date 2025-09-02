@@ -182,7 +182,8 @@ class ChatbotApiService {
   async streamChat(
     message: string,
     config: { maxTokens?: number; temperature?: number; model?: string } = {},
-    onProgress?: (event: StreamProgressEvent) => void
+    onProgress?: (event: StreamProgressEvent) => void,
+    options?: { signal?: AbortSignal }
   ): Promise<{
     fullResponse: string
     sources?: StreamProgressEvent['sources']
@@ -208,7 +209,8 @@ class ChatbotApiService {
         Pragma: 'no-cache',
         Expires: '0'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: options?.signal
     })
 
     if (!response.ok || !response.body) {

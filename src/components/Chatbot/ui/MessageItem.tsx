@@ -15,6 +15,8 @@ function MessageItem({
   onRetry?: () => void
 }): ReactElement {
   const isAssistant = message.role === 'assistant'
+  const showActions =
+    isAssistant && (message.metadata?.isComplete || message.metadata?.isAborted)
 
   return (
     <motion.div
@@ -38,7 +40,7 @@ function MessageItem({
 
         {isAssistant && (
           <MessageActions
-            visible={Boolean(message.metadata?.isComplete)}
+            visible={Boolean(showActions)}
             content={message.content}
             onRetry={onRetry}
             disabled={false}

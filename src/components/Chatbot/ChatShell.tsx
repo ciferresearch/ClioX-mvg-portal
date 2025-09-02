@@ -16,10 +16,14 @@ export default function ChatShell({
   knowledgeStatus: KnowledgeStatus | null
   backendError: string | null
 }): ReactElement {
-  const { messages, isTyping, sendMessage, retryMessage } = useChat(
-    status,
-    knowledgeStatus
-  )
+  const {
+    messages,
+    isTyping,
+    isStreaming,
+    sendMessage,
+    retryMessage,
+    cancelStream
+  } = useChat(status, knowledgeStatus)
   const lastMessageContent = messages[messages.length - 1]?.content || ''
   const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
     useSmartScroll(messages.length, lastMessageContent)
@@ -113,7 +117,6 @@ export default function ChatShell({
             sendMessage(message)
           }}
           disabled={
-            isTyping ||
             backendError !== null ||
             status === 'connecting' ||
             status === 'uploading' ||
@@ -127,6 +130,8 @@ export default function ChatShell({
           knowledgeStatus={knowledgeStatus}
           backendError={backendError}
           isTyping={isTyping}
+          isStreaming={isStreaming}
+          onPause={() => cancelStream()}
         />
       </motion.div>
     </motion.div>

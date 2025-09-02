@@ -1,6 +1,11 @@
-import { ReactElement, useEffect, useRef, useState } from 'react'
+import { ReactElement, useEffect, useRef, useState, useCallback } from 'react'
 import { motion } from 'motion/react'
-import { IconSettings, IconSend, IconCopy } from '@tabler/icons-react'
+import {
+  IconSettings,
+  IconSend,
+  IconCopy,
+  IconPlayerStopFilled
+} from '@tabler/icons-react'
 import type { KnowledgeStatus } from '../../../@utils/chatbot'
 import type { AssistantState } from '../hooks/useChat'
 
@@ -10,6 +15,9 @@ interface InputContainerProps {
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSubmit: (e: React.FormEvent) => void
   disabled: boolean
+  isStreaming?: boolean
+  isTyping?: boolean
+  onPause?: () => void
   placeholder: string
   isHovered: boolean
   onMouseEnter: () => void
@@ -29,6 +37,9 @@ function InputContainer({
   onKeyDown,
   onSubmit,
   disabled,
+  isStreaming,
+  isTyping,
+  onPause,
   placeholder,
   isHovered,
   onMouseEnter,
@@ -163,23 +174,46 @@ function InputContainer({
             )}
           </div>
 
-          <motion.button
-            type="submit"
-            disabled={disabled || !inputMessage.trim()}
-            className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            style={
-              {
-                backgroundColor: isHovered && !disabled ? '#b56a3e' : '#c8794d',
-                '--tw-ring-color': '#c8794d'
-              } as React.CSSProperties
-            }
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            whileTap={{ scale: disabled ? 1 : 0.95 }}
-            aria-label="Send message"
-          >
-            <IconSend className="h-4 w-4" />
-          </motion.button>
+          {isStreaming || isTyping ? (
+            <motion.button
+              type="button"
+              disabled={disabled}
+              className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              style={
+                {
+                  backgroundColor:
+                    isHovered && !disabled ? '#4b5563' : '#6b7280',
+                  '--tw-ring-color': '#6b7280'
+                } as React.CSSProperties
+              }
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+              whileTap={{ scale: disabled ? 1 : 0.95 }}
+              aria-label="Pause generation"
+              onClick={onPause}
+            >
+              <IconPlayerStopFilled className="h-4 w-4" />
+            </motion.button>
+          ) : (
+            <motion.button
+              type="submit"
+              disabled={disabled || !inputMessage.trim()}
+              className="w-8 h-8 text-white rounded-lg flex items-center justify-center focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              style={
+                {
+                  backgroundColor:
+                    isHovered && !disabled ? '#b56a3e' : '#c8794d',
+                  '--tw-ring-color': '#c8794d'
+                } as React.CSSProperties
+              }
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+              whileTap={{ scale: disabled ? 1 : 0.95 }}
+              aria-label="Send message"
+            >
+              <IconSend className="h-4 w-4" />
+            </motion.button>
+          )}
         </div>
 
         {/* Popover is anchored next to the Settings button (above in normal mode, below in hero) */}
@@ -196,7 +230,9 @@ export default function Composer({
   assistantStatus,
   knowledgeStatus,
   backendError,
-  isTyping = false
+  isTyping = false,
+  isStreaming = false,
+  onPause
 }: {
   onSendMessage: (message: string) => void
   disabled: boolean
@@ -206,10 +242,19 @@ export default function Composer({
   knowledgeStatus?: KnowledgeStatus | null
   backendError?: string | null
   isTyping?: boolean
+  isStreaming?: boolean
+  onPause?: () => void
 }): ReactElement {
   const [inputMessage, setInputMessage] = useState('')
   const [isHovered, setIsHovered] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const pauseGuardRef = useRef<number>(0)
+  const PAUSE_GUARD_MS = 250
+
+  const handlePause = useCallback(() => {
+    pauseGuardRef.current = Date.now()
+    onPause?.()
+  }, [onPause])
   const greetings = [
     'Hello. Ready to dive in?',
     'What can I help you explore today?',
@@ -345,6 +390,12 @@ export default function Composer({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isStreaming || isTyping) {
+      // During streaming/typing, ignore submit; only manual pause button should pause
+      return
+    }
+    // Guard: ignore immediate send right after pause DOM swap
+    if (Date.now() - pauseGuardRef.current < PAUSE_GUARD_MS) return
     if (inputMessage.trim() && !disabled) {
       onSendMessage(inputMessage.trim())
       setInputMessage('')
@@ -356,6 +407,11 @@ export default function Composer({
   ) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
+      if (isStreaming || isTyping) {
+        // Do nothing on Enter while streaming/typing; pause only via button
+        return
+      }
+      if (Date.now() - pauseGuardRef.current < PAUSE_GUARD_MS) return
       if (inputMessage.trim() && !disabled) {
         onSendMessage(inputMessage.trim())
         setInputMessage('')
@@ -387,6 +443,9 @@ export default function Composer({
             onKeyDown={onKeyDown}
             onSubmit={handleSubmit}
             disabled={disabled}
+            isStreaming={isStreaming}
+            isTyping={isTyping}
+            onPause={handlePause}
             placeholder={getPlaceholder()}
             isHovered={isHovered}
             onMouseEnter={() => setIsHovered(true)}
@@ -412,6 +471,9 @@ export default function Composer({
         onKeyDown={onKeyDown}
         onSubmit={handleSubmit}
         disabled={disabled}
+        isStreaming={isStreaming}
+        isTyping={isTyping}
+        onPause={handlePause}
         placeholder={getPlaceholder()}
         isHovered={isHovered}
         onMouseEnter={() => setIsHovered(true)}

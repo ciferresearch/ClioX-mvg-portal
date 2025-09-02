@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { chatbotApi, KnowledgeStatus } from '../../../@utils/chatbot'
 import type { ChatMessage } from '../_types'
 
@@ -16,16 +16,52 @@ export function useChat(
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isTyping, setIsTyping] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const streamingAssistantIdRef = useRef<string | null>(null)
+  const streamAbortRef = useRef<AbortController | null>(null)
 
   const hasKnowledge = useMemo(() => {
     return status === 'ready' || (knowledgeStatus?.has_knowledge ?? false)
   }, [status, knowledgeStatus])
 
+  const generateId = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? (crypto as any).randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+  const cancelStream = useCallback(() => {
+    if (streamAbortRef.current) {
+      streamAbortRef.current.abort()
+      streamAbortRef.current = null
+      // Mark current assistant bubble as aborted (not complete)
+      const id = streamingAssistantIdRef.current
+      if (id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === id
+              ? {
+                  ...m,
+                  metadata: {
+                    ...(m.metadata || {}),
+                    isAborted: true,
+                    isComplete: false
+                  }
+                }
+              : m
+          )
+        )
+      }
+      streamingAssistantIdRef.current = null
+      setIsTyping(false)
+      setIsStreaming(false)
+    }
+  }, [])
+
   const sendMessage = useCallback(
     async (userMessage: string) => {
       if (!hasKnowledge) {
         const noKnowledgeMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: generateId(),
           role: 'assistant',
           content:
             "I don't have any information loaded yet. Please add some compute job results first using the 'Add' button above.",
@@ -37,7 +73,7 @@ export function useChat(
 
       // Add user message immediately
       const userChatMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: generateId(),
         role: 'user',
         content: userMessage,
         timestamp: new Date()
@@ -48,7 +84,7 @@ export function useChat(
       setIsTyping(true)
 
       // Create a placeholder assistant message for streaming updates
-      const assistantId = (Date.now() + 1).toString()
+      const assistantId = generateId()
       setMessages((prev) => [
         ...prev,
         {
@@ -59,6 +95,11 @@ export function useChat(
           metadata: { isComplete: false }
         }
       ])
+
+      // Prepare abort controller for this stream
+      const controller = new AbortController()
+      streamAbortRef.current = controller
+      streamingAssistantIdRef.current = assistantId
 
       try {
         let buffered = ''
@@ -73,6 +114,7 @@ export function useChat(
                 hasStartedStreaming = true
                 // Hide typing indicator once streaming starts
                 setIsTyping(false)
+                setIsStreaming(true)
               }
               buffered += evt.content
               setMessages((prev) =>
@@ -81,7 +123,8 @@ export function useChat(
                 )
               )
             }
-          }
+          },
+          { signal: controller.signal }
         )
 
         // Finalize assistant message with metadata (sources/confidence)
@@ -102,33 +145,41 @@ export function useChat(
           )
         )
       } catch (error: any) {
-        console.error('❌ Chat message failed:', error)
+        if (error?.name === 'AbortError') {
+          // Stream cancelled by user; keep partial content
+        } else {
+          console.error('❌ Chat message failed:', error)
 
-        let errorContent =
-          'Sorry, I encountered an error processing your message.'
-        const errorMsg = error?.message || 'Unknown error'
+          let errorContent =
+            'Sorry, I encountered an error processing your message.'
+          const errorMsg = error?.message || 'Unknown error'
 
-        if (errorMsg.includes('no_knowledge')) {
-          errorContent =
-            "I don't have access to any information for this session. Please add some compute job results first."
-        } else if (errorMsg.includes('Cannot connect')) {
-          errorContent =
-            'Cannot connect to the chatbot backend. Please ensure the backend server is running on port 8001.'
-        } else if (errorMsg.includes('fetch')) {
-          errorContent =
-            'Network error: Unable to reach the chatbot backend. Please check your connection.'
+          if (errorMsg.includes('no_knowledge')) {
+            errorContent =
+              "I don't have access to any information for this session. Please add some compute job results first."
+          } else if (errorMsg.includes('Cannot connect')) {
+            errorContent =
+              'Cannot connect to the chatbot backend. Please ensure the backend server is running on port 8001.'
+          } else if (errorMsg.includes('fetch')) {
+            errorContent =
+              'Network error: Unable to reach the chatbot backend. Please check your connection.'
+          }
+
+          const errorMessage: ChatMessage = {
+            id: generateId(),
+            role: 'assistant',
+            content: errorContent,
+            timestamp: new Date()
+          }
+          setMessages((prev) => [...prev, errorMessage])
         }
-
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: errorContent,
-          timestamp: new Date()
-        }
-        setMessages((prev) => [...prev, errorMessage])
       } finally {
-        // Ensure typing indicator is hidden
         setIsTyping(false)
+        setIsStreaming(false)
+        streamingAssistantIdRef.current = null
+        if (streamAbortRef.current === controller) {
+          streamAbortRef.current = null
+        }
       }
     },
     [hasKnowledge]
@@ -136,6 +187,11 @@ export function useChat(
 
   const retryMessage = useCallback(
     async (assistantId: string, userMessage: string) => {
+      // Cancel any existing stream first if it's the same bubble
+      if (streamingAssistantIdRef.current === assistantId) {
+        cancelStream()
+      }
+
       // Reset existing assistant message content and mark as incomplete
       setIsTyping(true)
       setMessages((prev) =>
@@ -155,6 +211,10 @@ export function useChat(
         )
       )
 
+      const controller = new AbortController()
+      streamAbortRef.current = controller
+      streamingAssistantIdRef.current = assistantId
+
       try {
         let buffered = ''
         let hasStartedStreaming = false
@@ -167,6 +227,7 @@ export function useChat(
               if (!hasStartedStreaming) {
                 hasStartedStreaming = true
                 setIsTyping(false)
+                setIsStreaming(true)
               }
               buffered += evt.content
               setMessages((prev) =>
@@ -175,7 +236,8 @@ export function useChat(
                 )
               )
             }
-          }
+          },
+          { signal: controller.signal }
         )
 
         setMessages((prev) =>
@@ -194,28 +256,44 @@ export function useChat(
               : m
           )
         )
-      } catch (error) {
-        console.error('❌ Retry failed:', error)
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId
-              ? {
-                  ...m,
-                  content:
-                    'Sorry, I encountered an error retrying the response. Please try again.',
-                  metadata: { ...(m.metadata || {}), isComplete: true }
-                }
-              : m
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          // cancelled
+        } else {
+          console.error('❌ Retry failed:', error)
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? {
+                    ...m,
+                    content:
+                      'Sorry, I encountered an error retrying the response. Please try again.',
+                    metadata: { ...(m.metadata || {}), isComplete: true }
+                  }
+                : m
+            )
           )
-        )
+        }
       } finally {
         setIsTyping(false)
+        setIsStreaming(false)
+        streamingAssistantIdRef.current = null
+        if (streamAbortRef.current === controller) {
+          streamAbortRef.current = null
+        }
       }
     },
-    []
+    [cancelStream]
   )
 
-  return { messages, isTyping, sendMessage, retryMessage }
+  return {
+    messages,
+    isTyping,
+    isStreaming,
+    sendMessage,
+    retryMessage,
+    cancelStream
+  }
 }
 
 export default useChat

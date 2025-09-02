@@ -37,6 +37,7 @@ export interface ChatMessage {
     sources?: string[]
     confidence?: number
     isComplete?: boolean
+    isAborted?: boolean
   }
 }
 
