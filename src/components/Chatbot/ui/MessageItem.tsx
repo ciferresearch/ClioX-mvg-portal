@@ -86,9 +86,9 @@ function MessageItem({
       <div className={`flex flex-col ${columnAlign} ${columnMaxWidth}`}>
         {/* Bubble */}
         <div
-          className={`${bubbleMaxWidth} px-3 py-2 ${
+          className={`${bubbleMaxWidth} px-3 py-3 ${
             message.role === 'user'
-              ? 'bg-[#E5E7EB] text-[#0d0d0d] rounded-2xl rounded-br-md'
+              ? 'bg-[#E5E7EB] text-[#0d0d0d] rounded-2xl rounded-br-xs'
               : 'text-[#0d0d0d]'
           }`}
         >
