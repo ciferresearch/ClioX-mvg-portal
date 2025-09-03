@@ -183,13 +183,18 @@ export function useChat(
               'Network error: Unable to reach the chatbot backend. Please check your connection.'
           }
 
-          const errorMessage: ChatMessage = {
-            id: generateId(),
-            role: 'assistant',
-            content: errorContent,
-            timestamp: new Date()
-          }
-          setMessages((prev) => [...prev, errorMessage])
+          // Update the placeholder assistant message with error content and mark as complete
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? {
+                    ...m,
+                    content: errorContent,
+                    metadata: { ...(m.metadata || {}), isComplete: true }
+                  }
+                : m
+            )
+          )
         }
       } finally {
         setIsTyping(false)

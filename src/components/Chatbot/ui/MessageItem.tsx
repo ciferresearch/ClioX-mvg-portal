@@ -11,7 +11,8 @@ function MessageItem({
   onRetry,
   onUpdateUserMessage,
   assistantIdForUser,
-  onResendFromEdit
+  onResendFromEdit,
+  lockUserActions
 }: {
   message: ChatMessage
   index: number
@@ -20,6 +21,7 @@ function MessageItem({
   onUpdateUserMessage?: (messageId: string, newContent: string) => void
   assistantIdForUser?: string
   onResendFromEdit?: (assistantId: string, newMessage: string) => void
+  lockUserActions?: boolean
 }): ReactElement {
   const isAssistant = message.role === 'assistant'
   const [isHovered, setIsHovered] = useState(false)
@@ -140,7 +142,7 @@ function MessageItem({
           />
         ) : (
           <UserMessageActions
-            visible={!isEditing && isHovered}
+            visible={!isEditing && isHovered && !lockUserActions}
             content={message.content}
             onEdit={handleEdit}
             disabled={false}
