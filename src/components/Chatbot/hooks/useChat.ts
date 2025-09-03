@@ -57,6 +57,24 @@ export function useChat(
     }
   }, [])
 
+  // Trim all messages after the given message (keep it)
+  const pruneAfterMessage = useCallback(
+    (messageId: string) => {
+      // If currently streaming a later assistant bubble, cancel
+      if (streamingAssistantIdRef.current) {
+        if (streamingAssistantIdRef.current !== messageId) {
+          cancelStream()
+        }
+      }
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === messageId)
+        if (idx === -1) return prev
+        return prev.slice(0, idx + 1)
+      })
+    },
+    [cancelStream]
+  )
+
   const sendMessage = useCallback(
     async (userMessage: string) => {
       if (!hasKnowledge) {
@@ -92,7 +110,7 @@ export function useChat(
           role: 'assistant',
           content: '',
           timestamp: new Date(),
-          metadata: { isComplete: false }
+          metadata: { isComplete: false, isAborted: false }
         }
       ])
 
@@ -203,6 +221,7 @@ export function useChat(
                 metadata: {
                   ...(m.metadata || {}),
                   isComplete: false,
+                  isAborted: false,
                   sources: [],
                   confidence: undefined
                 }
@@ -286,13 +305,28 @@ export function useChat(
     [cancelStream]
   )
 
+  const updateUserMessage = useCallback(
+    (messageId: string, newContent: string) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId && m.role === 'user'
+            ? { ...m, content: newContent }
+            : m
+        )
+      )
+    },
+    []
+  )
+
   return {
     messages,
     isTyping,
     isStreaming,
     sendMessage,
     retryMessage,
-    cancelStream
+    cancelStream,
+    updateUserMessage,
+    pruneAfterMessage
   }
 }
 

@@ -22,7 +22,9 @@ export default function ChatShell({
     isStreaming,
     sendMessage,
     retryMessage,
-    cancelStream
+    cancelStream,
+    updateUserMessage,
+    pruneAfterMessage
   } = useChat(status, knowledgeStatus)
   const lastMessageContent = messages[messages.length - 1]?.content || ''
   const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
@@ -72,6 +74,13 @@ export default function ChatShell({
                   if (!userMessage || isTyping) return
                   // reuse same assistant bubble, clear content and re-stream
                   retryMessage(assistantId, userMessage)
+                }}
+                onUpdateUserMessage={updateUserMessage}
+                onResendFromEdit={(assistantId, newMessage) => {
+                  if (!newMessage || isTyping) return
+                  // prune future turns then retry
+                  pruneAfterMessage(assistantId)
+                  retryMessage(assistantId, newMessage)
                 }}
               />
             </motion.div>

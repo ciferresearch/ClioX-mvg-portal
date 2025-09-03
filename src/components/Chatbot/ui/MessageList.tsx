@@ -8,22 +8,32 @@ export default function MessageList({
   messages,
   isTyping,
   animateItems = true,
-  onRetry
+  onRetry,
+  onUpdateUserMessage,
+  onResendFromEdit
 }: {
   messages: ChatMessage[]
   isTyping: boolean
   animateItems?: boolean
   onRetry?: (userMessage: string, assistantId: string) => void
+  onUpdateUserMessage?: (messageId: string, newContent: string) => void
+  onResendFromEdit?: (assistantId: string, newMessage: string) => void
 }): ReactElement {
-  // Map each assistant message to its nearest previous user message content
-  const assistantToPrevUser: Record<string, string> = useMemo(() => {
-    let lastUser: string | null = null
-    const mapping: Record<string, string> = {}
+  // Map assistant -> previous user content AND user -> next assistant id
+  const { assistantToPrevUser, userToNextAssistant } = useMemo(() => {
+    let lastUser: { id: string; content: string } | null = null
+    const a2u: Record<string, string> = {}
+    const u2a: Record<string, string> = {}
     for (const msg of messages) {
-      if (msg.role === 'user') lastUser = msg.content
-      else if (msg.role === 'assistant' && lastUser) mapping[msg.id] = lastUser
+      if (msg.role === 'user') {
+        lastUser = { id: msg.id, content: msg.content }
+      } else if (msg.role === 'assistant' && lastUser) {
+        a2u[msg.id] = lastUser.content
+        if (!u2a[lastUser.id]) u2a[lastUser.id] = msg.id
+        lastUser = null
+      }
     }
-    return mapping
+    return { assistantToPrevUser: a2u, userToNextAssistant: u2a }
   }, [messages])
 
   return (
@@ -42,6 +52,13 @@ export default function MessageList({
                 ? () => onRetry(assistantToPrevUser[message.id], message.id)
                 : undefined
             }
+            onUpdateUserMessage={onUpdateUserMessage}
+            assistantIdForUser={
+              message.role === 'user'
+                ? userToNextAssistant[message.id]
+                : undefined
+            }
+            onResendFromEdit={onResendFromEdit}
           />
         ))}
       </AnimatePresence>

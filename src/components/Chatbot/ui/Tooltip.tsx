@@ -1,5 +1,14 @@
-import { ReactElement, ReactNode, useId, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useId, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { createPortal } from 'react-dom'
+import {
+  useFloating,
+  offset,
+  flip,
+  shift,
+  autoUpdate,
+  type Placement
+} from '@floating-ui/react-dom'
 
 export default function Tooltip({
   label,
@@ -13,15 +22,41 @@ export default function Tooltip({
   const tooltipId = useId()
   const [open, setOpen] = useState(false)
 
-  const positions: Record<string, string> = {
-    top: 'bottom-full mb-2 left-1/2 -translate-x-1/2',
-    bottom: 'top-full mt-2 left-1/2 -translate-x-1/2',
-    left: 'right-full mr-2 top-1/2 -translate-y-1/2',
-    right: 'left-full ml-2 top-1/2 -translate-y-1/2'
-  }
+  const { x, y, strategy, refs, update } = useFloating({
+    placement: placement as Placement,
+    strategy: 'fixed',
+    middleware: [offset(8), flip(), shift({ padding: 8 })]
+  })
+
+  useEffect(() => {
+    if (!open) return
+    if (!refs.reference.current || !refs.floating.current) return
+    return autoUpdate(refs.reference.current, refs.floating.current, update)
+  }, [open, refs.reference, refs.floating, update])
+
+  const floating = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={refs.setFloating}
+          role="tooltip"
+          id={tooltipId}
+          initial={{ opacity: 0, scale: 0.96, y: 2 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 2 }}
+          transition={{ duration: 0.15 }}
+          style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-black/90 backdrop-blur shadow-lg whitespace-nowrap z-[999] pointer-events-none`}
+        >
+          {label}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 
   return (
     <div
+      ref={refs.setReference}
       className="relative inline-block"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
@@ -29,21 +64,9 @@ export default function Tooltip({
       onBlur={() => setOpen(false)}
     >
       {children}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            role="tooltip"
-            id={tooltipId}
-            initial={{ opacity: 0, scale: 0.96, y: 2 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 2 }}
-            transition={{ duration: 0.15 }}
-            className={`absolute z-50 px-3 py-1.5 rounded-md text-xs text-white bg-black/90 backdrop-blur shadow-lg whitespace-nowrap ${positions[placement]}`}
-          >
-            {label}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof window !== 'undefined'
+        ? createPortal(floating, document.body)
+        : floating}
     </div>
   )
 }
