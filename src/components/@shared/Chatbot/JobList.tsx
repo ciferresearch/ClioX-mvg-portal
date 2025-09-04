@@ -2,22 +2,23 @@ import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useAccount, useSigner } from 'wagmi'
-import { useAutomation } from '../../@context/Automation/AutomationProvider'
-import { useUserPreferences } from '../../@context/UserPreferences'
-import { useCancelToken } from '../../@hooks/useCancelToken'
-import { useUseCases } from '../../@context/UseCases'
-import Accordion from '../@shared/Accordion'
-import Button from '../@shared/atoms/Button'
-import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
+import { useAutomation } from '../../../@context/Automation/AutomationProvider'
+import { useUserPreferences } from '../../../@context/UserPreferences'
+import { useCancelToken } from '../../../@hooks/useCancelToken'
+import { useUseCases } from '../../../@context/UseCases'
+import Accordion from '../../@shared/Accordion'
+import Button from '../../@shared/atoms/Button'
+import ComputeJobs, {
+  GetCustomActions
+} from '../../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import { CHATBOT_ALGO_DIDS, CHATBOT_RESULT_ZIP } from './_constants'
 import { ChatbotResult } from './_types'
-import { chatbotApi, ChatbotUseCaseData } from '../../@utils/chatbot'
+import { chatbotApi, ChatbotUseCaseData } from '../../../@utils/chatbot'
 
-import { getAsset } from '../../@utils/aquarius'
-import { getComputeJobs } from '../../@utils/compute'
+import { getAsset } from '../../../@utils/aquarius'
+import { getComputeJobs } from '../../../@utils/compute'
 
-type AssistantState =
+export type AssistantState =
   | 'connecting'
   | 'backend-error'
   | 'uploading'
@@ -26,18 +27,21 @@ type AssistantState =
   | 'no-knowledge'
 
 export default function JobList(props: {
+  algoDidsByChain: Record<number, string>
+  namespace: string
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
   onStatusChange?: (s: AssistantState) => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
-  const chatbotAlgoDids: string[] = Object.values(CHATBOT_ALGO_DIDS)
+  const chatbotAlgoDids: string[] = Object.values(props.algoDidsByChain)
 
   const { address: accountId } = useAccount()
   const { data: signer } = useSigner()
   const { autoWallet } = useAutomation()
 
   // Get IndexedDB operations through useUseCases hook
-  const { chatbotList, createOrUpdateChatbot, clearChatbot } = useUseCases()
+  const { chatbotList, createOrUpdateChatbot, clearChatbotByNamespace } =
+    useUseCases()
 
   const [jobs, setJobs] = useState<ComputeJobMetaData[]>([])
   const [refetchJobs, setRefetchJobs] = useState(false)
@@ -48,9 +52,12 @@ export default function JobList(props: {
   // Restore data from IndexedDB when component mounts or data changes
   useEffect(() => {
     if (chatbotList) {
-      props.setChatbotData(chatbotList)
+      const filtered = chatbotList.filter(
+        (row) => row.namespace === props.namespace
+      )
+      props.setChatbotData(filtered)
     }
-  }, [chatbotList, props])
+  }, [chatbotList, props.namespace, props.setChatbotData])
 
   const fetchJobs = useCallback(async () => {
     if (!accountId) {
@@ -79,14 +86,14 @@ export default function JobList(props: {
       }
 
       setJobs(
-        // Filter computeJobs for dids configured in _constants
+        // Filter computeJobs for dids provided from use case
         computeJobs.computeJobs.filter(
           (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
         )
       )
       setIsLoadingJobs(!computeJobs.isLoaded)
     } catch (error) {
-      LoggerInstance.error(error.message)
+      LoggerInstance.error((error as Error).message)
       setIsLoadingJobs(false)
     }
   }, [chainIds, chatbotAlgoDids, accountId, autoWallet, newCancelToken])
@@ -96,11 +103,19 @@ export default function JobList(props: {
   }, [refetchJobs, chainIds])
 
   const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
-    if (chatbotList.find((row) => row.job.jobId === job.jobId)) {
+    // Namespace-scoped existing rows
+    const nsRows = chatbotList.filter(
+      (row) => row.namespace === props.namespace
+    )
+    if (nsRows.find((row) => row.job.jobId === job.jobId)) {
       toast.info(
         'This compute job result is already being used by the chatbot.'
       )
       return
+    }
+    // If another KB already exists in this namespace, clear it before adding new one
+    if (nsRows.length > 0) {
+      await clearChatbotByNamespace(props.namespace)
     }
 
     try {
@@ -113,7 +128,6 @@ export default function JobList(props: {
           ? autoWallet
           : signer
 
-      const resultFile = job.results[0]
       const url = await ProviderInstance.getComputeResultUrl(
         datasetDDO.services[0].serviceEndpoint,
         signerToUse,
@@ -123,7 +137,6 @@ export default function JobList(props: {
 
       const response = await fetch(url)
 
-      // Check if the response is successful
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -162,7 +175,7 @@ export default function JobList(props: {
               domain:
                 job.assetName?.toLowerCase().replace(/[^a-z0-9]/g, '-') ||
                 'compute-job-result',
-              entities: [], // Will be extracted by backend
+              entities: [],
               description: `Knowledge from compute job: ${
                 job.assetName || job.jobId
               }`
@@ -184,7 +197,8 @@ export default function JobList(props: {
 
       const newUseCaseData: ChatbotUseCaseData = {
         job,
-        result: chatBotResults
+        result: chatBotResults,
+        namespace: props.namespace
       }
 
       try {
@@ -210,14 +224,14 @@ export default function JobList(props: {
           throw new Error(uploadResponse.message || 'Upload failed')
         }
       } catch (error) {
-        LoggerInstance.error('❌ Knowledge upload failed:', error)
+        LoggerInstance.error('❌ Knowledge upload failed:', error as any)
         toast.error('❌ Could not add compute result to chatbot')
         props.onStatusChange?.('no-knowledge')
       } finally {
         setIsUploadingKnowledge(false)
       }
     } catch (error) {
-      LoggerInstance.error('❌ Failed to process compute job:', error)
+      LoggerInstance.error('❌ Failed to process compute job:', error as any)
       toast.error('❌ Could not process compute job result')
       setIsUploadingKnowledge(false)
       props.onStatusChange?.('no-knowledge')
@@ -236,14 +250,14 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // 1. Remove from IndexedDB
-      await clearChatbot()
+      // 1. Remove from IndexedDB (namespace only)
+      await clearChatbotByNamespace(props.namespace)
 
       // 2. Clear knowledge from RAG backend
       toast.success('✅ Data removed from chatbot')
       props.onStatusChange?.('no-knowledge')
     } catch (error) {
-      LoggerInstance.error('❌ Knowledge update failed:', error)
+      LoggerInstance.error('❌ Knowledge update failed:', error as any)
       toast.error('❌ Failed to update knowledge base')
     } finally {
       setIsUploadingKnowledge(false)
@@ -257,16 +271,15 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // Clear from IndexedDB
-      await clearChatbot()
+      // Clear from IndexedDB (namespace only)
+      await clearChatbotByNamespace(props.namespace)
 
-      // Clear from RAG backend
       toast.success(
         '✅ Chatbot data was cleared. Add compute job results to start over.'
       )
       props.onStatusChange?.('no-knowledge')
     } catch (error) {
-      LoggerInstance.error('❌ Failed to clear data:', error)
+      LoggerInstance.error('❌ Failed to clear data:', error as any)
       toast.error('❌ Failed to clear chatbot data')
     } finally {
       setIsUploadingKnowledge(false)
@@ -277,23 +290,23 @@ export default function JobList(props: {
     job: ComputeJobMetaData
   ) => {
     const addAction = {
-      label: 'Add',
-      onClick: () => {
-        addComputeResultToUseCaseDB(job)
+      label: <span>Add</span>,
+      onClick: (j: ComputeJobMetaData) => {
+        addComputeResultToUseCaseDB(j)
       }
     }
     const deleteAction = {
-      label: 'Remove',
-      onClick: () => {
-        deleteJobResultFromDB(job)
+      label: <span>Remove</span>,
+      onClick: (j: ComputeJobMetaData) => {
+        deleteJobResultFromDB(j)
       }
     }
 
     const viewContainsResult = chatbotList.find(
-      (row) => row.job.jobId === job.jobId
+      (row) => row.job.jobId === job.jobId && row.namespace === props.namespace
     )
 
-    const actionArray = []
+    const actionArray = [] as ReturnType<GetCustomActions>
 
     if (viewContainsResult) {
       actionArray.push(deleteAction)

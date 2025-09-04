@@ -29,8 +29,12 @@
           "link": "/usecases/cameroonGazette"
         },
         {
-          "name": "AI Chatbot Assistant",
-          "link": "/usecases/chatbot"
+          "name": "AI Chatbot Assistant (Iris)",
+          "link": "/usecases/chatbotIris"
+        },
+        {
+          "name": "AI Chatbot Assistant (Cameroon)",
+          "link": "/usecases/chatbotCameroon"
         }
       ]
     },

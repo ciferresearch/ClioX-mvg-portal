@@ -6,7 +6,7 @@ import {
   IconCopy,
   IconPlayerStopFilled
 } from '@tabler/icons-react'
-import type { KnowledgeStatus } from '../../../@utils/chatbot'
+import type { KnowledgeStatus } from '../../../../@utils/chatbot'
 import type { AssistantState } from '../hooks/useChat'
 
 interface InputContainerProps {
