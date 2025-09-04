@@ -1,13 +1,17 @@
 import { ReactElement, useCallback, useEffect, useRef, useState } from 'react'
 import JobList from './JobList'
 import ChatShell from './ChatShell'
-import { ChatbotUseCaseData } from '../../@context/UseCases/models/Chatbot.model'
-import { useUseCases } from '../../@context/UseCases'
-import { chatbotApi, KnowledgeStatus } from '../../@utils/chatbot'
+import { ChatbotUseCaseData } from '../../../@context/UseCases/models/Chatbot.model'
+import { chatbotApi, KnowledgeStatus } from '../../../@utils/chatbot'
 
-export default function ChatbotViz(): ReactElement {
+export default function ChatbotViz({
+  algoDidsByChain,
+  namespace
+}: {
+  algoDidsByChain: Record<number, string>
+  namespace: string
+}): ReactElement {
   // Get chatbot data from IndexedDB through useUseCases hook
-  const { chatbotList } = useUseCases()
   const [, setChatbotData] = useState<ChatbotUseCaseData[]>([])
 
   type AssistantState =
@@ -94,6 +98,13 @@ export default function ChatbotViz(): ReactElement {
     }
   }, [])
 
+  // Expose imperative refresh to children (e.g. after session reset)
+  const forceRefresh = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    processingBackoffMsRef.current = 2000
+    pollOnce()
+  }, [pollOnce])
+
   // Keep refs in sync with state
   useEffect(() => {
     assistantStatusRef.current = assistantStatus
@@ -102,26 +113,25 @@ export default function ChatbotViz(): ReactElement {
     backendErrorRef.current = backendError
   }, [backendError])
 
-  // Restore data from IndexedDB when component mounts or data changes
-  useEffect(() => {
-    if (chatbotList) {
-      setChatbotData(chatbotList)
-    }
-  }, [chatbotList])
-
   // Initialize connection and start poller
   useEffect(() => {
     setAssistantStatus('connecting')
     processingBackoffMsRef.current = 2000
+    // ensure API uses namespace-specific session
+    try {
+      chatbotApi.setNamespace(namespace)
+    } catch {}
     pollOnce()
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [pollOnce])
+  }, [pollOnce, namespace])
 
   return (
     <div className="flex flex-col gap-6">
       <JobList
+        algoDidsByChain={algoDidsByChain}
+        namespace={namespace}
         setChatbotData={setChatbotData}
         onStatusChange={(s: AssistantState) => {
           setAssistantStatus(s)
@@ -132,6 +142,7 @@ export default function ChatbotViz(): ReactElement {
             pollOnce()
           }
         }}
+        onForceRefresh={forceRefresh}
       />
       <ChatShell
         status={assistantStatus}

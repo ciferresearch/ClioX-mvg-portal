@@ -58,6 +58,7 @@ interface ChatbotUseCaseData {
       description?: string
     }
   }>
+  namespace?: string
 }
 
 export interface StreamProgressEvent {
@@ -80,26 +81,36 @@ class ChatbotApiService {
   // Use relative URLs to call our internal API routes
   private baseUrl = '/api/chatbot'
   private sessionId: string
+  private namespace: string | undefined
 
   constructor() {
-    // Restore sessionId from sessionStorage, or generate new one
     this.sessionId = this.getOrCreateSessionId()
   }
 
-  private getOrCreateSessionId(): string {
-    // Check if we're in a browser environment
+  setNamespace(namespace: string): void {
+    this.namespace = namespace
+    // Reset session to ensure isolation per namespace
+    this.sessionId = this.getOrCreateSessionId(true)
+  }
+
+  private storageKey(): string {
+    const ns = this.namespace?.trim()
+    return ns ? `chatbot_session_id:${ns}` : 'chatbot_session_id'
+  }
+
+  private getOrCreateSessionId(forceNew = false): string {
     if (typeof window === 'undefined') {
-      // Server-side rendering, generate a temporary session ID
       return this.generateSessionId()
     }
 
-    const storedSessionId = sessionStorage.getItem('chatbot_session_id')
-    if (storedSessionId) {
-      return storedSessionId
+    const key = this.storageKey()
+    if (!forceNew) {
+      const storedSessionId = sessionStorage.getItem(key)
+      if (storedSessionId) return storedSessionId
     }
 
     const newSessionId = this.generateSessionId()
-    sessionStorage.setItem('chatbot_session_id', newSessionId)
+    sessionStorage.setItem(key, newSessionId)
     return newSessionId
   }
 
@@ -327,9 +338,32 @@ class ChatbotApiService {
   // Add method to manually clear session
   clearSession(): void {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('chatbot_session_id')
+      sessionStorage.removeItem(this.storageKey())
     }
-    this.sessionId = this.getOrCreateSessionId()
+    this.sessionId = this.getOrCreateSessionId(true)
+  }
+
+  // Delete session on server and reset local session
+  async resetSession(): Promise<string> {
+    try {
+      await fetch(`${this.baseUrl}/session`, {
+        method: 'DELETE',
+        headers: { 'X-Session-ID': this.sessionId }
+      })
+    } catch (e) {
+      // ignore errors while deleting upstream; still rotate local session
+      console.warn('⚠️ Failed to delete session upstream, rotating locally.', e)
+    }
+    this.clearSession()
+    return this.sessionId
+  }
+
+  // Replace server-side session knowledge (reset then upload)
+  async replaceSessionKnowledge(
+    chatbotData: ChatbotUseCaseData[]
+  ): Promise<UploadResponse> {
+    await this.resetSession()
+    return this.uploadKnowledge(chatbotData)
   }
 
   // Get current sessionId
@@ -357,15 +391,16 @@ class ChatbotApiService {
         return backendStatus
       }
       const { database } = await import('../../@context/UseCases')
-      const chatbotData = await database.chatbots.toArray()
+      const chatbotDataAll = await database.chatbots.toArray()
+      const chatbotData = this.namespace
+        ? chatbotDataAll.filter((row) => row.namespace === this.namespace)
+        : chatbotDataAll
 
       if (chatbotData && chatbotData.length > 0) {
-        // Extract knowledge chunks and domains
         const knowledgeChunks = this.extractKnowledgeChunks(chatbotData)
         const domains = this.extractDomains(chatbotData)
 
         if (knowledgeChunks.length > 0) {
-          // Upload to backend
           const uploadResult = await this.uploadKnowledge(chatbotData)
 
           if (uploadResult.success) {
@@ -379,7 +414,6 @@ class ChatbotApiService {
         }
       }
 
-      // Return original status if no sync was possible
       return backendStatus
     } catch (error) {
       console.error('❌ Auto-sync check failed:', error)

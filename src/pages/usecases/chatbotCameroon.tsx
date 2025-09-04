@@ -2,11 +2,11 @@ import { ReactElement, useEffect } from 'react'
 import Page from '@shared/Page'
 import { useRouter } from 'next/router'
 import content from '../../../content/pages/chatbot.json'
-import Chatbot from '../../components/Chatbot'
+import ChatbotCameroon from '../../components/ChatbotCameroon'
 import { useUseCases } from '../../@context/UseCases'
 import { chatbotApi } from '../../@utils/chatbot'
 
-export default function PageChatbot(): ReactElement {
+export default function PageChatbotCameroon(): ReactElement {
   const router = useRouter()
   const { clearChatbot } = useUseCases()
 
@@ -27,7 +27,7 @@ export default function PageChatbot(): ReactElement {
 
   return (
     <Page title={title} description={description} uri={router.route}>
-      <Chatbot />
+      <ChatbotCameroon />
     </Page>
   )
 }

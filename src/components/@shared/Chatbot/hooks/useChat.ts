@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { chatbotApi, KnowledgeStatus } from '../../../@utils/chatbot'
+import { chatbotApi, KnowledgeStatus } from '../../../../@utils/chatbot'
 import type { ChatMessage } from '../_types'
 
 export type AssistantState =

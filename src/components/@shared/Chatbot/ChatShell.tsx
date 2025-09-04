@@ -1,6 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { KnowledgeStatus, chatbotApi } from '../../@utils/chatbot'
+import { KnowledgeStatus, chatbotApi } from '../../../@utils/chatbot'
 import { useSmartScroll } from './hooks/useSmartScroll'
 import { useChat, AssistantState } from './hooks/useChat'
 import MessageList from './ui/MessageList'
