@@ -31,6 +31,7 @@ export default function JobList(props: {
   namespace: string
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
   onStatusChange?: (s: AssistantState) => void
+  onForceRefresh?: () => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
   const chatbotAlgoDids: string[] = Object.values(props.algoDidsByChain)
@@ -206,13 +207,15 @@ export default function JobList(props: {
         await createOrUpdateChatbot(newUseCaseData)
 
         // 2. Upload knowledge to RAG backend
-        const uploadResponse = await chatbotApi.uploadKnowledge([
-          newUseCaseData
-        ])
+        const uploadResponse =
+          nsRows.length > 0
+            ? await chatbotApi.replaceSessionKnowledge([newUseCaseData])
+            : await chatbotApi.uploadKnowledge([newUseCaseData])
 
         if (uploadResponse.success) {
-          // Switch to processing state; parent poller will move to ready when done
+          // Immediately refresh backend knowledge status after upload
           props.onStatusChange?.('processing')
+          props.onForceRefresh?.()
           toast.success(
             `✅ Data ready! ${
               uploadResponse.chunks_processed
@@ -253,8 +256,13 @@ export default function JobList(props: {
       // 1. Remove from IndexedDB (namespace only)
       await clearChatbotByNamespace(props.namespace)
 
-      // 2. Clear knowledge from RAG backend
-      toast.success('✅ Data removed from chatbot')
+      // 2. Clear knowledge from RAG backend by deleting session and rotating a new one
+      await chatbotApi.resetSession()
+
+      // 3. Immediately refresh backend knowledge status
+      props.onForceRefresh?.()
+
+      toast.success('✅ Data removed and session reset')
       props.onStatusChange?.('no-knowledge')
     } catch (error) {
       LoggerInstance.error('❌ Knowledge update failed:', error as any)
@@ -274,8 +282,14 @@ export default function JobList(props: {
       // Clear from IndexedDB (namespace only)
       await clearChatbotByNamespace(props.namespace)
 
+      // Also delete server-side session and rotate a new one
+      await chatbotApi.resetSession()
+
+      // Immediately refresh backend knowledge status
+      props.onForceRefresh?.()
+
       toast.success(
-        '✅ Chatbot data was cleared. Add compute job results to start over.'
+        '✅ Chatbot data was cleared and session reset. Add compute job results to start over.'
       )
       props.onStatusChange?.('no-knowledge')
     } catch (error) {

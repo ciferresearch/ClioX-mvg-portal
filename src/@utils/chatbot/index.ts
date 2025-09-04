@@ -343,6 +343,29 @@ class ChatbotApiService {
     this.sessionId = this.getOrCreateSessionId(true)
   }
 
+  // Delete session on server and reset local session
+  async resetSession(): Promise<string> {
+    try {
+      await fetch(`${this.baseUrl}/session`, {
+        method: 'DELETE',
+        headers: { 'X-Session-ID': this.sessionId }
+      })
+    } catch (e) {
+      // ignore errors while deleting upstream; still rotate local session
+      console.warn('⚠️ Failed to delete session upstream, rotating locally.', e)
+    }
+    this.clearSession()
+    return this.sessionId
+  }
+
+  // Replace server-side session knowledge (reset then upload)
+  async replaceSessionKnowledge(
+    chatbotData: ChatbotUseCaseData[]
+  ): Promise<UploadResponse> {
+    await this.resetSession()
+    return this.uploadKnowledge(chatbotData)
+  }
+
   // Get current sessionId
   getSessionId(): string {
     return this.sessionId

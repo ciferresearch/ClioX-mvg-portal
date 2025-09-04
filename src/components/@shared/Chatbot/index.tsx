@@ -98,6 +98,13 @@ export default function ChatbotViz({
     }
   }, [])
 
+  // Expose imperative refresh to children (e.g. after session reset)
+  const forceRefresh = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    processingBackoffMsRef.current = 2000
+    pollOnce()
+  }, [pollOnce])
+
   // Keep refs in sync with state
   useEffect(() => {
     assistantStatusRef.current = assistantStatus
@@ -135,6 +142,7 @@ export default function ChatbotViz({
             pollOnce()
           }
         }}
+        onForceRefresh={forceRefresh}
       />
       <ChatShell
         status={assistantStatus}
