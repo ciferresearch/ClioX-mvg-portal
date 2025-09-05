@@ -1,6 +1,4 @@
-// Basic types for chatbot component
 export interface ChatbotResult {
-  // Knowledge base chunks for chatbot context
   knowledgeBase?: {
     chunks: Array<{
       id: string
@@ -18,16 +16,14 @@ export interface ChatbotResult {
     searchIndex?: Record<string, string[]>
   }
 
-  // Domain information
   domainInfo?: {
-    domain: string // 'enron-emails', 'cameroon-gazette', etc.
+    domain: string
     entities: string[]
     timeRange?: string
     description?: string
   }
 }
 
-// Chat message interface
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -36,10 +32,11 @@ export interface ChatMessage {
   metadata?: {
     sources?: string[]
     confidence?: number
+    isComplete?: boolean
+    isAborted?: boolean
   }
 }
 
-// Knowledge base interface
 export interface KnowledgeBase {
   domains: Record<string, any>
   allChunks: Array<{

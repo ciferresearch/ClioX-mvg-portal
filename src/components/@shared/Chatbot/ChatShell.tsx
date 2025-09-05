@@ -1,6 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { KnowledgeStatus, chatbotApi } from '../../@utils/chatbot'
+import { KnowledgeStatus, chatbotApi } from '../../../@utils/chatbot'
 import { useSmartScroll } from './hooks/useSmartScroll'
 import { useChat, AssistantState } from './hooks/useChat'
 import MessageList from './ui/MessageList'
@@ -16,9 +16,19 @@ export default function ChatShell({
   knowledgeStatus: KnowledgeStatus | null
   backendError: string | null
 }): ReactElement {
-  const { messages, isTyping, sendMessage } = useChat(status, knowledgeStatus)
+  const {
+    messages,
+    isTyping,
+    isStreaming,
+    sendMessage,
+    retryMessage,
+    cancelStream,
+    updateUserMessage,
+    pruneAfterMessage
+  } = useChat(status, knowledgeStatus)
+  const lastMessageContent = messages[messages.length - 1]?.content || ''
   const { messagesEndRef, shouldAutoScroll, handleScroll, scrollToBottom } =
-    useSmartScroll(messages.length)
+    useSmartScroll(messages.length, lastMessageContent)
   const [isFirstInteraction, setIsFirstInteraction] = useState(false)
   const [suppressFirstMessageAnimation, setSuppressFirstMessageAnimation] =
     useState(false)
@@ -60,6 +70,18 @@ export default function ChatShell({
                 messages={messages}
                 isTyping={isTyping}
                 animateItems={!suppressFirstMessageAnimation}
+                onRetry={(userMessage, assistantId) => {
+                  if (!userMessage || isTyping) return
+                  // reuse same assistant bubble, clear content and re-stream
+                  retryMessage(assistantId, userMessage)
+                }}
+                onUpdateUserMessage={updateUserMessage}
+                onResendFromEdit={(assistantId, newMessage) => {
+                  if (!newMessage || isTyping) return
+                  // prune future turns then retry
+                  pruneAfterMessage(assistantId)
+                  retryMessage(assistantId, newMessage)
+                }}
               />
             </motion.div>
           </AnimatePresence>
@@ -104,7 +126,6 @@ export default function ChatShell({
             sendMessage(message)
           }}
           disabled={
-            isTyping ||
             backendError !== null ||
             status === 'connecting' ||
             status === 'uploading' ||
@@ -118,6 +139,8 @@ export default function ChatShell({
           knowledgeStatus={knowledgeStatus}
           backendError={backendError}
           isTyping={isTyping}
+          isStreaming={isStreaming}
+          onPause={() => cancelStream()}
         />
       </motion.div>
     </motion.div>

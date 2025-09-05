@@ -58,6 +58,7 @@ interface UseCasesValue {
   updateChatbot: (chatbots: ChatbotUseCaseData[]) => Promise<IndexableType>
   deleteChatbot: (id: number) => Promise<void>
   clearChatbot: () => Promise<void>
+  clearChatbotByNamespace: (namespace: string) => Promise<void>
 }
 
 const UseCasesContext = createContext<UseCasesValue | null>(null)
@@ -233,6 +234,19 @@ function UseCasesProvider({ children }: { children: ReactNode }): ReactElement {
     LoggerInstance.log(`[UseCases]: cleared chatbot table`)
   }
 
+  const clearChatbotByNamespace = async (namespace: string) => {
+    const rows = await database.chatbots
+      .where('namespace')
+      .equals(namespace)
+      .toArray()
+    const ids = rows.map((r) => r.id).filter(Boolean) as number[]
+    if (ids.length) await database.chatbots.bulkDelete(ids)
+    LoggerInstance.log(`[UseCases]: cleared chatbot table by namespace`, {
+      namespace,
+      count: ids.length
+    })
+  }
+
   return (
     <UseCasesContext.Provider
       value={
@@ -253,7 +267,8 @@ function UseCasesProvider({ children }: { children: ReactNode }): ReactElement {
           chatbotList,
           updateChatbot,
           deleteChatbot,
-          clearChatbot
+          clearChatbot,
+          clearChatbotByNamespace
         } satisfies UseCasesValue
       }
     >

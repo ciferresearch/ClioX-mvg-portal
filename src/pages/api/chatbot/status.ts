@@ -31,24 +31,26 @@ export default async function handler(
       })
     }
 
-    // Forward the request to the external chatbot service
-    const response = await fetch(
+    // First, check the backend knowledge status
+    const backendResponse = await fetch(
       `${chatbotApiUrl}/api/v1/session/knowledge/status`,
       {
         headers: { 'X-Session-ID': sessionId }
       }
     )
 
-    if (!response.ok) {
-      const errorText = await response.text()
+    if (!backendResponse.ok) {
+      const errorText = await backendResponse.text()
       console.error('Chatbot API status error:', errorText)
-      return res.status(response.status).json({
-        error: `Status check failed: ${response.statusText}`
+      return res.status(backendResponse.status).json({
+        error: `Status check failed: ${backendResponse.statusText}`
       })
     }
 
-    const result = await response.json()
-    return res.status(200).json(result)
+    const backendStatus = await backendResponse.json()
+
+    // Pure proxy: do not access local IndexedDB or auto-sync here
+    return res.status(200).json(backendStatus)
   } catch (error) {
     console.error('Chatbot status API error:', error)
     return res.status(500).json({

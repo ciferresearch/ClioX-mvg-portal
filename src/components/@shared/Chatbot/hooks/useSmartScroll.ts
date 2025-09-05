@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Keeps chat pinned to bottom unless user scrolls up
-export function useSmartScroll(triggerCount: number) {
+export function useSmartScroll(
+  triggerCount: number,
+  lastMessageContent?: string
+) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
 
-  // Only auto-scroll on new messages when the user is at the bottom
+  // Auto-scroll on new messages or content updates when user is at bottom
   useEffect(() => {
     if (!shouldAutoScroll) return
     const container = messagesEndRef.current?.parentElement
     if (container) {
-      container.scrollTop = container.scrollHeight
+      // Use requestAnimationFrame to ensure DOM updates are complete
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight
+      })
     }
-  }, [triggerCount, shouldAutoScroll])
+  }, [triggerCount, lastMessageContent, shouldAutoScroll])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
