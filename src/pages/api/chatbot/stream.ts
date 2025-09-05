@@ -36,7 +36,7 @@ export default async function handler(
 
     // Use the same path pattern as status.ts for consistency
     const upstreamResponse = await fetch(
-      `${chatbotApiUrl}/api/v1/session/chat/stream`,
+      `${chatbotApiUrl}/api/v1/session/chat`,
       {
         method: 'POST',
         headers: {

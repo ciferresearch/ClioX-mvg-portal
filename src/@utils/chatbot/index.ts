@@ -75,6 +75,9 @@ export interface StreamProgressEvent {
     model_used: string
   }
   error?: string
+  // New optional fields to support unified SSE schema
+  type?: 'status' | 'chunk' | 'complete' | 'error'
+  status?: string
 }
 
 class ChatbotApiService {
@@ -249,15 +252,24 @@ class ChatbotApiService {
         const payload = line.slice(6).trim()
         if (!payload) continue
         try {
-          const data: StreamProgressEvent = JSON.parse(payload)
-          if (data.error) throw new Error(data.error)
-          if (typeof data.content === 'string') {
+          const data: any = JSON.parse(payload)
+          if (data?.type === 'error' || data?.error) {
+            const message = data?.message || data?.error || 'Streaming error'
+            throw new Error(message)
+          }
+
+          // Only append real content chunks to the message
+          if (data?.type === 'chunk' && typeof data.content === 'string') {
             fullResponse += data.content
             onProgress?.({ content: data.content })
           }
-          if (data.sources) lastSources = data.sources
-          if (data.metadata) lastMetadata = data.metadata
-          if (data.done) {
+
+          // Track sources/metadata from any event (often sent on completion)
+          if (data?.sources) lastSources = data.sources
+          if (data?.metadata) lastMetadata = data.metadata
+
+          // Treat 'complete' (new schema) or legacy 'done' as completion
+          if (data?.type === 'complete' || data?.done) {
             onProgress?.({
               done: true,
               sources: lastSources,
@@ -350,12 +362,13 @@ class ChatbotApiService {
         method: 'DELETE',
         headers: { 'X-Session-ID': this.sessionId }
       })
-    } catch (e) {
-      // ignore errors while deleting upstream; still rotate local session
-      console.warn('⚠️ Failed to delete session upstream, rotating locally.', e)
+      this.sessionId = this.getOrCreateSessionId(true)
+      return this.sessionId
+    } catch (error) {
+      console.error('❌ Reset session failed:', error)
+      this.sessionId = this.getOrCreateSessionId(true)
+      return this.sessionId
     }
-    this.clearSession()
-    return this.sessionId
   }
 
   // Replace server-side session knowledge (reset then upload)
