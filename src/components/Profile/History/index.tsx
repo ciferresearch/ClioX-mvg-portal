@@ -1,4 +1,5 @@
 import { ReactElement, useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import Tabs from '@shared/atoms/Tabs'
 import PublishedList from './PublishedList'
 import Downloads from './Downloads'
@@ -65,6 +66,7 @@ export default function HistoryPage({
 }: {
   accountIdentifier: string
 }): ReactElement {
+  const router = useRouter()
   const { address: accountId } = useAccount()
   const { autoWallet } = useAutomation()
   const { chainIds } = useUserPreferences()
@@ -123,8 +125,15 @@ export default function HistoryPage({
   }, [accountId, refetchJobs, fetchJobs])
 
   const getDefaultIndex = useCallback((): number => {
-    const url = new URL(location.href)
-    const defaultTabString = url.searchParams.get('defaultTab')
+    // Prefer router.asPath for SSR-safety; fall back to window on client
+    const search =
+      typeof window !== 'undefined'
+        ? window.location.search
+        : router?.asPath?.includes('?')
+        ? `?${router.asPath.split('?')[1]}`
+        : ''
+    const params = new URLSearchParams(search)
+    const defaultTabString = params.get('defaultTab')
     const defaultTabIndex = tabsIndexList?.[defaultTabString]
 
     if (!defaultTabIndex) return 0
@@ -135,7 +144,7 @@ export default function HistoryPage({
       return 0
 
     return defaultTabIndex
-  }, [accountId, accountIdentifier])
+  }, [accountId, accountIdentifier, router?.asPath])
 
   useEffect(() => {
     setTabIndex(getDefaultIndex())

@@ -33,7 +33,7 @@ export default function NetworkItem({
           name="chainIds"
           value={chainId}
           onChange={handleNetworkChanged}
-          defaultChecked={chainIds.includes(chainId)}
+          checked={chainIds.includes(chainId)}
         />
         <NetworkName key={chainId} networkId={chainId} />
       </label>

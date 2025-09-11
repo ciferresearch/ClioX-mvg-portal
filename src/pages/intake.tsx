@@ -11,7 +11,7 @@ export default function IntakePage(): ReactElement {
     <Page
       title="Partner Intake Form"
       description="Join the Clio-X community as a partner organization"
-      uri={router.route}
+      uri={router.pathname}
       noPageHeader
     >
       <Container>

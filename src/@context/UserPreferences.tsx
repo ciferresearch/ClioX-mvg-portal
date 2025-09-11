@@ -42,10 +42,14 @@ const UserPreferencesContext = createContext(null)
 
 const localStorageKey = 'ocean-user-preferences-v4'
 
-function getLocalStorage(): UserPreferencesValue {
-  const storageParsed =
-    isBrowser && JSON.parse(window.localStorage.getItem(localStorageKey))
-  return storageParsed
+function getLocalStorage(): Partial<UserPreferencesValue> | undefined {
+  if (typeof window === 'undefined') return undefined
+  try {
+    const raw = window.localStorage.getItem(localStorageKey)
+    return raw ? (JSON.parse(raw) as Partial<UserPreferencesValue>) : undefined
+  } catch {
+    return undefined
+  }
 }
 
 function setLocalStorage(values: Partial<UserPreferencesValue>) {
@@ -61,47 +65,59 @@ function UserPreferencesProvider({
   children: ReactNode
 }): ReactElement {
   const { appConfig } = useMarketMetadata()
-  const localStorage = getLocalStorage()
-  // Set default values from localStorage
-  const [debug, setDebug] = useState<boolean>(localStorage?.debug || false)
-  const [currency, setCurrency] = useState<string>(
-    localStorage?.currency || 'EUR'
-  )
+  // Initialize with stable SSR-friendly defaults; hydrate from localStorage on mount
+  const [debug, setDebug] = useState<boolean>(false)
+  const [currency, setCurrency] = useState<string>('EUR')
   const [locale, setLocale] = useState<string>()
-  const [bookmarks, setBookmarks] = useState(localStorage?.bookmarks || [])
-  const [chainIds, setChainIds] = useState(
-    localStorage?.chainIds || appConfig.chainIds
-  )
+  const [bookmarks, setBookmarks] = useState<string[]>([])
+  const [chainIds, setChainIds] = useState<number[]>(appConfig.chainIds)
   const { defaultPrivacyPolicySlug, showOnboardingModuleByDefault } = appConfig
 
   const [privacyPolicySlug, setPrivacyPolicySlug] = useState<string>(
-    localStorage?.privacyPolicySlug || defaultPrivacyPolicySlug
+    defaultPrivacyPolicySlug
   )
 
-  const [showPPC, setShowPPC] = useState<boolean>(
-    localStorage?.showPPC !== false
-  )
+  const [showPPC, setShowPPC] = useState<boolean>(true)
 
-  const [allowExternalContent, setAllowExternalContent] = useState<boolean>(
-    localStorage?.allowExternalContent || false
-  )
+  const [allowExternalContent, setAllowExternalContent] =
+    useState<boolean>(false)
 
-  const [automationWallet, setAutomationWallet] = useState<string>(
-    localStorage?.automationWalletJSON || ''
-  )
+  const [automationWallet, setAutomationWallet] = useState<string>('')
 
   const [automationWalletMode, setAutomationWalletMode] =
-    useState<AUTOMATION_MODES>(
-      localStorage?.automationWalletMode || AUTOMATION_MODES.SIMPLE
-    )
+    useState<AUTOMATION_MODES>(AUTOMATION_MODES.SIMPLE)
 
   const [showOnboardingModule, setShowOnboardingModule] = useState<boolean>(
-    localStorage?.showOnboardingModule ?? showOnboardingModuleByDefault
+    showOnboardingModuleByDefault
   )
 
-  const [onboardingStep, setOnboardingStep] = useState<number>(
-    localStorage?.onboardingStep || 0
-  )
+  const [onboardingStep, setOnboardingStep] = useState<number>(0)
+
+  // Hydrate from localStorage on client after mount
+  useEffect(() => {
+    const stored = getLocalStorage()
+    if (!stored) return
+    if (typeof stored.debug === 'boolean') setDebug(stored.debug)
+    if (typeof stored.currency === 'string') setCurrency(stored.currency)
+    if (Array.isArray(stored.bookmarks)) setBookmarks(stored.bookmarks)
+    if (Array.isArray(stored.chainIds)) setChainIds(stored.chainIds as number[])
+    if (typeof stored.privacyPolicySlug === 'string')
+      setPrivacyPolicySlug(stored.privacyPolicySlug)
+    if (typeof stored.showPPC === 'boolean') setShowPPC(stored.showPPC)
+    if (typeof stored.allowExternalContent === 'boolean')
+      setAllowExternalContent(stored.allowExternalContent)
+    if (typeof stored.automationWalletJSON === 'string')
+      setAutomationWallet(stored.automationWalletJSON)
+    if (
+      stored.automationWalletMode === AUTOMATION_MODES.SIMPLE ||
+      stored.automationWalletMode === AUTOMATION_MODES.ADVANCED
+    )
+      setAutomationWalletMode(stored.automationWalletMode)
+    if (typeof stored.showOnboardingModule === 'boolean')
+      setShowOnboardingModule(stored.showOnboardingModule)
+    if (typeof stored.onboardingStep === 'number')
+      setOnboardingStep(stored.onboardingStep)
+  }, [])
 
   // Write values to localStorage on change
   useEffect(() => {
@@ -141,7 +157,7 @@ function UserPreferencesProvider({
 
   // Get locale always from user's browser
   useEffect(() => {
-    if (!window) return
+    if (typeof window === 'undefined') return
     setLocale(window.navigator.language)
   }, [])
 

@@ -13,7 +13,7 @@ export default function PageResources(): ReactElement {
     <Page
       title="Resources - The Reading Room"
       description="Your go-to hub for valuable resources and everything you need to get the most out of Clio-X."
-      uri={router.route}
+      uri={router.pathname}
       noPageHeader
     >
       <Resources initialArticles={articlesIndex.articles} />

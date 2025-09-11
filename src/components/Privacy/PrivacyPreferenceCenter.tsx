@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import { useConsent, CookieConsentStatus } from '@context/CookieConsent'
 import styles from './PrivacyPreferenceCenter.module.css'
 import { useGdprMetadata } from '@hooks/useGdprMetadata'
@@ -19,6 +19,10 @@ export default function CookieBanner({
   const cookies = useGdprMetadata()
   const { showPPC, setShowPPC } = useUserPreferences()
   const [smallBanner, setSmallBanner] = useState<boolean>(style === 'small')
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid SSR/CSR flash by deferring render until mounted
+  useEffect(() => setMounted(true), [])
 
   function closeBanner() {
     setShowPPC(false)
@@ -40,6 +44,8 @@ export default function CookieBanner({
     hidden: !showPPC,
     small: smallBanner // style === 'small'
   })
+
+  if (!mounted) return null
 
   return (
     <div className={styleClasses}>

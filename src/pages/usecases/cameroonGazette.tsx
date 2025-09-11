@@ -24,7 +24,7 @@ export default function CameroonGazettePage(): ReactElement {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Page title={title} description={description} uri={router.route}>
+    <Page title={title} description={description} uri={router.pathname}>
       <CameroonGazette />
     </Page>
   )

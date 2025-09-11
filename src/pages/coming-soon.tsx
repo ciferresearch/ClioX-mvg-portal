@@ -19,7 +19,7 @@ export default function ComingSoon(): ReactElement {
       <Page
         title="Coming Soon"
         description="This feature is currently under development and will be available soon."
-        uri={router.route}
+        uri={router.pathname}
         headerCenter
         noPageHeader
       >

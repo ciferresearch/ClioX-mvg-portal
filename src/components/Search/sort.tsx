@@ -44,16 +44,13 @@ export default function Sort({
 
   const router = useRouter()
 
-  const parsedUrl = queryString.parse(location.search, {
-    arrayFormat: 'separator'
-  })
-
   useEffect(() => {
     const initialFilters = getInitialFilters(
-      parsedUrl,
+      router.query as unknown as queryString.ParsedQuery<string>,
       Object.keys(sort) as (keyof SortInterface)[]
     )
     setSort(initialFilters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function sortResults(

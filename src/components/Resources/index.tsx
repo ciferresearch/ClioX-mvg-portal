@@ -50,6 +50,9 @@ interface ResourcesProps {
 export default function Resources({
   initialArticles = []
 }: ResourcesProps): ReactElement {
+  // useLayoutEffect doesn't run on the server; fall back to useEffect to avoid hydration warnings
+  const useIsomorphicLayoutEffect =
+    typeof window !== 'undefined' ? useLayoutEffect : useEffect
   const [activeTab, setActiveTab] = useState('articles')
   const [searchQuery, setSearchQuery] = useState('')
   const [resourceCards, setResourceCards] =
@@ -155,7 +158,7 @@ export default function Resources({
   }, [activeTab, initialArticles])
 
   // Recalculate underline when active tab or layout changes
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (searchQuery.trim() !== '') return
     // Measure synchronously before paint to avoid initial slide-in
     updateUnderline()

@@ -92,13 +92,13 @@ export default function Filter({
 
   const router = useRouter()
 
-  const parsedUrl = queryString.parse(location.search, {
-    arrayFormat: 'separator'
-  })
-
   useEffect(() => {
-    const initialFilters = getInitialFilters(parsedUrl, Object.keys(filters))
+    const initialFilters = getInitialFilters(
+      router.query as unknown as queryString.ParsedQuery<string>,
+      Object.keys(filters)
+    )
     setFilters(initialFilters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function applyFilter(filter: string[], filterId: string) {

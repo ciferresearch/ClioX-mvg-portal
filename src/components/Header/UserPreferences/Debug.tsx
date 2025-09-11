@@ -12,7 +12,7 @@ export default function Debug(): ReactElement {
       name="debug"
       type="checkbox"
       options={['Activate Debug Mode']}
-      defaultChecked={debug === true}
+      checked={debug === true}
       onChange={() => setDebug(!debug)}
     />
   )
