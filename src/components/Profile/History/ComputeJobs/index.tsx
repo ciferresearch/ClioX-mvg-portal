@@ -75,6 +75,12 @@ export default function ComputeJobs({
   const { address: accountId } = useAccount()
   const { chainIds } = useUserPreferences()
 
+  // Ensure consistent SSR/CSR markup to avoid hydration mismatch
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   const [actionsColumn, setActionsColumn] =
     useState<TableOceanColumn<ComputeJobMetaData>>(defaultActionsColumn)
 
@@ -100,6 +106,11 @@ export default function ComputeJobs({
       )
     })
   }, [getActions])
+
+  if (!isClient) {
+    // Render a stable placeholder on server and before client mount
+    return <div />
+  }
 
   return accountId ? (
     <>
