@@ -21,7 +21,8 @@ export default function JobList(props: {
     cameroonGazetteData: CameroonGazetteUseCaseData[]
   ) => void
 }): ReactElement {
-  const { chainIds } = useUserPreferences()
+  const __DEV__ = process.env.NODE_ENV !== 'production'
+  const { chainIds, prefsHydrated } = useUserPreferences()
   const cameroonGazetteAlgoDids: string[] = Object.values(
     CAMEROON_GAZETTE_ALGO_DIDS
   )
@@ -120,8 +121,12 @@ export default function JobList(props: {
   ])
 
   useEffect(() => {
+    if (!prefsHydrated) return
     fetchJobs()
-  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refetchJobs, chainIds, prefsHydrated]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Log when accountId becomes available after cold refresh
+  useEffect(() => {}, [accountId])
 
   const addJobToView = async (job: ComputeJobMetaData) => {
     // If there's already an active job, remove it first
@@ -324,7 +329,7 @@ export default function JobList(props: {
       <Accordion title="Compute Jobs" defaultExpanded>
         <ComputeJobs
           jobs={jobs}
-          isLoading={isLoadingJobs}
+          isLoading={isLoadingJobs || !prefsHydrated}
           refetchJobs={() => setRefetchJobs(!refetchJobs)}
           getActions={getCustomActionsPerComputeJob}
           hideDetails

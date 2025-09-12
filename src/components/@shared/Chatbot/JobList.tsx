@@ -33,7 +33,8 @@ export default function JobList(props: {
   onStatusChange?: (s: AssistantState) => void
   onForceRefresh?: () => void
 }): ReactElement {
-  const { chainIds } = useUserPreferences()
+  const __DEV__ = process.env.NODE_ENV !== 'production'
+  const { chainIds, prefsHydrated } = useUserPreferences()
   const chatbotAlgoDids: string[] = Object.values(props.algoDidsByChain)
 
   const { address: accountId } = useAccount()
@@ -86,12 +87,10 @@ export default function JobList(props: {
         })
       }
 
-      setJobs(
-        // Filter computeJobs for dids provided from use case
-        computeJobs.computeJobs.filter(
-          (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
-        )
+      const filtered = computeJobs.computeJobs.filter(
+        (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
       )
+      setJobs(filtered)
       setIsLoadingJobs(!computeJobs.isLoaded)
     } catch (error) {
       LoggerInstance.error((error as Error).message)
@@ -100,8 +99,12 @@ export default function JobList(props: {
   }, [chainIds, chatbotAlgoDids, accountId, autoWallet, newCancelToken])
 
   useEffect(() => {
+    if (!prefsHydrated) return
     fetchJobs()
-  }, [refetchJobs, chainIds])
+  }, [refetchJobs, chainIds, prefsHydrated])
+
+  // Log when accountId becomes available after cold refresh
+  useEffect(() => {}, [accountId])
 
   const addComputeResultToUseCaseDB = async (job: ComputeJobMetaData) => {
     // Namespace-scoped existing rows
@@ -343,7 +346,7 @@ export default function JobList(props: {
 
         <ComputeJobs
           jobs={jobs}
-          isLoading={isLoadingJobs}
+          isLoading={isLoadingJobs || !prefsHydrated}
           refetchJobs={() => setRefetchJobs(!refetchJobs)}
           getActions={getCustomActionsPerComputeJob}
           hideDetails

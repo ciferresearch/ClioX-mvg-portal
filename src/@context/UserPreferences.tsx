@@ -12,6 +12,7 @@ import { useMarketMetadata } from './MarketMetadata'
 import { AUTOMATION_MODES } from './Automation/AutomationProvider'
 
 interface UserPreferencesValue {
+  prefsHydrated: boolean
   debug: boolean
   setDebug: (value: boolean) => void
   currency: string
@@ -66,6 +67,7 @@ function UserPreferencesProvider({
 }): ReactElement {
   const { appConfig } = useMarketMetadata()
   // Initialize with stable SSR-friendly defaults; hydrate from localStorage on mount
+  const [prefsHydrated, setPrefsHydrated] = useState<boolean>(false)
   const [debug, setDebug] = useState<boolean>(false)
   const [currency, setCurrency] = useState<string>('EUR')
   const [locale, setLocale] = useState<string>()
@@ -96,7 +98,10 @@ function UserPreferencesProvider({
   // Hydrate from localStorage on client after mount
   useEffect(() => {
     const stored = getLocalStorage()
-    if (!stored) return
+    if (!stored) {
+      setPrefsHydrated(true)
+      return
+    }
     if (typeof stored.debug === 'boolean') setDebug(stored.debug)
     if (typeof stored.currency === 'string') setCurrency(stored.currency)
     if (Array.isArray(stored.bookmarks)) setBookmarks(stored.bookmarks)
@@ -117,6 +122,7 @@ function UserPreferencesProvider({
       setShowOnboardingModule(stored.showOnboardingModule)
     if (typeof stored.onboardingStep === 'number')
       setOnboardingStep(stored.onboardingStep)
+    setPrefsHydrated(true)
   }, [])
 
   // Write values to localStorage on change
@@ -195,6 +201,7 @@ function UserPreferencesProvider({
     <UserPreferencesContext.Provider
       value={
         {
+          prefsHydrated,
           debug,
           currency,
           locale,

@@ -19,7 +19,8 @@ import { TextAnalysisResult } from './_types'
 export default function JobList(props: {
   setTextAnalysisData: (textAnalysisData: TextAnalysisUseCaseData[]) => void
 }): ReactElement {
-  const { chainIds } = useUserPreferences()
+  const __DEV__ = process.env.NODE_ENV !== 'production'
+  const { chainIds, prefsHydrated } = useUserPreferences()
   const textAnalysisAlgoDids: string[] = Object.values(TEXT_ANALYSIS_ALGO_DIDS)
 
   const { address: accountId } = useAccount()
@@ -113,8 +114,12 @@ export default function JobList(props: {
   ])
 
   useEffect(() => {
+    if (!prefsHydrated) return
     fetchJobs()
-  }, [refetchJobs, chainIds]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refetchJobs, chainIds, prefsHydrated]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Log when accountId becomes available after cold refresh
+  useEffect(() => {}, [accountId])
 
   const addJobToView = async (job: ComputeJobMetaData) => {
     // If there's already an active job, remove it first
@@ -314,7 +319,7 @@ export default function JobList(props: {
       <Accordion title="Compute Jobs" defaultExpanded>
         <ComputeJobs
           jobs={jobs}
-          isLoading={isLoadingJobs}
+          isLoading={isLoadingJobs || !prefsHydrated}
           refetchJobs={() => setRefetchJobs(!refetchJobs)}
           getActions={getCustomActionsPerComputeJob}
           hideDetails
