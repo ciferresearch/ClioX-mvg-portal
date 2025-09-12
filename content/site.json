@@ -35,6 +35,10 @@
         {
           "name": "AI Chatbot Assistant (Cameroon)",
           "link": "/usecases/chatbotCameroon"
+        },
+        {
+          "name": "AI Chatbot Assistant (Intepares)",
+          "link": "/usecases/chatbotIntepares"
         }
       ]
     },
