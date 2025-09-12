@@ -44,11 +44,11 @@ export default function VerifyPage({
   const { label, placeholder, buttonLabel } = input
 
   const [isLoading, setIsLoading] = useState(false)
-  const [did, setDid] = useState<string>()
+  const [did, setDid] = useState<string>('')
   const [serviceCredential, setServiceCredential] = useState<string>()
 
-  const getDidString = (did: string): string => {
-    if (!did) return
+  const getDidString = (did?: string): string => {
+    if (!did) return ''
     return did.startsWith('did:op:') ? did : `did:op:${did}`
   }
 
@@ -113,7 +113,7 @@ export default function VerifyPage({
               setDid((event.target as HTMLInputElement).value)
             }
             placeholder={placeholder}
-            value={did}
+            value={did ?? ''}
           />
           <Button
             disabled={!did || isLoading}
