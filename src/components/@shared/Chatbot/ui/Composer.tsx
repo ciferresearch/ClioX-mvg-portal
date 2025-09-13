@@ -6,8 +6,12 @@ import {
   IconCopy,
   IconPlayerStopFilled
 } from '@tabler/icons-react'
+import IdeasToggle from './ideas/IdeasToggle'
+import IdeasPanel from './ideas/IdeasPanel'
+import { DEFAULT_IDEAS } from './ideas/constants'
 import type { KnowledgeStatus } from '../../../../@utils/chatbot'
 import type { AssistantState } from '../hooks/useChat'
+import SessionInfoPanel from './info/SessionInfoPanel'
 
 interface InputContainerProps {
   inputMessage: string
@@ -24,6 +28,10 @@ interface InputContainerProps {
   onMouseLeave: () => void
   onToggleInfo: () => void
   isInfoOpen: boolean
+  onToggleIdeas: () => void
+  isIdeasOpen?: boolean
+  infoToggleRef?: React.RefObject<HTMLButtonElement>
+  ideasToggleRef?: React.RefObject<HTMLButtonElement>
   sessionId?: string | null
   assistantStatus?: AssistantState
   knowledgeStatus?: KnowledgeStatus | null
@@ -46,6 +54,10 @@ function InputContainer({
   onMouseLeave,
   onToggleInfo,
   isInfoOpen,
+  onToggleIdeas,
+  isIdeasOpen,
+  infoToggleRef,
+  ideasToggleRef,
   sessionId,
   assistantStatus,
   knowledgeStatus,
@@ -55,9 +67,10 @@ function InputContainer({
   const anchorRef = useRef<HTMLDivElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
 
-  // Close on outside click or ESC
+  // Close on outside click or ESC (only for default mode)
   useEffect(() => {
-    if (!isInfoOpen) return
+    // In hero mode the SessionInfoPanel handles its own outside-click close
+    if (!isInfoOpen || isHero) return
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onToggleInfo()
     }
@@ -73,7 +86,7 @@ function InputContainer({
       document.removeEventListener('keydown', handleKey)
       document.removeEventListener('mousedown', handleClick)
     }
-  }, [isInfoOpen, onToggleInfo])
+  }, [isInfoOpen, onToggleInfo, isHero])
 
   return (
     <div className="bg-[#F8F7F5] rounded-2xl p-3 space-y-4 relative">
@@ -93,16 +106,31 @@ function InputContainer({
         />
 
         <div className="flex justify-between items-center mb-0">
-          <div className="flex items-center relative" ref={anchorRef}>
+          <div className="flex items-center gap-2" ref={anchorRef}>
             <button
               type="button"
-              onClick={onToggleInfo}
+              ref={infoToggleRef as any}
+              onClick={() => {
+                // Close ideas if open when toggling settings
+                if (isIdeasOpen) onToggleIdeas()
+                onToggleInfo()
+              }}
               className="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
               aria-label="Show session info"
             >
               <IconSettings className="h-4 w-4 text-gray-700" />
             </button>
-            {isInfoOpen && (
+            {isHero && (
+              <span ref={ideasToggleRef as any}>
+                <IdeasToggle
+                  onClick={() => {
+                    if (isInfoOpen) onToggleInfo()
+                    onToggleIdeas()
+                  }}
+                />
+              </span>
+            )}
+            {!isHero && isInfoOpen && (
               <motion.div
                 ref={popoverRef}
                 role="dialog"
@@ -110,9 +138,7 @@ function InputContainer({
                 initial={{ opacity: 0, y: isHero ? 6 : -6, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.18 }}
-                className={`absolute ${
-                  isHero ? 'top-full mt-2' : 'bottom-full mb-2'
-                } left-0 w-80 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 ring-1 ring-black/5 shadow-xl p-4 z-30`}
+                className={`absolute ${'bottom-full mb-2'} left-0 w-80 rounded-2xl bg-white/70 backdrop-blur-md border border-gray-200 shadow-xl p-4 z-30`}
               >
                 <div className="mb-3">
                   <div className="text-sm font-semibold text-[#2b2e3b] mb-1">
@@ -215,8 +241,6 @@ function InputContainer({
             </motion.button>
           )}
         </div>
-
-        {/* Popover is anchored next to the Settings button (above in normal mode, below in hero) */}
       </form>
     </div>
   )
@@ -248,6 +272,9 @@ export default function Composer({
   const [inputMessage, setInputMessage] = useState('')
   const [isHovered, setIsHovered] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [isIdeasOpen, setIsIdeasOpen] = useState(false)
+  const infoToggleRef = useRef<HTMLButtonElement>(null)
+  const ideasToggleRef = useRef<HTMLButtonElement>(null)
   const pauseGuardRef = useRef<number>(0)
   const PAUSE_GUARD_MS = 250
 
@@ -276,6 +303,9 @@ export default function Composer({
     'gathering'
   )
   const [typingStartTime, setTypingStartTime] = useState<number | null>(null)
+  // Suggestions come from constants (can be overridden per usecase)
+
+  // Ideas panel outside click/ESC handled inside IdeasPanel component
 
   // Generate appropriate placeholder based on status
   const getPlaceholder = () => {
@@ -421,7 +451,7 @@ export default function Composer({
 
   if (variant === 'hero') {
     return (
-      <div className="px-6 w-[820px] flex items-center min-h-[700px]">
+      <div className="px-6 w-[820px] flex items-center min-h-[900px]">
         <div className="w-full relative">
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none text-[28px] md:text-[40px] leading-tight font-serif text-[#2b2e3b] whitespace-nowrap">
             <span className="inline-block relative align-middle">
@@ -452,11 +482,39 @@ export default function Composer({
             onMouseLeave={() => setIsHovered(false)}
             onToggleInfo={() => setIsInfoOpen((v) => !v)}
             isInfoOpen={isInfoOpen}
+            onToggleIdeas={() => setIsIdeasOpen((v) => !v)}
+            isIdeasOpen={isIdeasOpen}
+            infoToggleRef={infoToggleRef}
+            ideasToggleRef={ideasToggleRef}
             sessionId={sessionId}
             assistantStatus={assistantStatus}
             knowledgeStatus={knowledgeStatus}
             backendError={backendError}
             isHero
+          />
+          {/* In hero mode, render session info panel below input with same spacing as Ideas */}
+          <SessionInfoPanel
+            open={isInfoOpen}
+            sessionId={sessionId}
+            assistantStatus={assistantStatus}
+            knowledgeStatus={knowledgeStatus}
+            backendError={backendError}
+            onClose={() => setIsInfoOpen(false)}
+            toggleRef={infoToggleRef}
+          />
+          <IdeasPanel
+            open={isIdeasOpen}
+            suggestions={DEFAULT_IDEAS}
+            onClose={() => setIsIdeasOpen(false)}
+            toggleRef={ideasToggleRef}
+            onPick={(s) => {
+              setInputMessage(s)
+              setIsIdeasOpen(false)
+              if (!disabled && !isStreaming && !isTyping) {
+                onSendMessage(s)
+                setInputMessage('')
+              }
+            }}
           />
         </div>
       </div>
@@ -480,12 +538,15 @@ export default function Composer({
         onMouseLeave={() => setIsHovered(false)}
         onToggleInfo={() => setIsInfoOpen((v) => !v)}
         isInfoOpen={isInfoOpen}
+        onToggleIdeas={() => setIsIdeasOpen((v) => !v)}
+        isIdeasOpen={isIdeasOpen}
         sessionId={sessionId}
         assistantStatus={assistantStatus}
         knowledgeStatus={knowledgeStatus}
         backendError={backendError}
         isHero={false}
       />
+      {/* No Ideas panel/button in default (non-hero) mode */}
     </div>
   )
 }

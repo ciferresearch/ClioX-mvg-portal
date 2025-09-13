@@ -46,7 +46,7 @@ export default function ChatShell({
   return (
     <motion.div
       className={`relative flex flex-col w-[820px] mx-auto max-h-[1080px] ${
-        isHero ? 'min-h-[700px]' : 'min-h-[700px] border-t border-[#d0d2dd]'
+        isHero ? 'min-h-[900px]' : 'min-h-[900px] border-t border-[#d0d2dd]'
       } bg-transparent overflow-hidden`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
