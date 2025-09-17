@@ -155,7 +155,7 @@ export default function FeaturedResearchCard({
 
       {/* Right Image */}
       <motion.div
-        className="relative w-[420px] h-[420px] border border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 order-first lg:order-last mx-auto lg:mx-0 flex-shrink-0"
+        className="relative w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] lg:w-[420px] lg:h-[420px] border border-gray-200 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 order-first lg:order-last mx-auto lg:mx-0 flex-shrink-0"
         variants={itemVariants}
       >
         <motion.img

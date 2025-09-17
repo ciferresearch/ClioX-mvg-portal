@@ -56,6 +56,30 @@ const researchPapers: ResearchPaper[] = [
     topic: 'education',
     abstract:
       'Educational module introducing AI competencies for archival professionals.'
+  },
+  // duplicate for testing:
+  // Example test paper for development/testing purposes
+  {
+    id: 'test-2024-sample',
+    title: 'Test Paper: Sample for Development',
+    authors: ['Test Author'],
+    year: 2024,
+    link: 'https://example.com/test-paper',
+    group: 'testing',
+    topic: 'publications',
+    abstract:
+      'This is a sample research paper entry used for testing and development purposes.'
+  },
+  {
+    id: 'test-2024-sample',
+    title: 'Test Paper: Sample for Development',
+    authors: ['Test Author'],
+    year: 2024,
+    link: 'https://example.com/test-paper',
+    group: 'testing',
+    topic: 'publications',
+    abstract:
+      'This is a sample research paper entry used for testing and development purposes.'
   }
 ]
 
