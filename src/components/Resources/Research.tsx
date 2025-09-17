@@ -270,7 +270,7 @@ export default function Research(): ReactElement {
           return (
             <motion.div
               key={topic.id}
-              className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 transition-[box-shadow] duration-200"
+              className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 transition-[box-shadow] duration-200 hover:shadow-lg hover:-translate-y-1  transition-all duration-200"
               style={{ borderTopColor: '#c8794d' }}
               variants={topicCardVariants}
             >
