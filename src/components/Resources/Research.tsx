@@ -1,4 +1,4 @@
-import { ReactElement, useState, useMemo } from 'react'
+import { ReactElement, useEffect, useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import { ResearchSortBy, ResearchGroup } from './types'
@@ -11,6 +11,7 @@ import {
 } from '@/utils/loadResearch'
 import FeaturedResearchCard from './shared/FeaturedResearchCard'
 import CustomDropdown from './shared/CustomDropdown'
+import { ResearchTopicListEmbedded } from './ResearchTopicList'
 
 // (removed) Manual height measurement replaced by layout animations
 
@@ -18,7 +19,14 @@ export default function Research(): ReactElement {
   const [sortBy, setSortBy] = useState<ResearchSortBy>('date-desc')
   const [filterGroup, setFilterGroup] = useState<ResearchGroup>('all')
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
-  const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
+  const [activeTopicList, setActiveTopicList] = useState<string | null>(null)
+  const [listPage, setListPage] = useState<number>(1)
+
+  useEffect(() => {
+    if (activeTopicList) {
+      setListPage(1)
+    }
+  }, [sortBy, filterGroup, activeTopicList])
 
   const researchTopics = getResearchTopics()
   const sortOptions = getSortOptions()
@@ -27,19 +35,6 @@ export default function Research(): ReactElement {
   // Toggle accordion for mobile
   const toggleTopic = (topicId: string) => {
     setExpandedTopics((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(topicId)) {
-        newSet.delete(topicId)
-      } else {
-        newSet.add(topicId)
-      }
-      return newSet
-    })
-  }
-
-  // Toggle list expansion within a topic box (show 3 by default)
-  const toggleListExpand = (topicId: string) => {
-    setExpandedLists((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(topicId)) {
         newSet.delete(topicId)
@@ -67,6 +62,11 @@ export default function Research(): ReactElement {
       }
     })
   }, [researchTopics, sortBy, filterGroup])
+
+  const selectedTopic = useMemo(
+    () => processedTopics.find((t) => t.id === activeTopicList),
+    [processedTopics, activeTopicList]
+  )
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -148,173 +148,141 @@ export default function Research(): ReactElement {
         />
       </motion.div>
 
-      {/* Research Topics Grid */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        variants={containerVariants}
-      >
-        {processedTopics.map((topic) => {
-          const isListExpanded = expandedLists.has(topic.id)
-          const hasMoreThanThree = topic.papers.length > 3
+      {/* Embedded List or Topics Grid */}
+      {activeTopicList && selectedTopic ? (
+        <motion.div variants={itemVariants}>
+          <ResearchTopicListEmbedded
+            topic={selectedTopic}
+            sortBy={sortBy}
+            filterGroup={filterGroup}
+            onChangeSort={(value) => setSortBy(value)}
+            onChangeGroup={(value) => setFilterGroup(value)}
+            page={listPage}
+            onChangePage={(p) => setListPage(p + 1)}
+            onBack={() => {
+              setActiveTopicList(null)
+              setListPage(1)
+            }}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={containerVariants}
+        >
+          {processedTopics.map((topic) => {
+            const hasMoreThanThree = topic.papers.length > 3
 
-          const TopicDetails = (): ReactElement => {
-            const alwaysVisiblePapers = topic.papers.slice(0, 3)
-            const extraPapers = hasMoreThanThree ? topic.papers.slice(3) : []
+            const TopicDetails = (): ReactElement => {
+              const previewPapers = topic.papers.slice(0, 3)
+              const remainingCount = topic.papers.length - previewPapers.length
+
+              return (
+                <div className="antialiased">
+                  {topic.comingSoon ? (
+                    <p className="text-gray-500 italic text-base">
+                      Coming soon...
+                    </p>
+                  ) : topic.papers.length === 0 ? (
+                    <p className="text-gray-500 italic text-base">
+                      {filterGroup !== 'all'
+                        ? 'No papers match your filter criteria.'
+                        : 'No papers available.'}
+                    </p>
+                  ) : (
+                    <>
+                      <ul className="space-y-4">
+                        {previewPapers.map((paper) => (
+                          <li key={paper.id} className="text-base">
+                            <a
+                              href={paper.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-900 hover:text-[color:var(--color-primary)] hover:underline transition-colors duration-200 leading-relaxed"
+                            >
+                              {paper.authors.join(', ')} ({paper.year}).{' '}
+                              {paper.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                      {hasMoreThanThree && (
+                        <p className="mt-3 text-sm text-gray-500">
+                          {remainingCount}{' '}
+                          {remainingCount === 1
+                            ? 'more paper available.'
+                            : 'more papers available.'}
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {!topic.comingSoon && hasMoreThanThree && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTopicList(topic.id)
+                          setListPage(1)
+                        }}
+                        className="text-sm font-medium underline cursor-pointer text-[color:var(--color-primary)] hover:text-[color:var(--color-secondary)]"
+                      >
+                        View all
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            }
 
             return (
-              <div className="antialiased">
-                {topic.comingSoon ? (
-                  <p className="text-gray-500 italic text-base">
-                    Coming soon...
-                  </p>
-                ) : topic.papers.length === 0 ? (
-                  <p className="text-gray-500 italic text-base">
-                    {filterGroup !== 'all'
-                      ? 'No papers match your filter criteria.'
-                      : 'No papers available.'}
-                  </p>
-                ) : (
-                  <>
-                    <ul className="space-y-4">
-                      {alwaysVisiblePapers.map((paper) => (
-                        <li key={paper.id} className="text-base">
-                          <a
-                            href={paper.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-900 hover:text-amber-700 hover:underline transition-colors duration-200 leading-relaxed"
-                          >
-                            {paper.authors.join(', ')} ({paper.year}).{' '}
-                            {paper.title}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                    {hasMoreThanThree && (
-                      <AnimatePresence initial={false}>
-                        {isListExpanded && (
-                          <motion.div
-                            key={`${topic.id}-extra`}
-                            initial={{ height: 0 }}
-                            animate={{ height: 'auto' }}
-                            exit={{ height: 0 }}
-                            transition={{
-                              duration: 0.32,
-                              ease: [0.22, 1, 0.36, 1]
-                            }}
-                            style={{ overflow: 'hidden' }}
-                          >
-                            <motion.ul
-                              className="space-y-4 mt-4"
-                              initial="hidden"
-                              animate="visible"
-                              variants={{
-                                hidden: {},
-                                visible: {
-                                  transition: {
-                                    staggerChildren: 0.04,
-                                    delayChildren: 0.06
-                                  }
-                                }
-                              }}
-                            >
-                              {extraPapers.map((paper) => (
-                                <motion.li
-                                  key={paper.id}
-                                  className="text-base"
-                                  variants={{
-                                    hidden: { opacity: 0, y: 6 },
-                                    visible: { opacity: 1, y: 0 }
-                                  }}
-                                  transition={{
-                                    duration: 0.18,
-                                    ease: [0.4, 0, 0.2, 1]
-                                  }}
-                                >
-                                  <a
-                                    href={paper.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-900 hover:text-amber-700 hover:underline transition-colors duration-200 leading-relaxed"
-                                  >
-                                    {paper.authors.join(', ')} ({paper.year}).{' '}
-                                    {paper.title}
-                                  </a>
-                                </motion.li>
-                              ))}
-                            </motion.ul>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    )}
-                  </>
-                )}
-                {!topic.comingSoon && hasMoreThanThree && (
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => toggleListExpand(topic.id)}
-                      aria-expanded={isListExpanded}
-                      className="text-sm font-medium text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                    >
-                      {isListExpanded
-                        ? 'Show less'
-                        : `Show more (${topic.papers.length - 3})`}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          }
-
-          return (
-            <motion.div
-              key={topic.id}
-              className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 transition-[box-shadow] duration-200 hover:shadow-lg hover:-translate-y-1  transition-all duration-200"
-              style={{ borderTopColor: '#c8794d' }}
-              variants={topicCardVariants}
-            >
-              {/* Topic Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900 m-0">
-                  {topic.title}
-                </h3>
-                {/* Mobile accordion toggle */}
-                <button
-                  onClick={() => toggleTopic(topic.id)}
-                  className="md:hidden p-1 text-gray-500 hover:text-gray-700"
-                  aria-label={`Toggle ${topic.title} section`}
-                >
-                  {expandedTopics.has(topic.id) ? (
-                    <ChevronUpIcon className="w-5 h-5" />
-                  ) : (
-                    <ChevronDownIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-
-              <div className="hidden md:block">
-                <TopicDetails />
-              </div>
-
-              <AnimatePresence initial={false}>
-                {expandedTopics.has(topic.id) && (
-                  <motion.div
-                    key={`${topic.id}-mobile`}
-                    className="md:hidden"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12, ease: [0.4, 0, 0.2, 1] }}
+              <motion.div
+                key={topic.id}
+                className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 transition-[box-shadow] duration-200 hover:shadow-lg hover:-translate-y-1  transition-all duration-200"
+                style={{ borderTopColor: 'var(--color-primary)' }}
+                variants={topicCardVariants}
+              >
+                {/* Topic Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 m-0">
+                    {topic.title}
+                  </h3>
+                  {/* Mobile accordion toggle */}
+                  <button
+                    onClick={() => toggleTopic(topic.id)}
+                    className="md:hidden p-1 text-gray-500 hover:text-gray-700"
+                    aria-label={`Toggle ${topic.title} section`}
                   >
-                    <TopicDetails />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )
-        })}
-      </motion.div>
+                    {expandedTopics.has(topic.id) ? (
+                      <ChevronUpIcon className="w-5 h-5" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="hidden md:block">
+                  <TopicDetails />
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {expandedTopics.has(topic.id) && (
+                    <motion.div
+                      key={`${topic.id}-mobile`}
+                      className="md:hidden"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.12, ease: [0.4, 0, 0.2, 1] }}
+                    >
+                      <TopicDetails />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+      )}
     </motion.div>
   )
 }
