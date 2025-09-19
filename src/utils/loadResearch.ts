@@ -4,8 +4,9 @@ import {
   ResearchSortBy,
   ResearchGroup
 } from '@/components/Resources/types'
+import presentationsIndex from '../../content/resources/research/presentations.json'
 
-// Research papers data
+// Research papers data (publications, education modules, etc.)
 const researchPapers: ResearchPaper[] = [
   {
     id: 'cameron-2025-navigating',
@@ -59,6 +60,35 @@ const researchPapers: ResearchPaper[] = [
   }
 ]
 
+// Map presentations JSON to ResearchPaper shape with presentation-specific fields populated
+const presentationsPapers: ResearchPaper[] = (
+  (presentationsIndex as any).presentations || []
+).map((p: any) => {
+  const date = p.date as string | undefined
+  const endDate = p.endDate as string | undefined
+  const city = p.city as string | undefined
+  const country = p.country as string | undefined
+  const eventName = p.eventName as string | undefined
+  const role = p.role as string | undefined
+
+  return {
+    id: p.id,
+    title: p.title,
+    authors: p.authors || [],
+    year: date ? new Date(date).getFullYear() : new Date().getFullYear(),
+    link: p.link || '#',
+    group: 'presentations',
+    topic: 'presentations',
+    abstract: undefined,
+    date,
+    endDate,
+    eventName,
+    location:
+      city && country ? `${city}, ${country}` : city || country || undefined,
+    role
+  } as ResearchPaper
+})
+
 // Research topics configuration
 const researchTopics: ResearchTopic[] = [
   {
@@ -69,8 +99,7 @@ const researchTopics: ResearchTopic[] = [
   {
     id: 'presentations',
     title: 'Presentations',
-    papers: [],
-    comingSoon: true
+    papers: presentationsPapers
   },
   {
     id: 'education',
@@ -91,12 +120,14 @@ export function sortResearchPapers(
   sortBy: ResearchSortBy
 ): ResearchPaper[] {
   const sortedPapers = [...papers]
+  const toTimestamp = (p: ResearchPaper) =>
+    p.date ? new Date(p.date).getTime() : new Date(`${p.year}-01-01`).getTime()
 
   switch (sortBy) {
     case 'date-desc':
-      return sortedPapers.sort((a, b) => b.year - a.year)
+      return sortedPapers.sort((a, b) => toTimestamp(b) - toTimestamp(a))
     case 'date-asc':
-      return sortedPapers.sort((a, b) => a.year - b.year)
+      return sortedPapers.sort((a, b) => toTimestamp(a) - toTimestamp(b))
     case 'title-asc':
       return sortedPapers.sort((a, b) => a.title.localeCompare(b.title))
     case 'title-desc':
@@ -138,20 +169,23 @@ export function getResearchPapersByTopic(topicId: string): ResearchPaper[] {
 
 // Get all research papers
 export function getAllResearchPapers(): ResearchPaper[] {
-  return researchPapers
+  return [...researchPapers, ...presentationsPapers]
 }
 
 // Search research papers
 export function searchResearchPapers(query: string): ResearchPaper[] {
   const searchTerm = query.toLowerCase()
-  return researchPapers.filter(
+  return [...researchPapers, ...presentationsPapers].filter(
     (paper) =>
       paper.title.toLowerCase().includes(searchTerm) ||
       paper.authors.some((author) =>
         author.toLowerCase().includes(searchTerm)
       ) ||
       paper.abstract?.toLowerCase().includes(searchTerm) ||
-      paper.group.toLowerCase().includes(searchTerm)
+      paper.group.toLowerCase().includes(searchTerm) ||
+      paper.eventName?.toLowerCase().includes(searchTerm) ||
+      paper.location?.toLowerCase().includes(searchTerm) ||
+      paper.role?.toLowerCase().includes(searchTerm)
   )
 }
 
