@@ -21,23 +21,19 @@
       "name": "Use Cases",
       "subItems": [
         {
-          "name": "Email Text Analysis Visualization",
+          "name": "Email Text Visual Analysis",
           "link": "/usecases/textAnalysis"
         },
         {
-          "name": "Cameroon Gazette Analysis",
+          "name": "Cameroon Gazette Visual Analysis",
           "link": "/usecases/cameroonGazette"
-        },
-        {
-          "name": "AI Chatbot Assistant (Iris)",
-          "link": "/usecases/chatbotIris"
         },
         {
           "name": "AI Chatbot Assistant (Cameroon)",
           "link": "/usecases/chatbotCameroon"
         },
         {
-          "name": "AI Chatbot Assistant (Intepares)",
+          "name": "AI Chatbot Assistant (InterPARES)",
           "link": "/usecases/chatbotIntepares"
         }
       ]

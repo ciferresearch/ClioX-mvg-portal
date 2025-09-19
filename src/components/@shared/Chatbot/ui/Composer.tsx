@@ -4,7 +4,8 @@ import {
   IconSettings,
   IconSend,
   IconCopy,
-  IconPlayerStopFilled
+  IconPlayerStopFilled,
+  IconX
 } from '@tabler/icons-react'
 import type { KnowledgeStatus } from '../../../../@utils/chatbot'
 import type { AssistantState } from '../hooks/useChat'
@@ -54,6 +55,26 @@ function InputContainer({
 }: InputContainerProps): ReactElement {
   const anchorRef = useRef<HTMLDivElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
+  const autoHideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hintVisible, setHintVisible] = useState(false)
+  const statusLabel = (s?: AssistantState) => {
+    switch (s) {
+      case 'uploading':
+        return 'Uploading knowledge…'
+      case 'processing':
+        return 'Processing knowledge…'
+      case 'ready':
+        return 'Ready'
+      case 'no-knowledge':
+        return 'No knowledge'
+      case 'backend-error':
+        return 'Assistant unavailable'
+      case 'connecting':
+        return 'Checking status…'
+      default:
+        return 'Unknown'
+    }
+  }
 
   // Close on outside click or ESC
   useEffect(() => {
@@ -75,6 +96,32 @@ function InputContainer({
     }
   }, [isInfoOpen, onToggleInfo])
 
+  // Show a small status hint near the Settings icon for lifecycle states
+  useEffect(() => {
+    // Clear any existing timer
+    if (autoHideRef.current) {
+      clearTimeout(autoHideRef.current)
+      autoHideRef.current = null
+    }
+
+    if (assistantStatus === 'uploading' || assistantStatus === 'processing') {
+      // Persist while busy
+      setHintVisible(true)
+    } else if (assistantStatus === 'ready') {
+      // Brief success confirmation, then auto-hide
+      setHintVisible(true)
+      autoHideRef.current = setTimeout(() => setHintVisible(false), 5000)
+    } else {
+      setHintVisible(false)
+    }
+    return () => {
+      if (autoHideRef.current) {
+        clearTimeout(autoHideRef.current)
+        autoHideRef.current = null
+      }
+    }
+  }, [assistantStatus])
+
   return (
     <div className="bg-[#F8F7F5] rounded-2xl p-3 space-y-4 relative">
       <form onSubmit={onSubmit} className="space-y-4">
@@ -93,7 +140,7 @@ function InputContainer({
         />
 
         <div className="flex justify-between items-center mb-0">
-          <div className="flex items-center relative" ref={anchorRef}>
+          <div className="flex items-center gap-2 relative" ref={anchorRef}>
             <button
               type="button"
               onClick={onToggleInfo}
@@ -102,6 +149,42 @@ function InputContainer({
             >
               <IconSettings className="h-4 w-4 text-gray-700" />
             </button>
+            {hintVisible && (
+              <motion.div
+                initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                role="status"
+                aria-live="polite"
+                className={`h-8 inline-flex items-center gap-2 max-w-[520px] whitespace-nowrap truncate rounded-lg border px-2 text-xs bg-white border-gray-300 text-[#4c5167]`}
+              >
+                <span
+                  className={`inline-block h-2.5 w-2.5 rounded-full ${
+                    assistantStatus === 'uploading'
+                      ? 'bg-blue-500 animate-pulse'
+                      : assistantStatus === 'processing'
+                      ? 'bg-cyan-500 animate-pulse'
+                      : 'bg-emerald-500'
+                  }`}
+                />
+                <span className="truncate">
+                  {assistantStatus === 'uploading'
+                    ? 'Uploading knowledge — input disabled'
+                    : assistantStatus === 'processing'
+                    ? 'Processing data — input disabled'
+                    : 'Knowledge ready — you can start chatting'}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Dismiss status"
+                  className="ml-1 p-0.5 rounded hover:bg-white/50 text-inherit cursor-pointer"
+                  onClick={() => setHintVisible(false)}
+                >
+                  <IconX className="h-3.5 w-3.5" />
+                </button>
+              </motion.div>
+            )}
             {isInfoOpen && (
               <motion.div
                 ref={popoverRef}
@@ -141,7 +224,7 @@ function InputContainer({
                     Assistant
                   </div>
                   <div className="text-xs text-[#4c5167]">
-                    Status: {assistantStatus || 'unknown'}
+                    Status: {statusLabel(assistantStatus)}
                   </div>
                   {backendError && (
                     <div className="text-xs text-red-600 mt-1">
@@ -285,12 +368,16 @@ export default function Composer({
         ? 'Gathering details to give you the best response...'
         : 'Preparing your answer...'
     }
+    // Short, consistent placeholder to reinforce state even when disabled
+    if (assistantStatus === 'uploading')
+      return 'Uploading knowledge… Please wait.'
+    if (assistantStatus === 'processing')
+      return 'Processing knowledge… Please wait.'
+    if (assistantStatus === 'backend-error') return 'Assistant unavailable...'
+
+    // If no knowledge exists yet (and not currently uploading/processing)
     if (!knowledgeStatus?.has_knowledge)
       return 'Please add a knowledge base to start chatting...'
-    if (assistantStatus === 'connecting') return 'Connecting to assistant...'
-    if (assistantStatus === 'uploading') return 'Uploading files...'
-    if (assistantStatus === 'processing') return 'Processing...'
-    if (assistantStatus === 'backend-error') return 'Assistant unavailable...'
 
     // Default placeholders when everything is working
     return isHeroVariant ? 'How can I help you today?' : 'Ask me anything...'

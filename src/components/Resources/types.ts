@@ -41,6 +41,12 @@ export interface ResearchPaper {
   topic: string
   abstract?: string
   doi?: string
+  // Optional fields primarily for presentations
+  date?: string
+  endDate?: string
+  eventName?: string
+  location?: string
+  role?: string
 }
 
 export interface ResearchTopic {
