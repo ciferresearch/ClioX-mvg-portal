@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useState, useMemo } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { IconBrandLinkedin } from '@tabler/icons-react'
 import { ResearchSortBy, ResearchGroup } from './types'
 import {
   getResearchTopics,
@@ -13,20 +14,12 @@ import FeaturedResearchCard from './shared/FeaturedResearchCard'
 import CustomDropdown from './shared/CustomDropdown'
 import { ResearchTopicListEmbedded } from './ResearchTopicList'
 
-// (removed) Manual height measurement replaced by layout animations
-
 export default function Research(): ReactElement {
   const [sortBy, setSortBy] = useState<ResearchSortBy>('date-desc')
   const [filterGroup, setFilterGroup] = useState<ResearchGroup>('all')
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set())
   const [activeTopicList, setActiveTopicList] = useState<string | null>(null)
   const [listPage, setListPage] = useState<number>(1)
-
-  useEffect(() => {
-    if (activeTopicList) {
-      setListPage(1)
-    }
-  }, [sortBy, filterGroup, activeTopicList])
 
   const researchTopics = getResearchTopics()
   const sortOptions = getSortOptions()
@@ -68,6 +61,13 @@ export default function Research(): ReactElement {
     [processedTopics, activeTopicList]
   )
 
+  // Reset pagination when sort/filter/topic changes
+  useEffect(() => {
+    if (activeTopicList) {
+      setListPage(1)
+    }
+  }, [sortBy, filterGroup, activeTopicList])
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -83,6 +83,51 @@ export default function Research(): ReactElement {
       y: 0,
       transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
     }
+  }
+
+  // Helper: format ISO date → Month D, YYYY
+  const formatPrettyDate = (iso?: string) => {
+    if (!iso) return ''
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    } catch {
+      return iso
+    }
+  }
+
+  // Helper: shorter date for compact list (e.g., "Oct 28, 2025")
+  const formatShortDate = (iso?: string) => {
+    if (!iso) return ''
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch {
+      return iso
+    }
+  }
+
+  // Build compact meta line for presentations with authors first
+  // Order: Authors • Event • Location • Date [Role]
+  const buildPresentationMeta = (paper: any) => {
+    const segs: string[] = []
+    if (paper?.authors && paper.authors.length > 0) {
+      segs.push(
+        paper.authors.length > 2
+          ? `${paper.authors[0]} et al.`
+          : paper.authors.join(', ')
+      )
+    }
+    if (paper?.eventName) segs.push(paper.eventName)
+    if (paper?.location) segs.push(paper.location)
+    if (paper?.date) segs.push(formatShortDate(paper.date))
+    return segs.join(' • ') + (paper?.role ? ` [${paper.role}]` : '')
   }
 
   // Topic cards: use fade only to avoid any perceived parent shift after animation
@@ -147,7 +192,6 @@ export default function Research(): ReactElement {
           id="filter-select"
         />
       </motion.div>
-
       {/* Embedded List or Topics Grid */}
       {activeTopicList && selectedTopic ? (
         <motion.div variants={itemVariants}>
@@ -194,15 +238,75 @@ export default function Research(): ReactElement {
                       <ul className="space-y-4">
                         {previewPapers.map((paper) => (
                           <li key={paper.id} className="text-base">
-                            <a
-                              href={paper.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-gray-900 hover:text-[color:var(--color-primary)] hover:underline transition-colors duration-200 leading-relaxed"
-                            >
-                              {paper.authors.join(', ')} ({paper.year}).{' '}
-                              {paper.title}
-                            </a>
+                            {topic.id === 'public-relations' ? (
+                              <a
+                                href={paper.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex w-full items-start gap-2 text-gray-900 hover:text-amber-700 transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700/40 rounded-md"
+                                title={`${paper.title} (${paper.year})`}
+                              >
+                                <IconBrandLinkedin
+                                  size={16}
+                                  className="text-amber-700 opacity-80 group-hover:opacity-100 self-start mt-[4px]"
+                                  aria-hidden="true"
+                                />
+                                <span
+                                  className="min-w-0 flex-1 leading-snug underline-offset-2 group-hover:underline"
+                                  aria-label={paper.title}
+                                >
+                                  <span className="text-sm md:text-base">
+                                    {paper.title}
+                                  </span>
+                                  <span className="inline-flex items-baseline whitespace-nowrap text-xs text-gray-400 group-hover:text-amber-700 before:content-['·'] before:mx-1 before:text-current before:opacity-60">
+                                    {paper.year}
+                                    <span aria-hidden="true" className="ml-1">
+                                      ↗
+                                    </span>
+                                  </span>
+                                </span>
+                              </a>
+                            ) : (
+                              <a
+                                href={paper.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group block text-gray-900 transition-colors duration-200 leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700/40 rounded-md"
+                                title={
+                                  topic.id === 'presentations'
+                                    ? `${paper.authors.join(', ')}. ${
+                                        paper.title
+                                      } — ${paper.eventName}${
+                                        paper.location
+                                          ? `, ${paper.location}`
+                                          : ''
+                                      }${
+                                        paper.date
+                                          ? `, ${formatPrettyDate(paper.date)}`
+                                          : ''
+                                      }${paper.role ? ` [${paper.role}]` : ''}`
+                                    : `${paper.authors.join(', ')} (${
+                                        paper.year
+                                      }). ${paper.title}`
+                                }
+                              >
+                                {topic.id === 'presentations' ? (
+                                  <>
+                                    <div className="truncate transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
+                                      {paper.title}
+                                    </div>
+                                    <div className="text-gray-600 text-sm transition-colors duration-200 group-hover:text-amber-700/80 group-hover:underline">
+                                      {buildPresentationMeta(paper)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <span className="transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
+                                    {paper.authors.join(', ')} ({paper.year}).{' '}
+                                    {paper.title}
+                                  </span>
+                                )}
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -220,11 +324,8 @@ export default function Research(): ReactElement {
                     <div className="mt-4">
                       <button
                         type="button"
-                        onClick={() => {
-                          setActiveTopicList(topic.id)
-                          setListPage(1)
-                        }}
-                        className="text-sm font-medium underline cursor-pointer text-[color:var(--color-primary)] hover:text-[color:var(--color-secondary)]"
+                        onClick={() => setActiveTopicList(topic.id)}
+                        className="text-sm font-medium underline cursor-pointer text-amber-700 hover:text-amber-600"
                       >
                         View all
                       </button>
@@ -241,12 +342,10 @@ export default function Research(): ReactElement {
                 style={{ borderTopColor: 'var(--color-primary)' }}
                 variants={topicCardVariants}
               >
-                {/* Topic Header */}
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-gray-900 m-0">
                     {topic.title}
                   </h3>
-                  {/* Mobile accordion toggle */}
                   <button
                     onClick={() => toggleTopic(topic.id)}
                     className="md:hidden p-1 text-gray-500 hover:text-gray-700"
