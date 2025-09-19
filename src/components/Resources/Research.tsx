@@ -220,6 +220,18 @@ export default function Research(): ReactElement {
             const TopicDetails = (): ReactElement => {
               const previewPapers = topic.papers.slice(0, 3)
               const remainingCount = topic.papers.length - previewPapers.length
+              const [singularNoun, pluralNoun] = (() => {
+                switch (topic.id) {
+                  case 'presentations':
+                    return ['presentation', 'presentations'] as const
+                  case 'education':
+                    return ['module', 'modules'] as const
+                  case 'public-relations':
+                    return ['post', 'posts'] as const
+                  default:
+                    return ['paper', 'papers'] as const
+                }
+              })()
 
               return (
                 <div className="antialiased flex flex-col gap-3 md:gap-4 md:h-full w-full">
@@ -315,8 +327,8 @@ export default function Research(): ReactElement {
                           <span className="text-gray-500">
                             {remainingCount}{' '}
                             {remainingCount === 1
-                              ? 'more paper available.'
-                              : 'more papers available.'}
+                              ? `more ${singularNoun} available.`
+                              : `more ${pluralNoun} available.`}
                           </span>
                           <button
                             type="button"

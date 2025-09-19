@@ -60,6 +60,38 @@ function getPaginationMeta(papers: ResearchPaper[], page: number) {
   }
 }
 
+// Helpers: date formatting and presentation meta
+const formatShortDate = (iso?: string) => {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch {
+    return iso ?? ''
+  }
+}
+
+const buildPresentationMeta = (paper: ResearchPaper) => {
+  const segs: string[] = []
+  if (paper?.authors && paper.authors.length > 0) {
+    segs.push(
+      paper.authors.length > 2
+        ? `${paper.authors[0]} et al.`
+        : paper.authors.join(', ')
+    )
+  }
+  if ((paper as any)?.eventName) segs.push((paper as any).eventName as string)
+  if ((paper as any)?.location) segs.push((paper as any).location as string)
+  if ((paper as any)?.date)
+    segs.push(formatShortDate((paper as any).date as string))
+  return (
+    segs.join(' • ') + ((paper as any)?.role ? ` [${(paper as any).role}]` : '')
+  )
+}
+
 function ResearchTopicListView({
   topic,
   processedPapers,
@@ -77,6 +109,14 @@ function ResearchTopicListView({
 }: ResearchTopicListViewProps): ReactElement {
   const groupLabelMap = useGroupLabelMap(filterOptions)
   const hasActiveFilters = filterGroup !== 'all'
+  const nounPlural =
+    topic?.id === 'presentations'
+      ? 'presentations'
+      : topic?.id === 'education'
+      ? 'modules'
+      : topic?.id === 'public-relations'
+      ? 'posts'
+      : 'papers'
 
   const {
     visibleResults,
@@ -143,8 +183,8 @@ function ResearchTopicListView({
                 </h2>
                 <p className="text-sm text-slate-600">
                   {visibleResults === 0
-                    ? 'No matching papers at the moment.'
-                    : `Showing ${currentRangeStart}-${currentRangeEnd} of ${visibleResults} curated papers.`}
+                    ? 'No matching items at the moment.'
+                    : `Showing ${currentRangeStart}-${currentRangeEnd} of ${visibleResults} curated ${nounPlural}.`}
                 </p>
               </div>
               {hasActiveFilters && (
@@ -258,15 +298,21 @@ function ResearchTopicListView({
                             <span>{paper.title}</span>
                             <IconExternalLink className="h-4 w-4" />
                           </a>
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-                            <span>{paper.authors.join(', ')}</span>
-                            <span className="hidden text-slate-300 sm:inline">
-                              •
-                            </span>
-                            <span className="font-medium text-slate-700">
-                              {paper.year}
-                            </span>
-                          </div>
+                          {paper.group === 'presentations' ? (
+                            <div className="text-sm text-slate-600">
+                              {buildPresentationMeta(paper)}
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                              <span>{paper.authors.join(', ')}</span>
+                              <span className="hidden text-slate-300 sm:inline">
+                                •
+                              </span>
+                              <span className="font-medium text-slate-700">
+                                {paper.year}
+                              </span>
+                            </div>
+                          )}
                           {paper.abstract && (
                             <p className="text-sm leading-relaxed text-slate-600">
                               {paper.abstract}
@@ -283,7 +329,9 @@ function ResearchTopicListView({
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 text-[color:var(--color-primary)] border-[color:var(--color-highlight)] bg-[color:var(--background-body-transparent)] hover:text-[color:var(--color-highlight)] hover:border-[color:var(--color-highlight)]"
                           >
-                            View paper
+                            {paper.group === 'presentations'
+                              ? 'View presentation'
+                              : 'View paper'}
                             <IconExternalLink className="h-4 w-4" />
                           </a>
                         </div>
