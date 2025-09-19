@@ -112,12 +112,12 @@ const presentationsPapers: ResearchPaper[] = (
 const researchTopics: ResearchTopic[] = [
   {
     id: 'publications',
-    title: 'Publications',
+    title: 'Recent Publications',
     papers: researchPapers.filter((paper) => paper.topic === 'publications')
   },
   {
     id: 'presentations',
-    title: 'Presentations',
+    title: 'Recent Presentations',
     papers: presentationsPapers
   },
   {
