@@ -332,15 +332,6 @@ export default function JobList(props: {
   return (
     <div className={styles.accordionWrapper}>
       <Accordion title="Compute Jobs" defaultExpanded>
-        {/* Knowledge upload status */}
-        {isUploadingKnowledge && (
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-            <p className="text-blue-600 text-sm">
-              🔄 Uploading knowledge to backend API...
-            </p>
-          </div>
-        )}
-
         <ComputeJobs
           jobs={jobs}
           isLoading={isLoadingJobs}

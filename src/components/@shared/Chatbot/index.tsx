@@ -54,10 +54,10 @@ export default function ChatbotViz({
       const hasKnowledge = Boolean(status?.has_knowledge)
 
       // Derive assistant state
-      if (
-        assistantStatusRef.current === 'uploading' ||
-        assistantStatusRef.current === 'processing'
-      ) {
+      // Preserve 'uploading' while an upload is in-flight so UI shows correct status.
+      if (assistantStatusRef.current === 'uploading') {
+        setAssistantStatus('uploading')
+      } else if (assistantStatusRef.current === 'processing') {
         setAssistantStatus(hasKnowledge ? 'ready' : 'processing')
       } else {
         setAssistantStatus(hasKnowledge ? 'ready' : 'no-knowledge')
