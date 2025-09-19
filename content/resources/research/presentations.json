@@ -1,0 +1,79 @@
+{
+  "presentations": [
+    {
+      "id": "cliox-ica-2025-barcelona",
+      "title": "ClioX: A Novel Decentralized Platform for Digital Asset Reference & Access",
+      "authors": [
+        "Victoria Lemieux",
+        "Roberto Garcia",
+        "Rosa Gil",
+        "Zehua Wang",
+        "Luis De La Torre",
+        "Gontse Molosiwa",
+        "Qihong Zhou",
+        "Pepita Raventós"
+      ],
+      "role": "Presenter",
+      "eventName": "International Council on Archives Congress",
+      "city": "Barcelona",
+      "country": "Spain",
+      "date": "2025-10-28",
+      "link": ""
+    },
+    {
+      "id": "cliox-ara-2025-bristol",
+      "title": "ClioX: A Novel Decentralized Platform for Digital Asset Reference & Access",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "Archives and Records Association of the UK Annual Conference",
+      "city": "Bristol",
+      "country": "United Kingdom",
+      "date": "2025-08-30",
+      "link": "https://openingdoors.eventsair.com/ara2025/"
+    },
+    {
+      "id": "sociocultural-dynamics-aom-2025-copenhagen",
+      "title": "The Socio-Cultural Dynamics of Blockchain Platforms: Beyond Decentralization and Algorithms",
+      "authors": ["Victoria Lemieux"],
+      "role": "Discussant",
+      "eventName": "Academy of Management Conference",
+      "city": "Copenhagen",
+      "country": "Denmark",
+      "date": "2025-07-29",
+      "link": ""
+    },
+    {
+      "id": "clio-x-lustre-glow-2025-manchester",
+      "title": "Clio-X Cultural Heritage and Archives Ecosystem",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "LUSTRE/GLOW Workshop",
+      "city": "Manchester",
+      "country": "United Kingdom",
+      "date": "2025-07-22",
+      "link": ""
+    },
+    {
+      "id": "clio-x-interpares-2025-bologna",
+      "title": "Clio-X Cultural Heritage and Archives Ecosystem",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "InterPARES Trust AI Symposium",
+      "city": "Bologna",
+      "country": "Italy",
+      "date": "2025-06-20",
+      "link": ""
+    },
+    {
+      "id": "clio-x-marburg-2025",
+      "title": "Clio-X Cultural Heritage and Archives Ecosystem",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "Archivwissenschaftliches Kolloquium",
+      "city": "Marburg",
+      "country": "Germany",
+      "date": "2025-05-20",
+      "link": ""
+    }
+  ]
+}
