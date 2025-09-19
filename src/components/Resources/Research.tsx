@@ -242,18 +242,22 @@ export default function Research(): ReactElement {
                         >
                           <IconBrandLinkedin
                             size={16}
-                            className="text-amber-700 opacity-80 group-hover:opacity-100 self-start mt-[3px]"
+                            className="text-amber-700 opacity-80 group-hover:opacity-100 self-start mt-[4px]"
                             aria-hidden="true"
                           />
+                          {/* Title + year cluster (A+C): native underline; year+arrow kept on same line and bridged with a middot */}
                           <span
-                            className="min-w-0 flex-1 leading-snug underline-offset-2 group-hover:underline after:ml-1 after:content-['↗'] after:text-gray-400 group-hover:after:text-amber-700"
+                            className="min-w-0 flex-1 leading-snug underline-offset-2 group-hover:underline"
                             aria-label={paper.title}
                           >
                             <span className="text-sm md:text-base">
                               {paper.title}
-                            </span>{' '}
-                            <span className="text-xs text-gray-400 group-hover:text-amber-700">
+                            </span>
+                            <span className="inline-flex items-baseline whitespace-nowrap text-xs text-gray-400 group-hover:text-amber-700 before:content-['·'] before:mx-1 before:text-current before:opacity-60">
                               {paper.year}
+                              <span aria-hidden="true" className="ml-1">
+                                ↗
+                              </span>
                             </span>
                           </span>
                         </a>
