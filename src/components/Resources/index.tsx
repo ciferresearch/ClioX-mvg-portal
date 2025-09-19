@@ -59,6 +59,13 @@ export default function Resources({
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const router = useRouter()
+  // Initialize active tab from query (e.g., /resources?tab=research)
+  useEffect(() => {
+    const tabFromQuery = (router.query.tab as string) || ''
+    if (tabFromQuery && tabs.find((t) => t.id === tabFromQuery)) {
+      setActiveTab(tabFromQuery)
+    }
+  }, [router.query.tab])
 
   // Guides tab commented out above; no special filtering needed
 
