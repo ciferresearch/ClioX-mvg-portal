@@ -4,9 +4,10 @@ import {
   ResearchSortBy,
   ResearchGroup
 } from '@/components/Resources/types'
+import prPublicRelations from '../../content/resources/research/public-relations.json'
 
-// Research papers data
-const researchPapers: ResearchPaper[] = [
+// Research papers data (base)
+const baseResearchPapers: ResearchPaper[] = [
   {
     id: 'cameron-2025-navigating',
     title:
@@ -59,6 +60,19 @@ const researchPapers: ResearchPaper[] = [
   }
 ]
 
+// Public Relations posts, modeled as ResearchPaper entries
+const prPapers: ResearchPaper[] = (prPublicRelations as ResearchPaper[]).map(
+  (item) => ({
+    ...item,
+    // Enforce required grouping/topic to align with UI filters
+    group: 'public-relations',
+    topic: 'public-relations'
+  })
+)
+
+// Combined research papers list
+const researchPapers: ResearchPaper[] = [...baseResearchPapers, ...prPapers]
+
 // Research topics configuration
 const researchTopics: ResearchTopic[] = [
   {
@@ -80,8 +94,7 @@ const researchTopics: ResearchTopic[] = [
   {
     id: 'public-relations',
     title: 'Public Relations',
-    papers: [],
-    comingSoon: true
+    papers: researchPapers.filter((paper) => paper.topic === 'public-relations')
   }
 ]
 

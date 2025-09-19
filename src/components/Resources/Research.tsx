@@ -1,6 +1,7 @@
 import { ReactElement, useState, useMemo } from 'react'
 import { motion } from 'motion/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { IconBrandLinkedin } from '@tabler/icons-react'
 import { ResearchSortBy, ResearchGroup } from './types'
 import {
   getResearchTopics,
@@ -183,14 +184,44 @@ export default function Research(): ReactElement {
                 <ul className="space-y-4">
                   {topic.papers.map((paper) => (
                     <li key={paper.id} className="text-base">
-                      <a
-                        href={paper.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-900 hover:text-amber-700 hover:underline transition-colors duration-200 leading-relaxed"
-                      >
-                        {paper.authors.join(', ')} ({paper.year}). {paper.title}
-                      </a>
+                      {topic.id === 'public-relations' ? (
+                        <a
+                          href={paper.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex w-full items-start gap-2 text-gray-900 hover:text-amber-700 transition-colors duration-200"
+                        >
+                          {/* Left icon */}
+                          <IconBrandLinkedin
+                            size={16}
+                            className="text-amber-700 opacity-80 group-hover:opacity-100 self-start mt-[3px]"
+                            aria-hidden="true"
+                          />
+
+                          {/* Title + year inline. External icon drawn via ::after to stay at end of last line */}
+                          <span
+                            className="min-w-0 flex-1 leading-snug underline-offset-2 group-hover:underline after:ml-1 after:content-['↗'] after:text-gray-400 group-hover:after:text-amber-700"
+                            aria-label={paper.title}
+                          >
+                            <span className="text-sm md:text-base">
+                              {paper.title}
+                            </span>{' '}
+                            <span className="text-xs text-gray-400 group-hover:text-amber-700">
+                              {paper.year}
+                            </span>
+                          </span>
+                        </a>
+                      ) : (
+                        <a
+                          href={paper.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-900 hover:text-amber-700 hover:underline transition-colors duration-200 leading-relaxed"
+                        >
+                          {paper.authors.join(', ')} ({paper.year}).{' '}
+                          {paper.title}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
