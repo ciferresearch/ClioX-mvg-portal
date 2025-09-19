@@ -1,6 +1,7 @@
 import { ReactElement, useState, useMemo } from 'react'
 import { motion } from 'motion/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { IconBrandLinkedin } from '@tabler/icons-react'
 import { ResearchSortBy, ResearchGroup } from './types'
 import {
   getResearchTopics,
@@ -231,45 +232,72 @@ export default function Research(): ReactElement {
                     : topic.papers
                   ).map((paper) => (
                     <li key={paper.id} className="text-base">
-                      <a
-                        href={paper.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group block text-gray-900 transition-colors duration-200 leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700/40 rounded-md"
-                        title={
-                          topic.id === 'presentations'
-                            ? `${paper.authors.join(', ')}. ${paper.title} — ${
-                                paper.eventName
-                              }${paper.location ? `, ${paper.location}` : ''}${
-                                paper.date
-                                  ? `, ${formatPrettyDate(paper.date)}`
-                                  : ''
-                              }${paper.role ? ` [${paper.role}]` : ''}`
-                            : `${paper.authors.join(', ')} (${paper.year}). ${
-                                paper.title
-                              }`
-                        }
-                      >
-                        {topic.id === 'presentations' ? (
-                          <>
-                            {/* Title on first line for compact layout */}
-                            <div className="truncate transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
+                      {topic.id === 'public-relations' ? (
+                        <a
+                          href={paper.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex w-full items-start gap-2 text-gray-900 hover:text-amber-700 transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700/40 rounded-md"
+                          title={`${paper.title} (${paper.year})`}
+                        >
+                          <IconBrandLinkedin
+                            size={16}
+                            className="text-amber-700 opacity-80 group-hover:opacity-100 self-start mt-[3px]"
+                            aria-hidden="true"
+                          />
+                          <span
+                            className="min-w-0 flex-1 leading-snug underline-offset-2 group-hover:underline after:ml-1 after:content-['↗'] after:text-gray-400 group-hover:after:text-amber-700"
+                            aria-label={paper.title}
+                          >
+                            <span className="text-sm md:text-base">
                               {paper.title}
-                            </div>
-                            {/* Meta: Authors • Event • Location • Date [Role] */}
-                            <div className="text-gray-600 text-sm transition-colors duration-200 group-hover:text-amber-700/80 group-hover:underline">
-                              {buildPresentationMeta(paper)}
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <span className="transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
-                              {paper.authors.join(', ')} ({paper.year}).{' '}
-                              {paper.title}
+                            </span>{' '}
+                            <span className="text-xs text-gray-400 group-hover:text-amber-700">
+                              {paper.year}
                             </span>
-                          </>
-                        )}
-                      </a>
+                          </span>
+                        </a>
+                      ) : (
+                        <a
+                          href={paper.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group block text-gray-900 transition-colors duration-200 leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-700/40 rounded-md"
+                          title={
+                            topic.id === 'presentations'
+                              ? `${paper.authors.join(', ')}. ${
+                                  paper.title
+                                } — ${paper.eventName}${
+                                  paper.location ? `, ${paper.location}` : ''
+                                }${
+                                  paper.date
+                                    ? `, ${formatPrettyDate(paper.date)}`
+                                    : ''
+                                }${paper.role ? ` [${paper.role}]` : ''}`
+                              : `${paper.authors.join(', ')} (${paper.year}). ${
+                                  paper.title
+                                }`
+                          }
+                        >
+                          {topic.id === 'presentations' ? (
+                            <>
+                              <div className="truncate transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
+                                {paper.title}
+                              </div>
+                              <div className="text-gray-600 text-sm transition-colors duration-200 group-hover:text-amber-700/80 group-hover:underline">
+                                {buildPresentationMeta(paper)}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <span className="transition-colors duration-200 group-hover:text-amber-700 group-hover:underline">
+                                {paper.authors.join(', ')} ({paper.year}).{' '}
+                                {paper.title}
+                              </span>
+                            </>
+                          )}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>

@@ -5,9 +5,10 @@ import {
   ResearchGroup
 } from '@/components/Resources/types'
 import presentationsIndex from '../../content/resources/research/presentations.json'
+import prPublicRelations from '../../content/resources/research/public-relations.json'
 
-// Research papers data (publications, education modules, etc.)
-const researchPapers: ResearchPaper[] = [
+// Base research papers (publications, education modules, etc.)
+const baseResearchPapers: ResearchPaper[] = [
   {
     id: 'cameron-2025-navigating',
     title:
@@ -60,6 +61,24 @@ const researchPapers: ResearchPaper[] = [
   }
 ]
 
+// Public Relations posts, mapped to ResearchPaper entries
+const prPapers: ResearchPaper[] = (prPublicRelations as any[]).map((item) => {
+  const year = typeof item.year === 'number' ? item.year : Number(item.year)
+  return {
+    id: item.id,
+    title: item.title,
+    authors: Array.isArray(item.authors) ? item.authors : [],
+    year: Number.isFinite(year) ? (year as number) : new Date().getFullYear(),
+    link: item.link || '#',
+    group: 'public-relations',
+    topic: 'public-relations',
+    abstract: item.abstract || undefined
+  } as ResearchPaper
+})
+
+// Combined research papers list
+const researchPapers: ResearchPaper[] = [...baseResearchPapers, ...prPapers]
+
 // Map presentations JSON to ResearchPaper shape with presentation-specific fields populated
 const presentationsPapers: ResearchPaper[] = (
   (presentationsIndex as any).presentations || []
@@ -109,8 +128,7 @@ const researchTopics: ResearchTopic[] = [
   {
     id: 'public-relations',
     title: 'Public Relations',
-    papers: [],
-    comingSoon: true
+    papers: researchPapers.filter((paper) => paper.topic === 'public-relations')
   }
 ]
 
@@ -132,14 +150,16 @@ export function sortResearchPapers(
       return sortedPapers.sort((a, b) => a.title.localeCompare(b.title))
     case 'title-desc':
       return sortedPapers.sort((a, b) => b.title.localeCompare(a.title))
-    case 'author-asc':
-      return sortedPapers.sort((a, b) =>
-        a.authors[0].localeCompare(b.authors[0])
-      )
-    case 'author-desc':
-      return sortedPapers.sort((a, b) =>
-        b.authors[0].localeCompare(a.authors[0])
-      )
+    case 'author-asc': {
+      const getLead = (p: ResearchPaper) =>
+        p.authors && p.authors.length > 0 ? p.authors[0] : ''
+      return sortedPapers.sort((a, b) => getLead(a).localeCompare(getLead(b)))
+    }
+    case 'author-desc': {
+      const getLead = (p: ResearchPaper) =>
+        p.authors && p.authors.length > 0 ? p.authors[0] : ''
+      return sortedPapers.sort((a, b) => getLead(b).localeCompare(getLead(a)))
+    }
     default:
       return sortedPapers
   }
