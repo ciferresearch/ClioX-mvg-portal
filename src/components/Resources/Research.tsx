@@ -222,7 +222,7 @@ export default function Research(): ReactElement {
               const remainingCount = topic.papers.length - previewPapers.length
 
               return (
-                <div className="antialiased">
+                <div className="antialiased flex flex-col gap-3 md:gap-4 md:h-full w-full">
                   {topic.comingSoon ? (
                     <p className="text-gray-500 italic text-base">
                       Coming soon...
@@ -311,26 +311,25 @@ export default function Research(): ReactElement {
                         ))}
                       </ul>
                       {hasMoreThanThree && (
-                        <p className="mt-3 text-sm text-gray-500">
-                          {remainingCount}{' '}
-                          {remainingCount === 1
-                            ? 'more paper available.'
-                            : 'more papers available.'}
-                        </p>
+                        <div className="md:mt-auto flex items-baseline gap-1 text-sm">
+                          <span className="text-gray-500">
+                            {remainingCount}{' '}
+                            {remainingCount === 1
+                              ? 'more paper available.'
+                              : 'more papers available.'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTopicList(topic.id)}
+                            className="font-medium underline cursor-pointer text-amber-700 hover:text-amber-600"
+                          >
+                            View all
+                          </button>
+                        </div>
                       )}
                     </>
                   )}
-                  {!topic.comingSoon && hasMoreThanThree && (
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTopicList(topic.id)}
-                        className="text-sm font-medium underline cursor-pointer text-amber-700 hover:text-amber-600"
-                      >
-                        View all
-                      </button>
-                    </div>
-                  )}
+                  {/* "View all" now colocated with remaining count above */}
                 </div>
               )
             }
@@ -338,7 +337,7 @@ export default function Research(): ReactElement {
             return (
               <motion.div
                 key={topic.id}
-                className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 transition-[box-shadow] duration-200 hover:shadow-lg hover:-translate-y-1  transition-all duration-200"
+                className="bg-white border border-gray-200 border-t-4 rounded-lg p-6 h-full flex flex-col transition-[box-shadow] duration-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
                 style={{ borderTopColor: 'var(--color-primary)' }}
                 variants={topicCardVariants}
               >
@@ -359,7 +358,7 @@ export default function Research(): ReactElement {
                   </button>
                 </div>
 
-                <div className="hidden md:block">
+                <div className="hidden md:flex md:flex-1">
                   <TopicDetails />
                 </div>
 
