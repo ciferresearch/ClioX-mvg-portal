@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import crypto from 'crypto'
 
 interface UploadResponse {
   success: boolean
@@ -6,6 +7,15 @@ interface UploadResponse {
   chunks_processed: number
   domains: string[]
   message?: string
+}
+
+// Increase JSON body size limit for large knowledge uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
 }
 
 export default async function handler(
@@ -26,6 +36,40 @@ export default async function handler(
       })
     }
 
+    // Validate payload
+    if (!sessionId || !Array.isArray(knowledgeChunks)) {
+      return res.status(400).json({
+        error: 'Invalid payload: sessionId and knowledgeChunks are required'
+      })
+    }
+
+    // Sanitize chunk IDs to ensure uniqueness (Chroma requires unique IDs)
+    const seen = new Set<string>()
+    const sanitizedChunks = knowledgeChunks.map((chunk: any, idx: number) => {
+      const content = typeof chunk?.content === 'string' ? chunk.content : ''
+      const metadata = chunk?.metadata ? JSON.stringify(chunk.metadata) : ''
+      // Create a stable short fingerprint from content + metadata
+      const fp = crypto
+        .createHash('sha1')
+        .update(content + '|' + metadata)
+        .digest('hex')
+        .slice(0, 12)
+
+      let newId = `${sessionId}_${fp}`
+      // Guarantee uniqueness within this batch
+      let salt = 0
+      while (seen.has(newId)) {
+        salt += 1
+        newId = `${sessionId}_${fp}_${salt}`
+      }
+      seen.add(newId)
+
+      return {
+        ...chunk,
+        id: newId
+      }
+    })
+
     // Forward the request to the external chatbot service
     const response = await fetch(
       `${chatbotApiUrl}/api/v1/session/knowledge/upload`,
@@ -37,7 +81,7 @@ export default async function handler(
         },
         body: JSON.stringify({
           session_id: sessionId,
-          knowledge_chunks: knowledgeChunks,
+          knowledge_chunks: sanitizedChunks,
           domains
         })
       }
