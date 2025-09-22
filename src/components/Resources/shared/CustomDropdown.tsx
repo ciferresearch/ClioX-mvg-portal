@@ -21,16 +21,19 @@ export default function CustomDropdown({
   options,
   onChange,
   label,
-  widthClass = 'w-36'
+  widthClass = 'w-24 sm:w-40'
 }: CustomDropdownProps): ReactElement {
   const [isOpen, setIsOpen] = useState(false)
   const selectedOption = options.find((option) => option.value === value)
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {label && (
-          <label htmlFor={id} className="text-base font-medium text-gray-700">
+          <label
+            htmlFor={id}
+            className="text-sm font-medium text-gray-700 sm:text-base"
+          >
             {label}
           </label>
         )}
@@ -38,11 +41,11 @@ export default function CustomDropdown({
           <button
             id={id}
             onClick={() => setIsOpen(!isOpen)}
-            className={`flex items-center ${widthClass} px-3 py-2 text-left bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:border-gray-300 hover:border-gray-400 transition-colors duration-200 text-base font-medium relative cursor-pointer`}
+            className={`flex items-center ${widthClass} px-3 py-2 text-left bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-0 focus:border-gray-300 hover:border-gray-400 transition-colors duration-200 text-sm font-medium relative cursor-pointer sm:text-base`}
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
-            <span className="truncate text-gray-900 pr-8">
+            <span className="truncate text-gray-900 pr-8 text-sm sm:text-base">
               {selectedOption?.label}
             </span>
             <ChevronDownIcon
@@ -70,7 +73,7 @@ export default function CustomDropdown({
                         onChange(option.value)
                         setIsOpen(false)
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-base hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:bg-gray-50 focus:text-gray-900 transition-colors duration-150 ${
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:bg-gray-50 focus:text-gray-900 transition-colors duration-150 sm:text-base ${
                         option.value === value
                           ? 'bg-gray-100 text-gray-900 font-medium'
                           : 'text-gray-700'
