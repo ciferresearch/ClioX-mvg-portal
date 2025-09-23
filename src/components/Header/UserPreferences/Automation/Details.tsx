@@ -65,10 +65,8 @@ export default function Details({
     autoWallet,
     autoWalletAddress,
     balance,
-    isAutomationEnabled,
     isLoading,
-    hasValidEncryptedWallet,
-    setIsAutomationEnabled
+    hasValidEncryptedWallet
   } = useAutomation()
 
   const { automationConfig } = useMarketMetadata().appConfig
@@ -86,30 +84,17 @@ export default function Details({
   useEffect(() => {
     if (!automationConfig.roughTxGasEstimate) return
     setRoughTxCountEstimate(
-      Number(balance.native.balance) / automationConfig.roughTxGasEstimate
+      Number(balance?.native?.balance) / automationConfig?.roughTxGasEstimate
     )
-  }, [balance.native, automationConfig?.roughTxGasEstimate])
+  }, [balance?.native, automationConfig?.roughTxGasEstimate])
 
   return (
     <div className={styles.details}>
       {/* DESCRIPTION */}
       <strong className={styles.title}>Automation</strong>
       <div className={styles.help}>
-        Automate transactions using an imported wallet of your choice.
+        Automate transactions using an imported encrypted json wallet file.
       </div>
-
-      {/* EN-/DISABLE */}
-      {autoWallet?.address && (
-        <Button
-          style="primary"
-          onClick={() => {
-            setIsAutomationEnabled(!isAutomationEnabled)
-          }}
-          className={styles.toggleBtn}
-        >
-          {isAutomationEnabled ? 'Disable automation' : 'Enable automation'}
-        </Button>
-      )}
 
       {/* AUTOMATION ADDRESS */}
       {autoWalletAddress && (

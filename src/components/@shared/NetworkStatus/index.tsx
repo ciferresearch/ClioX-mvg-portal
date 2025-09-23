@@ -29,23 +29,7 @@ export default function NetworkStatus({
       try {
         const result = await axios.get(apiEndpoint)
         const { Nodes } = result.data
-
-        // Check if Nodes exists before destructuring
-        if (!Nodes) {
-          LoggerInstance.warn(`[NetworkStatus] Nodes data is undefined`)
-          return
-        }
-
         const { nodes }: { nodes: { [node: string]: number } } = Nodes
-
-        // Check if nodes exists and has data
-        if (!nodes || Object.keys(nodes).length === 0) {
-          LoggerInstance.warn(
-            `[NetworkStatus] nodes data is empty or undefined`
-          )
-          return
-        }
-
         let minBlock: number
         let maxBlock: number
         Object.values(nodes).forEach((block) => {
@@ -68,22 +52,24 @@ export default function NetworkStatus({
     },
     [networkAlertConfig, chain]
   )
+  // TODO network status endpoint has been deprecated, enable once replacement is in place
+  // consider https://testnet.nexus.oasis.io/v1/pontusxtest/status for testnet
+  // https://testnet.nexus.oasis.io/v1/pontusxdev/status for devnet
+  // useEffect(() => {
+  //   if (!chain?.id) return
 
-  useEffect(() => {
-    if (!chain?.id) return
+  //   fetchNetworkStatus(chain?.id)
 
-    fetchNetworkStatus(chain?.id)
+  //   // init periodic refresh for network status
+  //   const networkStatusInterval = setInterval(
+  //     () => fetchNetworkStatus(chain?.id),
+  //     networkAlertConfig.refreshInterval
+  //   )
 
-    // init periodic refresh for network status
-    const networkStatusInterval = setInterval(
-      () => fetchNetworkStatus(chain?.id),
-      networkAlertConfig.refreshInterval
-    )
-
-    return () => {
-      clearInterval(networkStatusInterval)
-    }
-  }, [chain, fetchNetworkStatus])
+  //   return () => {
+  //     clearInterval(networkStatusInterval)
+  //   }
+  // }, [chain, fetchNetworkStatus])
 
   return (
     showNetworkAlert && (
