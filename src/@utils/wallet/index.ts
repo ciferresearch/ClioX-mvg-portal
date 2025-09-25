@@ -8,6 +8,7 @@ import { getSupportedChains } from './chains'
 import { chainIdsSupported } from '../../../app.config'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
+import { EthersWalletConnector } from './EthersWalletConnector'
 
 export async function getDummySigner(chainId: number): Promise<Signer> {
   if (typeof chainId !== 'number') {
@@ -44,6 +45,9 @@ export const wagmiClient = createClient({
   autoConnect: true,
   connectors: [
     new MetaMaskConnector({
+      chains
+    }),
+    new EthersWalletConnector({
       chains
     })
   ],
@@ -189,7 +193,7 @@ export async function getTokenBalance(
     const token = new Contract(tokenAddress, erc20ABI, web3Provider)
     const balance = await token.balanceOf(accountId)
 
-    return getAdjustDecimalsValue(balance, decimals)
+    return balance ? getAdjustDecimalsValue(balance, decimals) : null
   } catch (e) {
     LoggerInstance.error(`ERROR: Failed to get the balance: ${e.message}`)
   }
