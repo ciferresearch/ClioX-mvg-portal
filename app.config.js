@@ -128,5 +128,8 @@ module.exports = {
     'https://registry.lab.gaia-x.eu/v2206'
   ],
 
-  plausibleDataDomain: 'cliox.org'
+  plausibleDataDomain: 'cliox.org',
+
+  // token symbol used as fallback value in various components
+  defaultTokenSymbol: 'EURAU'
 }
