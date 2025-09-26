@@ -186,20 +186,20 @@ export default function Links(): ReactElement {
               <ul className="space-y-2.5 mt-0">
                 <li>
                   <Button
-                    to={privacyPolicySlug || '/privacy'}
-                    className={`${styles.link} ${styles.footerLink}`}
-                    style="text"
-                  >
-                    Privacy Policy
-                  </Button>
-                </li>
-                <li>
-                  <Button
                     to="/imprint"
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
                   >
                     Imprint
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    to={privacyPolicySlug || '/privacy'}
+                    className={`${styles.link} ${styles.footerLink}`}
+                    style="text"
+                  >
+                    Privacy Policy
                   </Button>
                 </li>
                 <li>
