@@ -186,6 +186,15 @@ export default function Links(): ReactElement {
               <ul className="space-y-2.5 mt-0">
                 <li>
                   <Button
+                    to="/imprint"
+                    className={`${styles.link} ${styles.footerLink}`}
+                    style="text"
+                  >
+                    Imprint
+                  </Button>
+                </li>
+                <li>
+                  <Button
                     to={privacyPolicySlug || '/privacy'}
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
@@ -195,11 +204,11 @@ export default function Links(): ReactElement {
                 </li>
                 <li>
                   <Button
-                    to="/imprint"
+                    to="/cookie/en"
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
                   >
-                    Imprint
+                    Cookie Policy
                   </Button>
                 </li>
                 {appConfig?.privacyPreferenceCenter === 'true' && (
@@ -209,7 +218,7 @@ export default function Links(): ReactElement {
                       onClick={() => setShowPPC(true)}
                       className={`${styles.link} ${styles.footerLink}`}
                     >
-                      Cookie Settings
+                      {cookies?.optionalCookies ? 'Cookie Settings' : 'Cookies'}
                     </Button>
                   </li>
                 )}
