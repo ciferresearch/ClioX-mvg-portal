@@ -204,7 +204,7 @@ export default function Links(): ReactElement {
                 </li>
                 <li>
                   <Button
-                    to="/cookie/en"
+                    to="/cookies/en"
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
                   >
