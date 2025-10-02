@@ -120,7 +120,7 @@
   --button-text-font-color: var(--color-secondary);
 
   /* Loading spinner */
-  --loader-border-color: var(--brand-blue);
+  --loader-border-color: var(--brand-clay);
   --loader-top-border-color: transparent;
   --loader-border-size: var(--border-size);
   --loader-message-color: var(--color-secondary);
