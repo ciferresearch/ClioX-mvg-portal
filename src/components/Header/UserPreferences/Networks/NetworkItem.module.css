@@ -29,3 +29,12 @@
   color: var(--font-color-text);
   font-weight: var(--font-weight-bold);
 }
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
