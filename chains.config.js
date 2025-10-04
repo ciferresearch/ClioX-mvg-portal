@@ -4,7 +4,7 @@
 const chains = [
   {
     chainId: 32456,
-    isDefault: false,
+    isDefault: true,
     isCustom: true,
     network: 'pontusx-devnet',
     oceanTokenSymbol: 'OCEAN',
@@ -27,7 +27,7 @@ const chains = [
   },
   {
     chainId: 32457,
-    isDefault: true,
+    isDefault: false,
     isCustom: true,
     network: 'pontusx-testnet',
     oceanTokenSymbol: 'OCEAN',

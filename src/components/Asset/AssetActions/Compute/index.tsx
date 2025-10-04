@@ -64,6 +64,7 @@ import { parseConsumerParameterValues } from '../ConsumerParameters'
 import { useAutomation } from '../../../../@context/Automation/AutomationProvider'
 import { Signer } from 'ethers'
 import { useAccount } from 'wagmi'
+import { useMarketMetadata } from '@context/MarketMetadata'
 
 const refreshInterval = 10000 // 10 sec.
 
@@ -89,6 +90,10 @@ export default function Compute({
   const { address } = useAccount()
   const { chainIds } = useUserPreferences()
 
+  const {
+    appConfig: { defaultTokenSymbol }
+  } = useMarketMetadata()
+
   const newAbortController = useAbortController()
   const newCancelToken = useCancelToken()
 
@@ -113,14 +118,11 @@ export default function Compute({
   const [computeEnvs, setComputeEnvs] = useState<ComputeEnvironment[]>()
   const [selectedComputeEnv, setSelectedComputeEnv] =
     useState<ComputeEnvironment>()
-  const [assetTermsAndConditions, setAssetTermsAndConditions] =
-    useState<boolean>(false)
-  const [portalTermsAndConditions, setPortalTermsAndConditions] =
-    useState<boolean>(false)
   const [initializedProviderResponse, setInitializedProviderResponse] =
     useState<ProviderComputeInitializeResults>()
   const [providerFeeAmount, setProviderFeeAmount] = useState<string>('0')
-  const [providerFeesSymbol, setProviderFeesSymbol] = useState<string>('OCEAN')
+  const [providerFeesSymbol, setProviderFeesSymbol] =
+    useState<string>(defaultTokenSymbol)
   const [computeValidUntil, setComputeValidUntil] = useState<string>('0')
   const [datasetOrderPriceAndFees, setDatasetOrderPriceAndFees] =
     useState<OrderPriceAndFees>()
@@ -573,8 +575,8 @@ export default function Compute({
             asset,
             selectedAlgorithmAsset,
             selectedComputeEnv,
-            assetTermsAndConditions,
-            portalTermsAndConditions
+            false, // intial assetTermsAndConditions checkbox always false
+            false // intial portalTermsAndConditions checkbox always false
           )}
           validateOnMount
           validationSchema={getComputeValidationSchema(
@@ -601,12 +603,11 @@ export default function Compute({
             hasDatatokenSelectedComputeAsset={hasAlgoAssetDatatoken}
             isAccountIdWhitelisted={isAccountIdWhitelisted}
             datasetSymbol={
-              asset?.accessDetails?.baseToken?.symbol ||
-              (asset?.chainId === 137 ? 'mOCEAN' : 'OCEAN')
+              asset?.accessDetails?.baseToken?.symbol || defaultTokenSymbol
             }
             algorithmSymbol={
               selectedAlgorithmAsset?.accessDetails?.baseToken?.symbol ||
-              (selectedAlgorithmAsset?.chainId === 137 ? 'mOCEAN' : 'OCEAN')
+              defaultTokenSymbol
             }
             providerFeesSymbol={providerFeesSymbol}
             dtSymbolSelectedComputeAsset={
@@ -619,8 +620,6 @@ export default function Compute({
             )}
             computeEnvs={computeEnvs}
             setSelectedComputeEnv={setSelectedComputeEnv}
-            setAssetTermsAndConditions={setAssetTermsAndConditions}
-            setPortalTermsAndConditions={setPortalTermsAndConditions}
             // lazy comment when removing pricingStepText
             stepText={computeStatusText}
             isConsumable={isConsumablePrice}
@@ -630,6 +629,7 @@ export default function Compute({
             providerFeeAmount={providerFeeAmount}
             validUntil={computeValidUntil}
             retry={retry}
+            license={asset?.metadata?.license}
           />
         </Formik>
       )}

@@ -19,8 +19,8 @@
 
   --brand-gradient: linear-gradient(
     to right bottom,
-    var(--brand-blue-light),
-    var(--brand-blue)
+    var(--brand-clay-light),
+    var(--brand-clay-dark)
   );
 
   --brand-grey: #2b2e3b;

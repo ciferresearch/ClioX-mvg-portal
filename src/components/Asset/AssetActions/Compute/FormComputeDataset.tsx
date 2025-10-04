@@ -46,8 +46,6 @@ export default function FormStartCompute({
   selectedComputeAssetTimeout,
   computeEnvs,
   setSelectedComputeEnv,
-  setAssetTermsAndConditions,
-  setPortalTermsAndConditions,
   stepText,
   isConsumable,
   consumableFeedback,
@@ -55,7 +53,8 @@ export default function FormStartCompute({
   algoOrderPriceAndFees,
   providerFeeAmount,
   validUntil,
-  retry
+  retry,
+  license
 }: {
   algorithms: AssetSelectionAsset[]
   ddoListAlgorithms: Asset[]
@@ -82,8 +81,6 @@ export default function FormStartCompute({
   setSelectedComputeEnv: React.Dispatch<
     React.SetStateAction<ComputeEnvironment>
   >
-  setAssetTermsAndConditions: React.Dispatch<React.SetStateAction<boolean>>
-  setPortalTermsAndConditions: React.Dispatch<React.SetStateAction<boolean>>
   stepText: string
   isConsumable: boolean
   consumableFeedback: string
@@ -92,6 +89,7 @@ export default function FormStartCompute({
   providerFeeAmount?: string
   validUntil?: string
   retry: boolean
+  license: string
 }): ReactElement {
   const { address: accountId, isConnected } = useAccount()
   const { balance } = useBalance()
@@ -399,21 +397,11 @@ export default function FormStartCompute({
         {...content.form.portalTermsAndConditions}
         licenses={[appConfig.defaultTermsAndConditionsUrl]}
         disabled={isLoading}
-        onChange={() =>
-          setPortalTermsAndConditions(
-            (portalTermsAndConditions) => !portalTermsAndConditions
-          )
-        }
       />
       <TermsAndConditionsCheckbox
         {...content.form.assetTermsAndConditions}
-        licenses={[asset?.metadata?.license]}
+        licenses={[license]}
         disabled={isLoading}
-        onChange={() =>
-          setAssetTermsAndConditions(
-            (assetTermsAndConditions) => !assetTermsAndConditions
-          )
-        }
       />
     </Form>
   )

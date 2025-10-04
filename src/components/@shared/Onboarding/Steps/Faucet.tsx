@@ -30,7 +30,7 @@ export default function Faucet(): ReactElement {
 
   const faucetTokenRequest = async () => {
     try {
-      const hashes = await requestTokens(accountId, signMessageData)
+      const hashes = await requestTokens(accountId, signMessageData, chain.id)
       toast.success(`Successfully requested test tokens: ${hashes.join(', ')}`)
       setCompleted(true)
     } catch (error) {
@@ -92,7 +92,7 @@ export default function Faucet(): ReactElement {
 
   const actions = [
     {
-      buttonLabel: `Request Test EUROe Tokens`,
+      buttonLabel: `Request Test EURAU Tokens`,
       buttonAction: async () => {
         await prepareMessage()
       },

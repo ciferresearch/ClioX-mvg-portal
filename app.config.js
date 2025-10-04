@@ -73,7 +73,7 @@ module.exports = {
   // is used to create and show a privacy preference center / cookie banner
   // To learn more about how to configure and use this, please refer to the readme
   privacyPreferenceCenter:
-    process.env.NEXT_PUBLIC_PRIVACY_PREFERENCE_CENTER || 'true',
+    process.env.NEXT_PUBLIC_PRIVACY_PREFERENCE_CENTER || 'false',
 
   // Default terms to be used for service offerings made on this marketplace
   defaultTermsAndConditionsUrl: 'https://cliox.org/terms',
@@ -90,7 +90,8 @@ module.exports = {
     enableAutomation: process.env.NEXT_PUBLIC_ENABLE_AUTOMATION || 'true',
     networkTokenFundDefaultValue: '2',
     erc20ApprovalDefaultValue: '50',
-    roughTxGasEstimate: 0.02
+    roughTxGasEstimate: 0.02,
+    defaultMode: 'simple'
   },
 
   // Display alert banner for the developer preview deployment
@@ -119,8 +120,16 @@ module.exports = {
   showOnboardingModuleByDefault:
     process.env.NEXT_PUBLIC_SHOW_ONBOARDING_MODULE_BY_DEFAULT === 'true',
 
+  // hides MetaMask Connect Wallet button
+  hideMetaMaskLogin: process.env.NEXT_PUBLIC_HIDE_METAMASK_LOGIN || 'false',
+
   allowedGaiaXRegistryDomains: [
     'https://registry.gaia-x.eu/v2206',
     'https://registry.lab.gaia-x.eu/v2206'
-  ]
+  ],
+
+  plausibleDataDomain: 'cliox.org',
+
+  // token symbol used as fallback value in various components
+  defaultTokenSymbol: 'EURAU'
 }

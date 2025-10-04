@@ -19,12 +19,21 @@ import AutomationProvider from '../@context/Automation/AutomationProvider'
 import { FilterProvider } from '@context/Filter'
 import { UseCasesProvider } from '../@context/UseCases'
 import { Analytics } from '@vercel/analytics/react'
+import Script from 'next/script'
+import { plausibleDataDomain } from 'app.config'
 
 function MyApp({ Component, pageProps }: AppProps): ReactElement {
   Decimal.set({ rounding: 1 })
 
   return (
     <>
+      {plausibleDataDomain && (
+        <Script
+          data-domain={plausibleDataDomain}
+          src="https://plausible.io/js/script.js"
+        />
+      )}
+
       <Theme>
         <WagmiConfig client={wagmiClient}>
           <ConnectKitProvider

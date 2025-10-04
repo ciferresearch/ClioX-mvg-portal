@@ -1,3 +1,6 @@
+import { AUTOMATION_MODES } from '@context/Automation/AutomationProvider'
+import { defaultTokenSymbol } from 'app.config'
+
 export interface OpcFee {
   chainId: number
   swapNotApprovedFee: string
@@ -35,6 +38,7 @@ export interface AppConfig {
     networkTokenFundDefaultValue: string
     erc20ApprovalDefaultValue: string
     roughTxGasEstimate: number
+    defaultMode: AUTOMATION_MODES
   }
   showPreviewAlert: string
   contractingProvider: {
@@ -55,6 +59,7 @@ export interface AppConfig {
     baseUri: string
   }
   showOnboardingModuleByDefault: boolean
+  defaultTokenSymbol: string
 }
 export interface SiteContent {
   siteTitle: string
