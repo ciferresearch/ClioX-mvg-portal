@@ -12,6 +12,7 @@ export interface ButtonProps {
   onClick?: (e: FormEvent) => void
   disabled?: boolean
   to?: string
+  prefetch?: boolean
   name?: string
   size?: 'small' | 'sm' | 'md' | 'lg'
   style?: 'primary' | 'ghost' | 'text' | 'secondary' | 'outline'

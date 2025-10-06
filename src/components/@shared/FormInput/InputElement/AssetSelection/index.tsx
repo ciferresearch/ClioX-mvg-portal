@@ -60,7 +60,7 @@ export default function AssetSelection({
     <div className={styleClassesWrapper}>
       <InputElement
         type="search"
-        name="search"
+        name="assetSearch"
         size="small"
         placeholder="Search by title, datatoken, or DID..."
         value={searchValue}
