@@ -147,9 +147,19 @@ export default function Links(): ReactElement {
               </div>
 
               <ul className="space-y-2.5 mt-0">
+                {/*
+                  Note: prefetch is disabled for /docs and /newsletter.
+                  Reason: these routes currently redirect to /coming-soon and
+                  do not have static Markdown pages yet, so Next.js was
+                  prefetching /_next/data/... JSON which returned 404s.
+                  Future: we will add content/pages/docs.md and
+                  content/pages/newsletter.md (or proper pages), then we can
+                  re-enable prefetch.
+                */}
                 <li>
                   <Button
                     to="/docs"
+                    prefetch={false}
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
                   >
@@ -159,6 +169,7 @@ export default function Links(): ReactElement {
                 <li>
                   <Button
                     to="/newsletter"
+                    prefetch={false}
                     className={`${styles.link} ${styles.footerLink}`}
                     style="text"
                   >

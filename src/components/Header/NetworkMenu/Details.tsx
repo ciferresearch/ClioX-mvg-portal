@@ -22,9 +22,8 @@ export default function Details(): ReactElement {
           {networksListToDisplay?.length > 0 &&
             networksListToDisplay.map((chain) => {
               if (!getCustomChainIds().includes(chain.id)) return false
-              // TEMP_DISABLE_TESTNET: Disable Pontus‑X Testnet button until provider is fixed.
-              // To revert, remove this condition and the disabled prop below.
-              const isDisabled = chain.id === 32457
+              // TEMP_DISABLE_TESTNET (RE-ENABLED): set to false to allow Testnet connect.
+              const isDisabled = false
               return (
                 <AddNetwork
                   key={`add-network-button-${chain.id}`}

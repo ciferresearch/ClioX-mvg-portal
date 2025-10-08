@@ -11,12 +11,11 @@ export default function NetworkItem({
 }): ReactElement {
   const { chainIds, setChainIds } = useUserPreferences()
   /*
-   * TEMP_DISABLE_TESTNET
-   * We temporarily disable Pontus‑X Testnet (chainId 32457) in the UI
-   * to avoid user selection while provider issues are being sorted out.
-   * To re‑enable: remove this predicate and any related disabled styles/props.
+   * TEMP_DISABLE_TESTNET (RE-ENABLED)
+   * Testnet (chainId 32457) is now re-enabled. Leaving this switch in place
+   * for quick toggling if needed again; keep it `false` to allow selection.
    */
-  const isDisabled = chainId === 32457
+  const isDisabled = false
 
   function handleNetworkChanged(e: ChangeEvent<HTMLInputElement>) {
     if (isDisabled) return
@@ -36,8 +35,6 @@ export default function NetworkItem({
       <label
         className={`${styles.radioLabel} ${isDisabled ? styles.disabled : ''}`}
         htmlFor={`opt-${chainId}`}
-        aria-disabled={isDisabled}
-        title={isDisabled ? 'Temporarily disabled' : undefined}
       >
         <input
           className={styles.input}
@@ -47,7 +44,6 @@ export default function NetworkItem({
           value={chainId}
           onChange={handleNetworkChanged}
           defaultChecked={chainIds.includes(chainId)}
-          disabled={isDisabled}
         />
         <NetworkName key={chainId} networkId={chainId} />
       </label>
