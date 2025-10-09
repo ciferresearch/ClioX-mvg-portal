@@ -41,8 +41,12 @@ export default function JobList(props: {
   const { autoWallet } = useAutomation()
 
   // Get IndexedDB operations through useUseCases hook
-  const { chatbotList, createOrUpdateChatbot, clearChatbotByNamespace } =
-    useUseCases()
+  const {
+    chatbotList,
+    createOrUpdateChatbot,
+    clearChatbotByNamespace,
+    deleteChatbot
+  } = useUseCases()
 
   const [jobs, setJobs] = useState<ComputeJobMetaData[]>([])
   const [refetchJobs, setRefetchJobs] = useState(false)
@@ -114,10 +118,7 @@ export default function JobList(props: {
       )
       return
     }
-    // If another KB already exists in this namespace, clear it before adding new one
-    if (nsRows.length > 0) {
-      await clearChatbotByNamespace(props.namespace)
-    }
+    // Do not clear existing KBs; we will aggregate and upload in one session
 
     try {
       setIsUploadingKnowledge(true)
@@ -206,11 +207,9 @@ export default function JobList(props: {
         // 1. Save to IndexedDB first for persistence
         await createOrUpdateChatbot(newUseCaseData)
 
-        // 2. Upload knowledge to RAG backend
-        const uploadResponse =
-          nsRows.length > 0
-            ? await chatbotApi.replaceSessionKnowledge([newUseCaseData])
-            : await chatbotApi.uploadKnowledge([newUseCaseData])
+        // 2. Aggregate existing namespace KBs + new KB, then upload once (same session)
+        const updatedList = [...nsRows, newUseCaseData]
+        const uploadResponse = await chatbotApi.uploadKnowledge(updatedList)
 
         if (uploadResponse.success) {
           // Immediately refresh backend knowledge status after upload
@@ -253,17 +252,28 @@ export default function JobList(props: {
     try {
       setIsUploadingKnowledge(true)
 
-      // 1. Remove from IndexedDB (namespace only)
-      await clearChatbotByNamespace(props.namespace)
+      // 1. Remove only this item from IndexedDB
+      if (rowToDelete.id !== undefined) {
+        await deleteChatbot(rowToDelete.id)
+      }
 
-      // 2. Clear knowledge from RAG backend by deleting session and rotating a new one
-      await chatbotApi.resetSession()
+      // 2. Compute remaining KBs in this namespace based on current list
+      const remaining = chatbotList
+        .filter((row) => row.namespace === props.namespace)
+        .filter((row) => row.job.jobId !== job.jobId)
 
-      // 3. Immediately refresh backend knowledge status
-      props.onForceRefresh?.()
-
-      toast.success('✅ Data removed and session reset')
-      props.onStatusChange?.('no-knowledge')
+      if (remaining.length > 0) {
+        // Upload remaining knowledge to backend without resetting session
+        await chatbotApi.uploadKnowledge(remaining)
+        props.onForceRefresh?.()
+        toast.success('✅ Data updated')
+      } else {
+        // If no KBs remain, reset the session per strategy B
+        await chatbotApi.resetSession()
+        props.onForceRefresh?.()
+        toast.success('✅ Data removed and session reset')
+        props.onStatusChange?.('no-knowledge')
+      }
     } catch (error) {
       LoggerInstance.error('❌ Knowledge update failed:', error as any)
       toast.error('❌ Failed to update knowledge base')
