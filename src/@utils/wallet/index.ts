@@ -1,7 +1,7 @@
 import { LoggerInstance } from '@oceanprotocol/lib'
 import { configureChains, createClient, erc20ABI } from 'wagmi'
 import { ethers, Contract, Signer } from 'ethers'
-import { formatEther } from 'ethers/lib/utils'
+import { formatUnits } from 'ethers/lib/utils'
 import { getNetworkDisplayName } from '@hooks/useNetworkMetadata'
 import { getOceanConfig } from '../ocean'
 import { getSupportedChains } from './chains'
@@ -174,11 +174,15 @@ export async function addCustomNetwork(
 }
 
 export function getAdjustDecimalsValue(
-  value: number,
+  value: ethers.BigNumberish,
   decimals: number
 ): string {
-  const adjustedDecimalsValue = `${value}${'0'.repeat(18 - decimals)}`
-  return formatEther(adjustedDecimalsValue)
+  try {
+    return formatUnits(value, decimals)
+  } catch (e) {
+    LoggerInstance.error(`[wallet] Failed to format token amount: ${e.message}`)
+    return '0'
+  }
 }
 
 export async function getTokenBalance(
@@ -187,15 +191,32 @@ export async function getTokenBalance(
   tokenAddress: string,
   web3Provider: ethers.providers.Provider
 ): Promise<string> {
-  if (!web3Provider || !accountId || !tokenAddress) return
+  if (!web3Provider || !accountId || !tokenAddress) return '0'
 
   try {
+    if (!ethers.utils.isAddress(tokenAddress)) {
+      LoggerInstance.error(
+        `[wallet] Invalid token address provided: ${tokenAddress}`
+      )
+      return '0'
+    }
+
+    const code = await web3Provider.getCode(tokenAddress)
+    if (!code || code === '0x') {
+      // No contract deployed at this address on the current network
+      LoggerInstance.log(
+        `[wallet] No contract code at ${tokenAddress} on current chain.`
+      )
+      return '0'
+    }
+
     const token = new Contract(tokenAddress, erc20ABI, web3Provider)
     const balance = await token.balanceOf(accountId)
 
-    return balance ? getAdjustDecimalsValue(balance, decimals) : null
+    return balance ? getAdjustDecimalsValue(balance, decimals) : '0'
   } catch (e) {
     LoggerInstance.error(`ERROR: Failed to get the balance: ${e.message}`)
+    return '0'
   }
 }
 
