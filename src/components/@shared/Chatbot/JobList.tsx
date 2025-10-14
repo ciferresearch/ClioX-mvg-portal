@@ -65,38 +65,45 @@ export default function JobList(props: {
   }, [chatbotList, props.namespace, props.setChatbotData])
 
   const fetchJobs = useCallback(async () => {
-    if (!accountId) {
-      return
-    }
+    if (!accountId) return
 
     try {
       setIsLoadingJobs(true)
-      // Fetch computeJobs for all selected networks (UserPreferences)
-      const computeJobs = await getComputeJobs(
+
+      // Fetch computeJobs for current account
+      const baseRes = await getComputeJobs(
         chainIds,
         accountId,
         null,
         newCancelToken()
       )
-      if (autoWallet) {
-        const autoComputeJobs = await getComputeJobs(
+
+      let merged = baseRes?.computeJobs || []
+      let loaded = baseRes?.isLoaded
+
+      // If auto wallet is different address, fetch and merge
+      const autoAddr = autoWallet?.address
+      if (autoAddr && autoAddr.toLowerCase() !== accountId.toLowerCase()) {
+        const autoRes = await getComputeJobs(
           chainIds,
-          autoWallet?.address,
+          autoAddr,
           null,
           newCancelToken()
         )
-        autoComputeJobs.computeJobs.forEach((job) => {
-          computeJobs.computeJobs.push(job)
-        })
+        merged = merged.concat(autoRes?.computeJobs || [])
+        loaded = loaded && autoRes?.isLoaded
       }
 
-      setJobs(
-        // Filter computeJobs for dids provided from use case
-        computeJobs.computeJobs.filter(
-          (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
-        )
+      // Dedupe by jobId only, then filter for this use case
+      const deduped = Array.from(
+        new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      setIsLoadingJobs(!computeJobs.isLoaded)
+      const filtered = deduped.filter(
+        (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
+      )
+
+      setJobs(filtered)
+      setIsLoadingJobs(!loaded)
     } catch (error) {
       LoggerInstance.error((error as Error).message)
       setIsLoadingJobs(false)
