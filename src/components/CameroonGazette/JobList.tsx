@@ -69,43 +69,42 @@ export default function JobList(props: {
   }, [cameroonGazetteList, activeJobId, setCameroonGazetteData])
 
   const fetchJobs = useCallback(async () => {
-    if (!accountId) {
-      return
-    }
+    if (!accountId) return
 
     try {
       setIsLoadingJobs(true)
-      // Fetch computeJobs for all selected networks (UserPreferences)
-      const computeJobs = await getComputeJobs(
+
+      const baseRes = await getComputeJobs(
         chainIds,
         accountId,
         null,
         newCancelToken()
       )
-      if (autoWallet) {
-        const autoComputeJobs = await getComputeJobs(
+
+      let merged = baseRes?.computeJobs || []
+      let loaded = baseRes?.isLoaded
+
+      const autoAddr = autoWallet?.address
+      if (autoAddr && autoAddr.toLowerCase() !== accountId.toLowerCase()) {
+        const autoRes = await getComputeJobs(
           chainIds,
-          autoWallet?.address,
+          autoAddr,
           null,
           newCancelToken()
         )
-        autoComputeJobs.computeJobs.forEach((job) => {
-          computeJobs.computeJobs.push(job)
-        })
+        merged = merged.concat(autoRes?.computeJobs || [])
+        loaded = loaded && autoRes?.isLoaded
       }
 
-      setJobs(
-        // Filter computeJobs for dids configured in _constants
-        computeJobs.computeJobs.filter(
-          (job) =>
-            cameroonGazetteAlgoDids.includes(job.algoDID) && job.status === 70
-
-          // TODO: Uncomment this when the resultFileName is available
-          // job.results.filter((result) => result.filename === resultFileName)
-          // .length > 0
-        )
+      const deduped = Array.from(
+        new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      setIsLoadingJobs(!computeJobs.isLoaded)
+      const filtered = deduped.filter(
+        (job) =>
+          cameroonGazetteAlgoDids.includes(job.algoDID) && job.status === 70
+      )
+      setJobs(filtered)
+      setIsLoadingJobs(!loaded)
     } catch (error) {
       LoggerInstance.error(error.message)
       setIsLoadingJobs(false)
