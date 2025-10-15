@@ -1,6 +1,11 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import { toast, Id } from 'react-toastify'
+import {
+  showUploadingToast,
+  updateToastError,
+  updateToastSuccess
+} from '../../../@utils/toast'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../../@context/Automation/AutomationProvider'
 import { useUserPreferences } from '../../../@context/UserPreferences'
@@ -120,9 +125,13 @@ export default function JobList(props: {
     }
     // Do not clear existing KBs; we will aggregate and upload in one session
 
+    let uploadToastId: Id | undefined
     try {
       setIsUploadingKnowledge(true)
       props.onStatusChange?.('uploading')
+
+      // Show an info toast while uploading knowledge; update it on success/error
+      uploadToastId = showUploadingToast('Uploading knowledge…')
 
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
@@ -153,7 +162,7 @@ export default function JobList(props: {
         fileContent.includes('Traceback (most recent call last)')
       ) {
         console.error('❌ Compute job returned error/traceback:', fileContent)
-        toast.error('❌ Compute job failed - check job status')
+        updateToastError(uploadToastId, 'Compute job failed — check status')
         setIsUploadingKnowledge(false)
         return
       }
@@ -190,8 +199,9 @@ export default function JobList(props: {
           '❌ File content that failed to parse:',
           fileContent.substring(0, 500)
         )
-        toast.error(
-          '❌ Failed to parse compute job result - invalid JSON format'
+        updateToastError(
+          uploadToastId,
+          'Failed to parse compute job result — invalid JSON'
         )
         setIsUploadingKnowledge(false)
         return
@@ -215,26 +225,29 @@ export default function JobList(props: {
           // Immediately refresh backend knowledge status after upload
           props.onStatusChange?.('processing')
           props.onForceRefresh?.()
-          toast.success(
-            `✅ Data ready! ${
-              uploadResponse.chunks_processed
-            } pieces of information uploaded. Session: ${uploadResponse.session_id.slice(
-              -8
-            )}`
-          )
+          const successMsg = `Data ready! ${
+            uploadResponse.chunks_processed
+          } pieces of information uploaded. Session: ${uploadResponse.session_id.slice(
+            -8
+          )}`
+          updateToastSuccess(uploadToastId, successMsg)
         } else {
           throw new Error(uploadResponse.message || 'Upload failed')
         }
       } catch (error) {
         LoggerInstance.error('❌ Knowledge upload failed:', error as any)
-        toast.error('❌ Could not add compute result to chatbot')
+        updateToastError(
+          uploadToastId,
+          'Could not add compute result to chatbot'
+        )
         props.onStatusChange?.('no-knowledge')
       } finally {
         setIsUploadingKnowledge(false)
       }
     } catch (error) {
       LoggerInstance.error('❌ Failed to process compute job:', error as any)
-      toast.error('❌ Could not process compute job result')
+      // Ensure the loading toast transitions and auto-closes
+      updateToastError(uploadToastId, 'Could not process compute job result')
       setIsUploadingKnowledge(false)
       props.onStatusChange?.('no-knowledge')
     }
@@ -266,17 +279,17 @@ export default function JobList(props: {
         // Upload remaining knowledge to backend without resetting session
         await chatbotApi.uploadKnowledge(remaining)
         props.onForceRefresh?.()
-        toast.success('✅ Data updated')
+        updateToastSuccess(null, 'Data updated')
       } else {
         // If no KBs remain, reset the session per strategy B
         await chatbotApi.resetSession()
         props.onForceRefresh?.()
-        toast.success('✅ Data removed and session reset')
+        updateToastSuccess(null, 'Data removed and session reset')
         props.onStatusChange?.('no-knowledge')
       }
     } catch (error) {
-      LoggerInstance.error('❌ Knowledge update failed:', error as any)
-      toast.error('❌ Failed to update knowledge base')
+      LoggerInstance.error('Knowledge update failed:', error as any)
+      updateToastError(null, 'Failed to update knowledge base')
     } finally {
       setIsUploadingKnowledge(false)
     }
@@ -298,13 +311,14 @@ export default function JobList(props: {
       // Immediately refresh backend knowledge status
       props.onForceRefresh?.()
 
-      toast.success(
-        '✅ Chatbot data was cleared and session reset. Add compute job results to start over.'
+      updateToastSuccess(
+        null,
+        'Chatbot data was cleared and session reset. Add compute job results to start over.'
       )
       props.onStatusChange?.('no-knowledge')
     } catch (error) {
       LoggerInstance.error('❌ Failed to clear data:', error as any)
-      toast.error('❌ Failed to clear chatbot data')
+      updateToastError(null, 'Failed to clear chatbot data')
     } finally {
       setIsUploadingKnowledge(false)
     }

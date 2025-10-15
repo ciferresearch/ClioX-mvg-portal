@@ -17,8 +17,28 @@ div.Toastify__toast--error {
 }
 
 div.Toastify__toast--success {
+  /* Subtle card: white background, dark text, green icon */
+  background: var(--brand-white);
+  color: var(--brand-grey);
+  /* Ensure success icon is green on white background */
+  --toastify-icon-color-success: var(--brand-alert-green);
+}
+
+/* Subtle progress bar for success */
+.Toastify__toast--success .Toastify__progress-bar {
+  height: 3px;
   background: var(--brand-alert-green);
-  color: var(--brand-white);
+  opacity: 0.35;
+}
+
+/* Make the close button visible on white background */
+.Toastify__toast--success .Toastify__close-button {
+  color: var(--brand-grey);
+  opacity: 0.5;
+}
+.Toastify__toast--success .Toastify__close-button:hover,
+.Toastify__toast--success .Toastify__close-button:focus {
+  opacity: 0.85;
 }
 
 div.Toastify__toast--info {

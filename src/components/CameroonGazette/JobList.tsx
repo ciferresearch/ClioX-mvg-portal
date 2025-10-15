@@ -1,6 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import {
+  showUploadingToast,
+  updateToastError,
+  updateToastSuccess
+} from '../../@utils/toast'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
@@ -251,16 +255,17 @@ export default function JobList(props: {
         result: textAnalysisResults
       }
 
+      const loadingId = showUploadingToast('Adding to visualization…')
       await createOrUpdateCameroonGazette(newuseCaseData)
       setActiveJobId(job.jobId)
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
       }
       setCameroonGazetteData([newuseCaseData])
-      toast.success('Added to visualization')
+      updateToastSuccess(loadingId, 'Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add to visualization')
+      updateToastError(undefined, 'Could not add to visualization')
     }
   }
 
@@ -273,7 +278,7 @@ export default function JobList(props: {
         sessionStorage.removeItem('cameroonGazette.activeJobId')
       }
       setCameroonGazetteData([])
-      toast.success('Removed from visualization')
+      updateToastSuccess(undefined, 'Removed from visualization')
     }
   }
 
@@ -286,7 +291,7 @@ export default function JobList(props: {
       sessionStorage.removeItem('cameroonGazette.activeJobId')
     }
     setCameroonGazetteData([])
-    toast.success('Cameroon Gazette data was cleared.')
+    updateToastSuccess(undefined, 'Cameroon Gazette data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
