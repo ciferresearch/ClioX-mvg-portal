@@ -1,6 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import {
+  showUploadingToast,
+  updateToastError,
+  updateToastSuccess
+} from '../../@utils/toast'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
@@ -122,6 +126,7 @@ export default function JobList(props: {
 
     // Always fetch fresh data from chain
     try {
+      const loadingId = showUploadingToast('Adding to visualization…')
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
         job.owner.toLowerCase() === autoWallet?.address.toLowerCase()
@@ -246,10 +251,10 @@ export default function JobList(props: {
         sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
       }
       setTextAnalysisData([newuseCaseData])
-      toast.success('Added to visualization')
+      updateToastSuccess(loadingId, 'Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add to visualization')
+      updateToastError(undefined, 'Could not add to visualization')
     }
   }
 
@@ -262,7 +267,7 @@ export default function JobList(props: {
         sessionStorage.removeItem('textAnalysis.activeJobId')
       }
       setTextAnalysisData([])
-      toast.success('Removed from visualization')
+      updateToastSuccess(undefined, 'Removed from visualization')
     }
   }
 
@@ -274,7 +279,7 @@ export default function JobList(props: {
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('textAnalysis.activeJobId')
     }
-    toast.success('Text Analysis data was cleared.')
+    updateToastSuccess(undefined, 'Text Analysis data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
