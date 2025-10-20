@@ -79,10 +79,12 @@
   display: none;
 }
 
+/* Current step: outlined primary ring with number */
 .current:before {
-  color: var(--background-content);
-  background: var(--color-primary);
-  border-color: transparent;
+  content: counter(list-number);
+  color: var(--color-primary);
+  background: var(--background-content);
+  border: 2px solid var(--color-primary);
 }
 
 .navigation .success:before {
@@ -92,8 +94,15 @@
   border-color: transparent;
 }
 
+/* Current + success: prefer current visual over check */
 .success.current:before {
-  background: var(--font-color-heading);
-  color: var(--brand-alert-green);
-  border-color: var(--brand-alert-green);
+  content: counter(list-number);
+  color: var(--color-primary);
+  background: var(--background-content);
+  border: 2px solid var(--color-primary);
+}
+
+/* Color the connector line after a successful step */
+.navigation .success:after {
+  background: var(--brand-alert-green);
 }
