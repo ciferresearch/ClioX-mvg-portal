@@ -37,6 +37,10 @@
           "link": "/usecases/chatbotIntepares"
         },
         {
+          "name": "AI Chatbot Assistant (InterPARES General)",
+          "link": "/usecases/chatbotInteparesGeneral"
+        },
+        {
           "name": "AI Chatbot Assistant (UdL)",
           "link": "/usecases/chatbotUdl"
         }

@@ -146,11 +146,34 @@ export default function JobList(props: {
           ? autoWallet
           : signer
 
+      // Determine correct result index: prefer a file named "final_output"
+      const results = Array.isArray(job.results) ? job.results : []
+      let resultIndex = 0
+      if (results.length > 0) {
+        const byName = results.findIndex(
+          (r: any) =>
+            typeof r?.filename === 'string' &&
+            r.filename.toLowerCase().includes('final_output')
+        )
+        if (byName !== -1) {
+          resultIndex = byName
+        } else {
+          // fallback: pick the last item of type 'output' if available
+          for (let i = results.length - 1; i >= 0; i--) {
+            const r: any = results[i]
+            if (r?.type === 'output') {
+              resultIndex = i
+              break
+            }
+          }
+        }
+      }
+
       const url = await ProviderInstance.getComputeResultUrl(
         datasetDDO.services[0].serviceEndpoint,
         signerToUse,
         job.jobId,
-        0
+        resultIndex
       )
 
       const response = await fetch(url)
@@ -196,7 +219,9 @@ export default function JobList(props: {
               entities: [],
               description: `Knowledge from compute job: ${
                 job.assetName || job.jobId
-              }`
+              } (result: ${
+                results[resultIndex]?.filename || `#${resultIndex}`
+              })`
             }
           }
         ]
