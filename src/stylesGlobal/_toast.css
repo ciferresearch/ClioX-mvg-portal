@@ -63,13 +63,14 @@ div.Toastify__toast--success {
 div.Toastify__toast--info {
   background: var(--brand-white);
   color: var(--brand-grey);
-  --toastify-icon-color-info: var(--brand-grey);
+  /* Use lighter brand blue for info icon */
+  --toastify-icon-color-info: var(--brand-blue-light);
 }
 
 /* Subtle progress bar for info */
 .Toastify__toast--info .Toastify__progress-bar {
   height: 3px;
-  background: var(--brand-grey);
+  background: var(--brand-blue-light);
   opacity: 0.35;
 }
 
