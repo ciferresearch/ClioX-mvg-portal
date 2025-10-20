@@ -33,8 +33,13 @@
           "link": "/usecases/chatbotCameroon"
         },
         {
+          "name": "AI Chatbot Assistant (InterPARES) (deprecated)",
+          "link": "/usecases/chatbotIntepares",
+          "isLive": false
+        },
+        {
           "name": "AI Chatbot Assistant (InterPARES)",
-          "link": "/usecases/chatbotIntepares"
+          "link": "/usecases/chatbotInteparesGeneral"
         },
         {
           "name": "AI Chatbot Assistant (UdL)",

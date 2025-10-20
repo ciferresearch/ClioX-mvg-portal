@@ -1,6 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import {
+  showUploadingToast,
+  updateToastError,
+  updateToastSuccess
+} from '../../@utils/toast'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
@@ -62,43 +66,41 @@ export default function JobList(props: {
   }, [textAnalysisList, activeJobId, setTextAnalysisData])
 
   const fetchJobs = useCallback(async () => {
-    if (!accountId) {
-      return
-    }
+    if (!accountId) return
 
     try {
       setIsLoadingJobs(true)
-      // Fetch computeJobs for all selected networks (UserPreferences)
-      const computeJobs = await getComputeJobs(
+
+      const baseRes = await getComputeJobs(
         chainIds,
         accountId,
         null,
         newCancelToken()
       )
-      if (autoWallet) {
-        const autoComputeJobs = await getComputeJobs(
+
+      let merged = baseRes?.computeJobs || []
+      let loaded = baseRes?.isLoaded
+
+      const autoAddr = autoWallet?.address
+      if (autoAddr && autoAddr.toLowerCase() !== accountId.toLowerCase()) {
+        const autoRes = await getComputeJobs(
           chainIds,
-          autoWallet?.address,
+          autoAddr,
           null,
           newCancelToken()
         )
-        autoComputeJobs.computeJobs.forEach((job) => {
-          computeJobs.computeJobs.push(job)
-        })
+        merged = merged.concat(autoRes?.computeJobs || [])
+        loaded = loaded && autoRes?.isLoaded
       }
 
-      setJobs(
-        // Filter computeJobs for dids configured in _constants
-        computeJobs.computeJobs.filter(
-          (job) =>
-            textAnalysisAlgoDids.includes(job.algoDID) && job.status === 70
-
-          // TODO: Uncomment this when the resultFileName is available
-          // job.results.filter((result) => result.filename === resultFileName)
-          // .length > 0
-        )
+      const deduped = Array.from(
+        new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      setIsLoadingJobs(!computeJobs.isLoaded)
+      const filtered = deduped.filter(
+        (job) => textAnalysisAlgoDids.includes(job.algoDID) && job.status === 70
+      )
+      setJobs(filtered)
+      setIsLoadingJobs(!loaded)
     } catch (error) {
       LoggerInstance.error(error.message)
       setIsLoadingJobs(false)
@@ -124,6 +126,7 @@ export default function JobList(props: {
 
     // Always fetch fresh data from chain
     try {
+      const loadingId = showUploadingToast('Adding to visualization…')
       const datasetDDO = await getAsset(job.inputDID[0], newCancelToken())
       const signerToUse =
         job.owner.toLowerCase() === autoWallet?.address.toLowerCase()
@@ -248,10 +251,10 @@ export default function JobList(props: {
         sessionStorage.setItem('textAnalysis.activeJobId', job.jobId)
       }
       setTextAnalysisData([newuseCaseData])
-      toast.success('Added to visualization')
+      updateToastSuccess(loadingId, 'Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add to visualization')
+      updateToastError(undefined, 'Could not add to visualization')
     }
   }
 
@@ -264,7 +267,7 @@ export default function JobList(props: {
         sessionStorage.removeItem('textAnalysis.activeJobId')
       }
       setTextAnalysisData([])
-      toast.success('Removed from visualization')
+      updateToastSuccess(undefined, 'Removed from visualization')
     }
   }
 
@@ -276,7 +279,7 @@ export default function JobList(props: {
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('textAnalysis.activeJobId')
     }
-    toast.success('Text Analysis data was cleared.')
+    updateToastSuccess(undefined, 'Text Analysis data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (

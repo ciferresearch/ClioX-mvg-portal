@@ -1,6 +1,10 @@
 import { LoggerInstance, ProviderInstance } from '@oceanprotocol/lib'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import {
+  showUploadingToast,
+  updateToastError,
+  updateToastSuccess
+} from '../../@utils/toast'
 import { useAccount, useSigner } from 'wagmi'
 import { useAutomation } from '../../@context/Automation/AutomationProvider'
 import { useUseCases } from '../../@context/UseCases'
@@ -69,43 +73,42 @@ export default function JobList(props: {
   }, [cameroonGazetteList, activeJobId, setCameroonGazetteData])
 
   const fetchJobs = useCallback(async () => {
-    if (!accountId) {
-      return
-    }
+    if (!accountId) return
 
     try {
       setIsLoadingJobs(true)
-      // Fetch computeJobs for all selected networks (UserPreferences)
-      const computeJobs = await getComputeJobs(
+
+      const baseRes = await getComputeJobs(
         chainIds,
         accountId,
         null,
         newCancelToken()
       )
-      if (autoWallet) {
-        const autoComputeJobs = await getComputeJobs(
+
+      let merged = baseRes?.computeJobs || []
+      let loaded = baseRes?.isLoaded
+
+      const autoAddr = autoWallet?.address
+      if (autoAddr && autoAddr.toLowerCase() !== accountId.toLowerCase()) {
+        const autoRes = await getComputeJobs(
           chainIds,
-          autoWallet?.address,
+          autoAddr,
           null,
           newCancelToken()
         )
-        autoComputeJobs.computeJobs.forEach((job) => {
-          computeJobs.computeJobs.push(job)
-        })
+        merged = merged.concat(autoRes?.computeJobs || [])
+        loaded = loaded && autoRes?.isLoaded
       }
 
-      setJobs(
-        // Filter computeJobs for dids configured in _constants
-        computeJobs.computeJobs.filter(
-          (job) =>
-            cameroonGazetteAlgoDids.includes(job.algoDID) && job.status === 70
-
-          // TODO: Uncomment this when the resultFileName is available
-          // job.results.filter((result) => result.filename === resultFileName)
-          // .length > 0
-        )
+      const deduped = Array.from(
+        new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      setIsLoadingJobs(!computeJobs.isLoaded)
+      const filtered = deduped.filter(
+        (job) =>
+          cameroonGazetteAlgoDids.includes(job.algoDID) && job.status === 70
+      )
+      setJobs(filtered)
+      setIsLoadingJobs(!loaded)
     } catch (error) {
       LoggerInstance.error(error.message)
       setIsLoadingJobs(false)
@@ -251,16 +254,17 @@ export default function JobList(props: {
         result: textAnalysisResults
       }
 
+      const loadingId = showUploadingToast('Adding to visualization…')
       await createOrUpdateCameroonGazette(newuseCaseData)
       setActiveJobId(job.jobId)
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('cameroonGazette.activeJobId', job.jobId)
       }
       setCameroonGazetteData([newuseCaseData])
-      toast.success('Added to visualization')
+      updateToastSuccess(loadingId, 'Added to visualization')
     } catch (error) {
       LoggerInstance.error(error)
-      toast.error('Could not add to visualization')
+      updateToastError(undefined, 'Could not add to visualization')
     }
   }
 
@@ -273,7 +277,7 @@ export default function JobList(props: {
         sessionStorage.removeItem('cameroonGazette.activeJobId')
       }
       setCameroonGazetteData([])
-      toast.success('Removed from visualization')
+      updateToastSuccess(undefined, 'Removed from visualization')
     }
   }
 
@@ -286,7 +290,7 @@ export default function JobList(props: {
       sessionStorage.removeItem('cameroonGazette.activeJobId')
     }
     setCameroonGazetteData([])
-    toast.success('Cameroon Gazette data was cleared.')
+    updateToastSuccess(undefined, 'Cameroon Gazette data was cleared.')
   }
 
   const getCustomActionsPerComputeJob: GetCustomActions = (
