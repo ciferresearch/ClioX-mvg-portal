@@ -73,6 +73,30 @@ function transformTags(originalTags: string[]): string[] {
   return transformedTags
 }
 
+// Ensure title includes configured prefix (once), using configured separator.
+function applyTitlePrefix(title: string): string {
+  const prefix = assetTitlePrefix?.trim()
+  if (!title || !prefix) return title
+  const sep = (assetTitleSeparator || '-').trim()
+  const normalizedWithSep = `${prefix} ${sep} `
+
+  if (title.startsWith(normalizedWithSep)) return title
+
+  if (title.startsWith(prefix + ' ')) {
+    const rest = title.substring((prefix + ' ').length).trimStart()
+    return normalizedWithSep + rest
+  }
+  if (title.startsWith(prefix + '-')) {
+    const rest = title.substring((prefix + '-').length).trimStart()
+    return normalizedWithSep + rest
+  }
+  if (title.startsWith(prefix)) {
+    const rest = title.substring(prefix.length).trimStart()
+    return rest ? normalizedWithSep + rest : normalizedWithSep.trim()
+  }
+  return normalizedWithSep + title
+}
+
 export function transformConsumerParameters(
   parameters: FormConsumerParameter[]
 ): ConsumerParameter[] {
@@ -616,26 +640,4 @@ export function getPublisherFromServiceCredential(
     typeof legalName === 'string' ? legalName : legalName?.['@value']
 
   return publisher
-}
-function applyTitlePrefix(title: string): string {
-  const prefix = assetTitlePrefix?.trim()
-  if (!title || !prefix) return title
-  const sep = (assetTitleSeparator || '-').trim()
-  const normalizedWithSep = `${prefix} ${sep} `
-
-  if (title.startsWith(normalizedWithSep)) return title
-
-  if (title.startsWith(prefix + ' ')) {
-    const rest = title.substring((prefix + ' ').length).trimStart()
-    return normalizedWithSep + rest
-  }
-  if (title.startsWith(prefix + '-')) {
-    const rest = title.substring((prefix + '-').length).trimStart()
-    return normalizedWithSep + rest
-  }
-  if (title.startsWith(prefix)) {
-    const rest = title.substring(prefix.length).trimStart()
-    return rest ? normalizedWithSep + rest : normalizedWithSep.trim()
-  }
-  return normalizedWithSep + title
 }

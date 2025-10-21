@@ -41,7 +41,23 @@
 .hasError input:focus,
 .hasError select,
 .hasError textarea,
-.hasError [class*='prefix'],
+/* Keep prefix neutral: do not color it red */
 .hasError [class*='postfix'] {
   border-color: var(--brand-alert-red);
+}
+
+/* When an errored field is focused, return to normal focus styles */
+.hasError:focus-within label {
+  color: var(--font-color-text);
+}
+
+.hasError:focus-within input,
+.hasError:focus-within select,
+.hasError:focus-within textarea {
+  border-color: var(--font-color-text);
+}
+
+/* Only postfix follows focus color; prefix stays neutral */
+.hasError:focus-within [class*='postfix'] {
+  border-color: var(--font-color-text);
 }

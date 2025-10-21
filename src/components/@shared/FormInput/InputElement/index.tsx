@@ -229,10 +229,17 @@ const InputElement = forwardRef(
       default:
         return prefix || postfix ? (
           <div
-            className={`${prefix ? styles.prefixGroup : styles.postfixGroup}`}
+            className={`${prefix ? styles.prefixGroup : styles.postfixGroup} ${
+              props.hasError ? styles.hasError : ''
+            }`}
           >
             {prefix && (
-              <div className={cx({ prefix: true, [size]: size })}>{prefix}</div>
+              <>
+                <div className={cx({ prefix: true, [size]: size })}>
+                  {prefix}
+                </div>
+                <span className={styles.prefixDivider} aria-hidden="true" />
+              </>
             )}
             <DefaultInput
               ref={ref}

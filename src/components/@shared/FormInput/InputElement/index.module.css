@@ -125,6 +125,8 @@
 .prefix {
   border-top-left-radius: var(--input-border-radius);
   border-bottom-left-radius: var(--input-border-radius);
+  /* Let a dedicated divider draw the seam between prefix and input */
+  border-right: 0;
 }
 
 .postfix {
@@ -141,19 +143,25 @@
   border-color: var(--font-color-text);
 }
 
-/* Draw a 1px left seam for the input when a prefix is used */
-.prefixGroup input:focus {
-  /* draw a crisp left seam without altering prefix */
-  box-shadow: none;
-  background-image: linear-gradient(
-    var(--font-color-text),
-    var(--font-color-text)
-  );
-  background-repeat: no-repeat;
-  background-size: var(--input-border-size) 100%;
-  background-position: 0 0;
-  background-clip: border-box;
-  background-origin: border-box;
+/* Dedicated divider between prefix and input for simpler styling */
+.prefixDivider {
+  width: var(--input-border-size);
+  align-self: stretch;
+  background: var(--input-border-color);
+}
+
+/* Focus/active states for divider */
+.prefixGroup:focus-within .prefixDivider {
+  background: var(--font-color-text);
+}
+
+/* Local error state applied by InputElement */
+.hasError .prefixDivider {
+  background: var(--brand-alert-red);
+}
+
+.hasError:focus-within .prefixDivider {
+  background: var(--font-color-text);
 }
 
 .input[type='range'] {
