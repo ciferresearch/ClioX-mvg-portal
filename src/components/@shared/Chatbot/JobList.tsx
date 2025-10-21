@@ -32,14 +32,16 @@ export type AssistantState =
   | 'no-knowledge'
 
 export default function JobList(props: {
-  algoDidsByChain: Record<number, string>
+  algoDidsByChain: Record<number, string | string[]>
   namespace: string
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
   onStatusChange?: (s: AssistantState) => void
   onForceRefresh?: () => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
-  const chatbotAlgoDids: string[] = Object.values(props.algoDidsByChain)
+  const chatbotAlgoDids: string[] = (
+    Object.values(props.algoDidsByChain) as (string | string[])[]
+  ).flat()
 
   const { address: accountId } = useAccount()
   const { data: signer } = useSigner()

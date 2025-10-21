@@ -8,7 +8,7 @@ export default function ChatbotViz({
   algoDidsByChain,
   namespace
 }: {
-  algoDidsByChain: Record<number, string>
+  algoDidsByChain: Record<number, string | string[]>
   namespace: string
 }): ReactElement {
   // Get chatbot data from IndexedDB through useUseCases hook
