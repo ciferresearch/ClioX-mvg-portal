@@ -133,7 +133,27 @@
 }
 
 .input:focus + .postfix {
-  border-color: var(--input-border-color);
+  border-color: var(--font-color-text);
+}
+
+/* Keep prefix border color unchanged on focus (only input highlights) */
+.postfixGroup:focus-within .postfix {
+  border-color: var(--font-color-text);
+}
+
+/* Draw a 1px left seam for the input when a prefix is used */
+.prefixGroup input:focus {
+  /* draw a crisp left seam without altering prefix */
+  box-shadow: none;
+  background-image: linear-gradient(
+    var(--font-color-text),
+    var(--font-color-text)
+  );
+  background-repeat: no-repeat;
+  background-size: var(--input-border-size) 100%;
+  background-position: 0 0;
+  background-clip: border-box;
+  background-origin: border-box;
 }
 
 .input[type='range'] {

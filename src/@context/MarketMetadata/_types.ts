@@ -9,6 +9,7 @@ export interface OpcFee {
 }
 
 export interface AppConfig {
+  assetTitlePrefix: any
   metadataCacheUri: string
   complianceUri: string
   complianceApiVersion: string

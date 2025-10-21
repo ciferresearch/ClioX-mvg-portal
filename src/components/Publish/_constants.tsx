@@ -1,7 +1,8 @@
 import {
   allowFixedPricing,
   customProviderUrl,
-  defaultTokenSymbol
+  defaultTokenSymbol,
+  assetTitlePrefix
 } from '../../../app.config'
 import {
   FormPublishData,
@@ -73,7 +74,7 @@ export const initialValues: FormPublishData = {
     name: '',
     author: '',
     description: '',
-    tags: [],
+    tags: [assetTitlePrefix],
     termsAndConditions: false,
     dockerImage: '',
     dockerImageCustom: '',
