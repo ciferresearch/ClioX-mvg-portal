@@ -104,7 +104,9 @@ export default function MetadataFields(): ReactElement {
         prefix={appConfig?.assetTitlePrefix}
         help={
           appConfig?.assetTitlePrefix
-            ? `Will publish as: ${appConfig.assetTitlePrefix} - [Your Title]. You don't need to type the prefix.`
+            ? `Will publish as: ${appConfig.assetTitlePrefix} ${
+                appConfig?.assetTitleSeparator || '-'
+              } [Your Title]. You don't need to type the prefix.`
             : undefined
         }
       />
