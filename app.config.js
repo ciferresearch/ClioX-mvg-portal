@@ -131,5 +131,10 @@ module.exports = {
   plausibleDataDomain: 'cliox.org',
 
   // token symbol used as fallback value in various components
-  defaultTokenSymbol: 'EURAU'
+  defaultTokenSymbol: 'EURAU',
+
+  // Default prefix added to published asset titles
+  assetTitlePrefix: 'Clio-X',
+  // Separator used between prefix and user title when publishing
+  assetTitleSeparator: '|'
 }

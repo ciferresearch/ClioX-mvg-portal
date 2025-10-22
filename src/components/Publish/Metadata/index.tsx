@@ -19,7 +19,7 @@ const assetTypeOptionsTitles = getFieldContent(
 ).options
 
 export default function MetadataFields(): ReactElement {
-  const { siteContent } = useMarketMetadata()
+  const { siteContent, appConfig } = useMarketMetadata()
 
   // connect with Form state, use for conditional field rendering
   const { values, setFieldValue } = useFormikContext<FormPublishData>()
@@ -101,6 +101,14 @@ export default function MetadataFields(): ReactElement {
         {...getFieldContent('name', content.metadata.fields)}
         component={Input}
         name="metadata.name"
+        prefix={appConfig?.assetTitlePrefix}
+        help={
+          appConfig?.assetTitlePrefix
+            ? `Will publish as: ${appConfig.assetTitlePrefix} ${
+                appConfig?.assetTitleSeparator || '-'
+              } [Your Title]. You don't need to type the prefix.`
+            : undefined
+        }
       />
       <Field
         {...getFieldContent('description', content.metadata.fields)}

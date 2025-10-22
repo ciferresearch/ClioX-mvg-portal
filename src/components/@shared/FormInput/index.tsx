@@ -80,6 +80,8 @@ export interface InputProps {
   accountId?: string
   actions?: string[]
   fieldFormPrefix?: string
+  // internal: set by FormInput to propagate error state to InputElement
+  hasError?: boolean
 }
 
 function checkError(form: any, field: FieldInputProps<any>) {
@@ -149,7 +151,12 @@ export default function Input(props: Partial<InputProps>): ReactElement {
           <Tooltip content={<Markdown text={help} />} />
         )}
       </Label>
-      <InputElement size={size} {...field} {...props} />
+      <InputElement
+        size={size}
+        {...field}
+        {...props}
+        hasError={hasFormikError}
+      />
       {help && prominentHelp && <FormHelp>{help}</FormHelp>}
 
       {field?.name !== 'files' && isFormikField && hasFormikError && (
