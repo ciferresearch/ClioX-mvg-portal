@@ -1,0 +1,54 @@
+[
+  {
+    "id": "cameron-2025-navigating",
+    "title": "Navigating accountability: the role of paradata in AI documentation and governance",
+    "authors": ["Cameron", "Franks", "Huvila", "Mooradian"],
+    "year": 2025,
+    "link": "https://doi.org/10.1108/JD-01-2025-0009",
+    "group": "governance",
+    "topic": "publications",
+    "doi": "10.1108/JD-01-2025-0009",
+    "abstract": "This paper explores the role of paradata in AI documentation and governance frameworks."
+  },
+  {
+    "id": "lemieux-2024-protecting",
+    "title": "Protecting Privacy in Digital Records: The Potential of Privacy-Enhancing Technologies",
+    "authors": ["Lemieux", "Werner"],
+    "year": 2024,
+    "link": "https://doi.org/10.1145/3633477",
+    "group": "privacy",
+    "topic": "publications",
+    "doi": "10.1145/3633477",
+    "abstract": "An examination of privacy-enhancing technologies for digital records protection."
+  },
+  {
+    "id": "lemieux-2024-distant",
+    "title": "Using Distant Reading to Enhance Archival Access Whilst Protecting Privacy",
+    "authors": ["Lemieux", "Chung", "Zhou", "Wang"],
+    "year": 2024,
+    "link": "https://interparestrustai.org/assets/public/dissemination/UsingDistantReadingtoEnhanceArchivalAccessWhilstProtectingPrivacyFINAL_V2.docx",
+    "group": "privacy",
+    "topic": "publications",
+    "abstract": "RA06 research on using distant reading techniques to enhance archival access while maintaining privacy."
+  },
+  {
+    "id": "kwon-2025-hybrid-pii-masking",
+    "title": "Hybrid PII Masking and RAG-based LLM Inference for Privacy-Preserving QA on Clio",
+    "authors": ["Kwon", "Sun", "Lemieux", "Gang", "Lee"],
+    "year": 2025,
+    "link": "#",
+    "group": "privacy",
+    "topic": "publications",
+    "abstract": "Proceedings of the ACM International Conference on Intelligent Computing and Emerging Applications 2025, La Trobe University, Melbourne, Australia."
+  },
+  {
+    "id": "lemieux-2025-privacy-first-cliox",
+    "title": "Clio-X: A privacy-first platform built by and for archivists, cultural institutions and Researchers",
+    "authors": ["Lemieux"],
+    "year": 2025,
+    "link": "https://www.ica.org/newsletter/sahr-newsletter-august-2025/",
+    "group": "privacy",
+    "topic": "publications",
+    "abstract": "Archives and Human Rights: Newsletter from the Section on Archives and Human Rights, Issue No. 188. Paris: International Council on Archives Section on Archives and Human Rights."
+  }
+]
