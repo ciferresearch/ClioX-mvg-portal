@@ -92,7 +92,8 @@ export default function Research(): ReactElement {
       return new Date(iso).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC'
       })
     } catch {
       return iso
@@ -106,7 +107,8 @@ export default function Research(): ReactElement {
       return new Date(iso).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC'
       })
     } catch {
       return iso

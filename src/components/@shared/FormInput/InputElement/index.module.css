@@ -125,6 +125,8 @@
 .prefix {
   border-top-left-radius: var(--input-border-radius);
   border-bottom-left-radius: var(--input-border-radius);
+  /* Let a dedicated divider draw the seam between prefix and input */
+  border-right: 0;
 }
 
 .postfix {
@@ -133,7 +135,33 @@
 }
 
 .input:focus + .postfix {
-  border-color: var(--input-border-color);
+  border-color: var(--font-color-text);
+}
+
+/* Keep prefix border color unchanged on focus (only input highlights) */
+.postfixGroup:focus-within .postfix {
+  border-color: var(--font-color-text);
+}
+
+/* Dedicated divider between prefix and input for simpler styling */
+.prefixDivider {
+  width: var(--input-border-size);
+  align-self: stretch;
+  background: var(--input-border-color);
+}
+
+/* Focus/active states for divider */
+.prefixGroup:focus-within .prefixDivider {
+  background: var(--font-color-text);
+}
+
+/* Local error state applied by InputElement */
+.hasError .prefixDivider {
+  background: var(--brand-alert-red);
+}
+
+.hasError:focus-within .prefixDivider {
+  background: var(--font-color-text);
 }
 
 .input[type='range'] {

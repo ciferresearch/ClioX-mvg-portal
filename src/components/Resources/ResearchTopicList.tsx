@@ -67,7 +67,8 @@ const formatShortDate = (iso?: string) => {
     return new Date(iso).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     })
   } catch {
     return iso ?? ''
@@ -288,14 +289,16 @@ function ResearchTopicListView({
                       transition={{ duration: 0.4, ease: [0.33, 1, 0.68, 1] }}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:flex-1 sm:min-w-0">
                           <a
                             href={paper.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-base font-semibold text-slate-900 transition-colors hover:text-[color:var(--color-primary)]"
+                            className="inline-flex w-full items-center gap-2 text-base font-semibold text-slate-900 transition-colors hover:text-[color:var(--color-primary)]"
                           >
-                            <span>{paper.title}</span>
+                            <span className="flex-1 min-w-0 break-words whitespace-normal">
+                              {paper.title}
+                            </span>
                             <IconExternalLink className="h-4 w-4" />
                           </a>
                           {paper.group === 'presentations' ? (
@@ -319,7 +322,7 @@ function ResearchTopicListView({
                             </p>
                           )}
                         </div>
-                        <div className="flex flex-col items-start gap-2 sm:items-end">
+                        <div className="flex flex-col items-start gap-2 sm:items-end shrink-0 sm:flex-none">
                           <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-tight text-[color:var(--color-primary)] bg-[color:var(--button-secondary-background)]">
                             {groupLabel}
                           </span>
@@ -327,7 +330,7 @@ function ResearchTopicListView({
                             href={paper.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 text-[color:var(--color-primary)] border-[color:var(--color-highlight)] bg-[color:var(--background-body-transparent)] hover:text-[color:var(--color-highlight)] hover:border-[color:var(--color-highlight)]"
+                            className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 text-[color:var(--color-primary)] border-[color:var(--color-highlight)] bg-[color:var(--background-body-transparent)] hover:text-[color:var(--color-highlight)] hover:border-[color:var(--color-highlight)] whitespace-nowrap"
                           >
                             {paper.group === 'presentations'
                               ? 'View presentation'

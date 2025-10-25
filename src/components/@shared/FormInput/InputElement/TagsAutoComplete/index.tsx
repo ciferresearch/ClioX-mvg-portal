@@ -1,10 +1,10 @@
 import { ReactElement, useEffect, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
-import { OnChangeValue } from 'react-select'
+import { components as selectComponents, OnChangeValue } from 'react-select'
 import { useField } from 'formik'
 import { InputProps } from '../..'
 import { getTagsList } from '@utils/aquarius'
-import { chainIds } from '../../../../../../app.config'
+import { chainIds, assetTitlePrefix } from '../../../../../../app.config'
 import { useCancelToken } from '@hooks/useCancelToken'
 import styles from './index.module.css'
 import { matchSorter } from 'match-sorter'
@@ -36,9 +36,9 @@ export default function TagsAutoComplete({
     }))
   }
 
-  const defaultTags = !field.value
-    ? undefined
-    : generateAutocompleteOptions(field.value)
+  const selectedTags = field.value
+    ? generateAutocompleteOptions(field.value)
+    : []
 
   useEffect(() => {
     const generateTagsList = async () => {
@@ -50,7 +50,21 @@ export default function TagsAutoComplete({
   }, [newCancelToken])
 
   const handleChange = (userInput: OnChangeValue<AutoCompleteOption, true>) => {
-    const normalizedInput = userInput.map((input) => input.value)
+    let normalizedInput = userInput.map((input) => input.value)
+
+    // Enforce non-removable default tag only for publish form field
+    const enforceLock = name === 'metadata.tags'
+    if (enforceLock) {
+      const hasProtected = normalizedInput.some(
+        (v) => v?.toLowerCase() === assetTitlePrefix?.toLowerCase()
+      )
+      if (!hasProtected && assetTitlePrefix) {
+        normalizedInput = [assetTitlePrefix, ...normalizedInput]
+      }
+      // ensure unique values
+      normalizedInput = Array.from(new Set(normalizedInput))
+    }
+
     helpers.setValue(normalizedInput)
     helpers.setTouched(true)
   }
@@ -64,14 +78,36 @@ export default function TagsAutoComplete({
     setMatchedTagsList(matchedTagsList)
   }
 
+  // Adjust padding only for protected (non-removable) tag; keep defaults otherwise
+  const selectStyles = {
+    multiValueLabel: (base: any, state: any) => {
+      const isProtected =
+        state?.selectProps?.name === 'metadata.tags' &&
+        state?.data?.value?.toLowerCase() === assetTitlePrefix?.toLowerCase()
+      return isProtected ? { ...base, paddingLeft: 6, paddingRight: 6 } : base
+    }
+  }
+
   return (
     <CreatableSelect
       components={{
         DropdownIndicator: () => null,
-        IndicatorSeparator: () => null
+        IndicatorSeparator: () => null,
+        // Hide remove icon for protected tag when used in publish form
+        MultiValueRemove: (componentProps) => {
+          const enforceLock = name === 'metadata.tags'
+          const isProtected =
+            enforceLock &&
+            componentProps.data?.value?.toLowerCase() ===
+              assetTitlePrefix?.toLowerCase()
+          if (isProtected) return null
+          return <selectComponents.MultiValueRemove {...componentProps} />
+        }
       }}
       className={styles.select}
-      defaultValue={defaultTags}
+      value={selectedTags}
+      styles={selectStyles}
+      name={name}
       hideSelectedOptions
       isMulti
       isClearable={false}
@@ -83,6 +119,19 @@ export default function TagsAutoComplete({
       openMenuOnClick
       options={!input || input?.length < 1 ? [] : matchedTagsList}
       placeholder={placeholder}
+      onKeyDown={(e) => {
+        // Prevent backspace from removing protected tag when no input text
+        if (name !== 'metadata.tags') return
+        if (e.key !== 'Backspace') return
+        if (input && input.length > 0) return
+        const values: string[] = field?.value || []
+        if (!values?.length) return
+        const last = values[values.length - 1]
+        if (last?.toLowerCase() === assetTitlePrefix?.toLowerCase()) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }}
       theme={(theme) => ({
         ...theme,
         colors: { ...theme.colors, primary25: 'var(--border-color)' }

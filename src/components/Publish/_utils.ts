@@ -35,7 +35,9 @@ import {
   defaultTermsAndConditionsUrl,
   complianceApiVersion,
   complianceUri,
-  allowedGaiaXRegistryDomains
+  allowedGaiaXRegistryDomains,
+  assetTitlePrefix,
+  assetTitleSeparator
 } from '../../../app.config'
 import { sanitizeUrl } from '@utils/url'
 import { getContainerChecksum } from '@utils/docker'
@@ -69,6 +71,30 @@ function dateToStringNoMS(date: Date): string {
 function transformTags(originalTags: string[]): string[] {
   const transformedTags = originalTags?.map((tag) => slugify(tag).toLowerCase())
   return transformedTags
+}
+
+// Ensure title includes configured prefix (once), using configured separator.
+function applyTitlePrefix(title: string): string {
+  const prefix = assetTitlePrefix?.trim()
+  if (!title || !prefix) return title
+  const sep = (assetTitleSeparator || '-').trim()
+  const normalizedWithSep = `${prefix} ${sep} `
+
+  if (title.startsWith(normalizedWithSep)) return title
+
+  if (title.startsWith(prefix + ' ')) {
+    const rest = title.substring((prefix + ' ').length).trimStart()
+    return normalizedWithSep + rest
+  }
+  if (title.startsWith(prefix + '-')) {
+    const rest = title.substring((prefix + '-').length).trimStart()
+    return normalizedWithSep + rest
+  }
+  if (title.startsWith(prefix)) {
+    const rest = title.substring(prefix.length).trimStart()
+    return rest ? normalizedWithSep + rest : normalizedWithSep.trim()
+  }
+  return normalizedWithSep + title
 }
 
 export function transformConsumerParameters(
@@ -191,7 +217,7 @@ export async function transformPublishFormToDdo(
     created: currentTime,
     updated: currentTime,
     type,
-    name,
+    name: applyTitlePrefix(name),
     description,
     tags: transformTags(tags),
     author,

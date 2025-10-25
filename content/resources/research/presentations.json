@@ -5,13 +5,13 @@
       "title": "ClioX: A Novel Decentralized Platform for Digital Asset Reference & Access",
       "authors": [
         "Victoria Lemieux",
-        "Roberto Garcia",
+        "Pepita Raventos Pajares",
+        "Chris Zhou",
+        "Brandon Li",
+        "Faith Molosiwa",
         "Rosa Gil",
-        "Zehua Wang",
-        "Luis De La Torre",
-        "Gontse Molosiwa",
-        "Qihong Zhou",
-        "Pepita Raventós"
+        "Luis de la Torre",
+        "Roberto Garcia"
       ],
       "role": "Presenter",
       "eventName": "International Council on Archives Congress",
@@ -73,6 +73,28 @@
       "city": "Marburg",
       "country": "Germany",
       "date": "2025-05-20",
+      "link": ""
+    },
+    {
+      "id": "clio-x-iciam-2025-online-brazil",
+      "title": "Clio-X: A Decentralized Digital Solution Architecture and Design for Ethical AI-enabled Archival Reference and Access / Clio-X: Uma arquitetura e design de solução digital descentralizada para referência e acesso arquivístico éticos habilitados por IA",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "5th International Colloquium on Information Architecture and Multimodality (ICIAM): Information Technologies and Society",
+      "city": "Online",
+      "country": "Brazil",
+      "date": "2025-10-16",
+      "link": ""
+    },
+    {
+      "id": "clio-x-interpares-2025-macerata",
+      "title": "Clio-X",
+      "authors": ["Victoria Lemieux"],
+      "role": "Presenter",
+      "eventName": "InterPARES Trust AI Public Symposium: Artificial Intelligence to Benefit the Management of Public Records",
+      "city": "Macerata",
+      "country": "Italy",
+      "date": "2025-10-24",
       "link": ""
     }
   ]

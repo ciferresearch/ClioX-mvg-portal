@@ -82,8 +82,8 @@
 /* Current step: outlined primary ring with number */
 .current:before {
   content: counter(list-number);
-  color: var(--color-primary);
-  background: var(--background-content);
+  color: var(--brand-white);
+  background: var(--color-primary);
   border: 2px solid var(--color-primary);
 }
 
@@ -96,9 +96,9 @@
 
 /* Current + success: prefer current visual over check */
 .success.current:before {
-  content: counter(list-number);
-  color: var(--color-primary);
-  background: var(--background-content);
+  content: '✓';
+  color: var(--brand-white);
+  background: var(--brand-alert-green);
   border: 2px solid var(--color-primary);
 }
 

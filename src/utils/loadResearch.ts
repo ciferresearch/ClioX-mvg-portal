@@ -6,84 +6,10 @@ import {
 } from '@/components/Resources/types'
 import presentationsIndex from '../../content/resources/research/presentations.json'
 import prPublicRelations from '../../content/resources/research/public-relations.json'
+import publicationsJson from '../../content/resources/research/publications.json'
+import educationJson from '../../content/resources/research/education.json'
 
-// Base research papers (publications, education modules, etc.)
-const baseResearchPapers: ResearchPaper[] = [
-  {
-    id: 'cameron-2025-navigating',
-    title:
-      'Navigating accountability: the role of paradata in AI documentation and governance',
-    authors: ['Cameron', 'Franks', 'Huvila', 'Mooradian'],
-    year: 2025,
-    link: 'https://doi.org/10.1108/JD-01-2025-0009',
-    group: 'governance',
-    topic: 'publications',
-    doi: '10.1108/JD-01-2025-0009',
-    abstract:
-      'This paper explores the role of paradata in AI documentation and governance frameworks.'
-  },
-  {
-    id: 'lemieux-2024-protecting',
-    title:
-      'Protecting Privacy in Digital Records: The Potential of Privacy-Enhancing Technologies',
-    authors: ['Lemieux', 'Werner'],
-    year: 2024,
-    link: 'https://doi.org/10.1145/3633477',
-    group: 'privacy',
-    topic: 'publications',
-    doi: '10.1145/3633477',
-    abstract:
-      'An examination of privacy-enhancing technologies for digital records protection.'
-  },
-  {
-    id: 'lemieux-2024-distant',
-    title:
-      'Using Distant Reading to Enhance Archival Access Whilst Protecting Privacy',
-    authors: ['Lemieux', 'Chung', 'Zhou', 'Wang'],
-    year: 2024,
-    link: 'https://interparestrustai.org/assets/public/dissemination/UsingDistantReadingtoEnhanceArchivalAccessWhilstProtectingPrivacyFINAL_V2.docx',
-    group: 'privacy',
-    topic: 'publications',
-    abstract:
-      'RA06 research on using distant reading techniques to enhance archival access while maintaining privacy.'
-  },
-  {
-    id: 'ad01-2024-ai-module',
-    title:
-      'Archivist & Records Managers AI Competencies – Module 1: Introduction to Artificial Intelligence for the Archival Professions',
-    authors: ['AD01-Teachable AI'],
-    year: 2024,
-    link: 'https://interparestrustai.org/assets/public/dissemination/AD_01_Module1_v_1_1_20241018.pdf',
-    group: 'education',
-    topic: 'education',
-    abstract:
-      'Educational module introducing AI competencies for archival professionals.'
-  },
-  // duplicate for testing:
-  // Example test paper for development/testing purposes
-  {
-    id: 'test-2024-sample',
-    title: 'Test Paper: Sample for Development',
-    authors: ['Test Author'],
-    year: 2024,
-    link: 'https://example.com/test-paper',
-    group: 'testing',
-    topic: 'publications',
-    abstract:
-      'This is a sample research paper entry used for testing and development purposes.'
-  },
-  {
-    id: 'test-2024-sample',
-    title: 'Test Paper: Sample for Development',
-    authors: ['Test Author'],
-    year: 2024,
-    link: 'https://example.com/test-paper',
-    group: 'testing',
-    topic: 'publications',
-    abstract:
-      'This is a sample research paper entry used for testing and development purposes.'
-  }
-]
+// Base research papers are now fully loaded from JSON files
 
 // Public Relations posts, mapped to ResearchPaper entries
 const prPapers: ResearchPaper[] = (prPublicRelations as any[]).map((item) => {
@@ -100,8 +26,51 @@ const prPapers: ResearchPaper[] = (prPublicRelations as any[]).map((item) => {
   } as ResearchPaper
 })
 
+// Publications loaded from JSON
+const publicationPapers: ResearchPaper[] = (publicationsJson as any[]).map(
+  (item) => {
+    const year = typeof item.year === 'number' ? item.year : Number(item.year)
+    return {
+      id: item.id,
+      title: item.title,
+      authors: Array.isArray(item.authors) ? item.authors : [],
+      year: Number.isFinite(year)
+        ? (year as number)
+        : new Date().getUTCFullYear(),
+      link: item.link || '#',
+      group: item.group || 'privacy',
+      topic: 'publications',
+      abstract: item.abstract,
+      doi: item.doi
+    } as ResearchPaper
+  }
+)
+
+// Education modules loaded from JSON
+const educationPapers: ResearchPaper[] = (educationJson as any[]).map(
+  (item) => {
+    const year = typeof item.year === 'number' ? item.year : Number(item.year)
+    return {
+      id: item.id,
+      title: item.title,
+      authors: Array.isArray(item.authors) ? item.authors : [],
+      year: Number.isFinite(year)
+        ? (year as number)
+        : new Date().getUTCFullYear(),
+      link: item.link || '#',
+      group: 'education',
+      topic: 'education',
+      abstract: item.abstract
+    } as ResearchPaper
+  }
+)
+
 // Combined research papers list
-const researchPapers: ResearchPaper[] = [...baseResearchPapers, ...prPapers]
+const researchPapers: ResearchPaper[] = [
+  ...publicationPapers,
+  ...educationPapers,
+  ...prPapers
+]
 
 // Map presentations JSON to ResearchPaper shape with presentation-specific fields populated
 const presentationsPapers: ResearchPaper[] = (
@@ -118,7 +87,11 @@ const presentationsPapers: ResearchPaper[] = (
     id: p.id,
     title: p.title,
     authors: p.authors || [],
-    year: date ? new Date(date).getFullYear() : new Date().getFullYear(),
+    // Derive year from the date string to avoid timezone drift
+    year:
+      date && /^\d{4}-\d{2}-\d{2}$/.test(date)
+        ? parseInt(date.slice(0, 4), 10)
+        : new Date().getUTCFullYear(),
     link: p.link || '#',
     group: 'presentations',
     topic: 'presentations',
@@ -162,8 +135,15 @@ export function sortResearchPapers(
   sortBy: ResearchSortBy
 ): ResearchPaper[] {
   const sortedPapers = [...papers]
-  const toTimestamp = (p: ResearchPaper) =>
-    p.date ? new Date(p.date).getTime() : new Date(`${p.year}-01-01`).getTime()
+  const toTimestamp = (p: ResearchPaper) => {
+    if (p.date && /^\d{4}-\d{2}-\d{2}$/.test(p.date)) {
+      const [y, m, d] = p.date.split('-').map((n) => parseInt(n, 10))
+      if (!Number.isNaN(y) && !Number.isNaN(m) && !Number.isNaN(d)) {
+        return Date.UTC(y, m - 1, d)
+      }
+    }
+    return Date.UTC(p.year, 0, 1)
+  }
 
   switch (sortBy) {
     case 'date-desc':
