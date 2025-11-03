@@ -251,9 +251,10 @@ export default function JobList(props: {
         // 1. Save to IndexedDB first for persistence
         await createOrUpdateChatbot(newUseCaseData)
 
-        // 2. Aggregate existing namespace KBs + new KB, then upload once (same session)
-        const updatedList = [...nsRows, newUseCaseData]
-        const uploadResponse = await chatbotApi.uploadKnowledge(updatedList)
+        // 2. Delta upload: only send the newly added job to avoid duplicate IDs on backend
+        const uploadResponse = await chatbotApi.uploadKnowledge([
+          newUseCaseData
+        ])
 
         if (uploadResponse.success) {
           // Immediately refresh backend knowledge status after upload
@@ -310,8 +311,8 @@ export default function JobList(props: {
         .filter((row) => row.job.jobId !== job.jobId)
 
       if (remaining.length > 0) {
-        // Upload remaining knowledge to backend without resetting session
-        await chatbotApi.uploadKnowledge(remaining)
+        // Backend forbids duplicate IDs: replace session knowledge to reflect remaining items
+        await chatbotApi.replaceSessionKnowledge(remaining)
         props.onForceRefresh?.()
         updateToastSuccess(null, 'Data updated')
       } else {
