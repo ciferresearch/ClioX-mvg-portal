@@ -121,29 +121,122 @@ class ChatbotApiService {
     chatbotData: ChatbotUseCaseData[]
   ): Promise<UploadResponse> {
     try {
-      const allChunks = this.extractKnowledgeChunks(chatbotData)
+      const allChunksRaw = this.extractKnowledgeChunks(chatbotData)
       const domains = this.extractDomains(chatbotData)
 
-      const response = await fetch(`${this.baseUrl}/upload`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': this.sessionId
-        },
-        body: JSON.stringify({
-          sessionId: this.sessionId,
-          knowledgeChunks: allChunks,
-          domains
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(
-          `Upload failed: ${response.status} ${response.statusText}`
-        )
+      // 1) Deduplicate within this call to avoid cross-batch duplicate IDs
+      const seenKeys = new Set<string>()
+      const allChunks: KnowledgeChunk[] = []
+      for (const c of allChunksRaw) {
+        const key = `${c.content}|${JSON.stringify(c.metadata || {})}`
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key)
+          allChunks.push(c)
+        }
       }
 
-      return await response.json()
+      // 2) Estimate base overhead (payload envelope) for conservative byte-based batching
+      const measureBytes = (str: string) => {
+        try {
+          if (typeof Blob !== 'undefined') return new Blob([str]).size
+          if (typeof TextEncoder !== 'undefined')
+            return new TextEncoder().encode(str).length
+        } catch {}
+        return str.length
+      }
+      const baseOverhead = measureBytes(
+        JSON.stringify({
+          sessionId: this.sessionId,
+          knowledgeChunks: [],
+          domains
+        })
+      )
+      const measureObj = (obj: any) => measureBytes(JSON.stringify(obj))
+
+      // 3) Partition into ~1.5MB batches to stay well under platform limits
+      const MAX_BATCH_BYTES = Math.floor(1.5 * 1024 * 1024)
+      const batches: KnowledgeChunk[][] = []
+      let current: KnowledgeChunk[] = []
+      let currentBytes = baseOverhead
+      for (const chunk of allChunks) {
+        const size = measureObj(chunk) + 1 // approximate comma/array overhead
+        // If adding this chunk would exceed the limit, flush current batch first
+        if (current.length > 0 && currentBytes + size > MAX_BATCH_BYTES) {
+          batches.push(current)
+          current = []
+          currentBytes = baseOverhead
+        }
+        current.push(chunk)
+        currentBytes += size
+      }
+      if (current.length) batches.push(current)
+
+      // 4) Upload batches serially with retries (exponential backoff)
+      let totalProcessed = 0
+      const allDomains = new Set<string>(domains)
+
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i]
+        const body = {
+          sessionId: this.sessionId,
+          knowledgeChunks: batch,
+          domains
+        }
+        const bodyStr = JSON.stringify(body)
+        const bytes = measureBytes(bodyStr)
+        const mb = (bytes / (1024 * 1024)).toFixed(2)
+        // eslint-disable-next-line no-console
+        console.log(
+          `[Chatbot Upload] batch ${i + 1}/${batches.length} chunks=${
+            batch.length
+          } size=${mb} MB (${bytes} bytes)`
+        )
+
+        let attempt = 0
+        const maxAttempts = 3
+        let lastErr: any = null
+        while (attempt < maxAttempts) {
+          try {
+            const resp = await fetch(`${this.baseUrl}/upload`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Session-ID': this.sessionId
+              },
+              body: bodyStr
+            })
+            if (!resp.ok) {
+              const text = await resp.text().catch(() => '')
+              throw new Error(
+                `Upload failed (batch ${i + 1}): ${resp.status} ${
+                  resp.statusText
+                } ${text}`
+              )
+            }
+            const result: UploadResponse = await resp.json()
+            totalProcessed += result?.chunks_processed || 0
+            // Merge domains defensively
+            ;(result?.domains || []).forEach((d) => allDomains.add(d))
+            lastErr = null
+            break
+          } catch (err) {
+            lastErr = err
+            attempt += 1
+            if (attempt >= maxAttempts) break
+            // Simple exponential backoff: 500ms -> 1000ms -> 2000ms
+            const delay = 500 * Math.pow(2, attempt - 1)
+            await new Promise((resolve) => setTimeout(resolve, delay))
+          }
+        }
+        if (lastErr) throw lastErr
+      }
+
+      return {
+        success: true,
+        session_id: this.sessionId,
+        chunks_processed: totalProcessed,
+        domains: Array.from(allDomains)
+      }
     } catch (error) {
       console.error('❌ Knowledge upload failed:', error)
       throw error
