@@ -306,7 +306,7 @@ export default function Glossary(): ReactElement {
                 setActiveFilter(null)
                 setLocalSearchQuery('')
               }}
-              className="ml-4 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md transition-colors duration-200"
+              className="ml-4 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md transition-colors duration-200 cursor-pointer"
             >
               Clear
             </button>
@@ -332,7 +332,7 @@ export default function Glossary(): ReactElement {
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={closeTermDetail}
-              className="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
             >
               ← Back to Glossary
             </button>
@@ -498,7 +498,7 @@ export default function Glossary(): ReactElement {
                                     title={
                                       canOpen ? 'Open term' : 'Search term'
                                     }
-                                    className="px-2 py-1 text-xs rounded-full bg-white border border-gray-200 text-gray-700 hover:border-amber-300 hover:text-amber-800 transition-colors inline-flex items-center gap-1"
+                                    className="px-2 py-1 text-xs rounded-full bg-white border border-gray-200 text-gray-700 hover:border-amber-300 hover:text-amber-800 transition-colors inline-flex items-center gap-1 cursor-pointer"
                                   >
                                     {name}
                                   </button>
@@ -587,7 +587,7 @@ export default function Glossary(): ReactElement {
                       onClick={() => prev && openTermDetail(prev.id)}
                       className={`px-3 py-1.5 text-sm rounded-md border ${
                         prev
-                          ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900'
+                          ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 cursor-pointer'
                           : 'border-gray-200 text-gray-300 cursor-not-allowed'
                       } transition-colors`}
                     >
@@ -598,7 +598,7 @@ export default function Glossary(): ReactElement {
                       onClick={() => next && openTermDetail(next.id)}
                       className={`px-3 py-1.5 text-sm rounded-md border ${
                         next
-                          ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900'
+                          ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 cursor-pointer'
                           : 'border-gray-200 text-gray-300 cursor-not-allowed'
                       } transition-colors`}
                     >
@@ -651,7 +651,7 @@ export default function Glossary(): ReactElement {
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => openTermDetail(term.id)}
-                          className="text-left text-lg font-semibold text-gray-900 hover:text-amber-700 transition-colors duration-200 border-b-2 border-transparent hover:border-amber-700 inline-block"
+                          className="text-left text-lg font-semibold text-gray-900 hover:text-amber-700 transition-colors duration-200 border-b-2 border-transparent hover:border-amber-700 inline-block cursor-pointer"
                         >
                           {term.term}
                         </button>

@@ -7,6 +7,7 @@ import {
   useLayoutEffect
 } from 'react'
 import { motion } from 'motion/react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { IconSearch as SearchIcon } from '@tabler/icons-react'
 import { ResourceCard, Tab } from './types'
@@ -15,17 +16,8 @@ import {
   generateResourceCardImageForList,
   generateResourceCardImage
 } from '@/utils/loadResources'
-import {
-  searchGlossaryTerms,
-  generateGlossaryTermImage,
-  generateGlossaryTermImageForList
-} from '@/utils/loadGlossary'
-import {
-  searchResearchPapers,
-  generateResearchImage,
-  generateResearchImageForList
-} from '@/utils/loadResearch'
-import Glossary from './Glossary'
+// Glossary is loaded lazily to keep main bundle small
+const Glossary = dynamic(() => import('./Glossary'), { loading: () => null })
 import Research from './Research'
 import Academy from './Academy'
 import Events from './Events'
@@ -56,6 +48,13 @@ export default function Resources({
     useState<ResourceCard[]>(initialArticles)
   const [allResourceCards, setAllResourceCards] = useState<ResourceCard[]>([])
   const [academyResources, setAcademyResources] = useState<ResourceCard[]>([])
+  // Lazy search results (populated via dynamic imports when searching)
+  const [glossarySearchCards, setGlossarySearchCards] = useState<
+    ResourceCard[]
+  >([])
+  const [researchSearchCards, setResearchSearchCards] = useState<
+    ResourceCard[]
+  >([])
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const router = useRouter()
@@ -178,6 +177,78 @@ export default function Resources({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
+  // Run glossary + research search via dynamic imports to avoid pulling large JSON into main bundle
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      const q = searchQuery.trim()
+      if (!q) {
+        if (!cancelled) {
+          setGlossarySearchCards([])
+          setResearchSearchCards([])
+        }
+        return
+      }
+      try {
+        const [glossaryFns, researchFns] = await Promise.all([
+          import('@/utils/loadGlossary'),
+          import('@/utils/loadResearch')
+        ])
+
+        const glossaryMatches = glossaryFns.searchGlossaryTerms(q)
+        const glossaryCards: ResourceCard[] = glossaryMatches.map((term) => ({
+          id: `glossary-${term.id}`,
+          title: term.term,
+          description:
+            term.definition.substring(0, 150) +
+            (term.definition.length > 150 ? '...' : ''),
+          image:
+            viewMode === 'list'
+              ? glossaryFns.generateGlossaryTermImageForList(term.term)
+              : glossaryFns.generateGlossaryTermImage(term.term),
+          link: term.link || '#',
+          tag: 'GLOSSARY TERM',
+          category: 'glossary',
+          content: term.definition
+        }))
+
+        const researchMatches = researchFns.searchResearchPapers(q)
+        const researchCards: ResourceCard[] = researchMatches.map((paper) => ({
+          id: `research-${paper.id}`,
+          title: paper.title,
+          description:
+            paper.abstract?.substring(0, 150) +
+              (paper.abstract && paper.abstract.length > 150 ? '...' : '') ||
+            `Research paper by ${paper.authors.join(', ')} (${paper.year})`,
+          image:
+            viewMode === 'list'
+              ? researchFns.generateResearchImageForList(paper.title)
+              : researchFns.generateResearchImage(paper.title),
+          link: paper.link,
+          tag: 'RESEARCH',
+          category: 'research',
+          content: paper.abstract || '',
+          tags: [paper.group, ...paper.authors]
+        }))
+
+        if (!cancelled) {
+          setGlossarySearchCards(glossaryCards)
+          setResearchSearchCards(researchCards)
+        }
+      } catch (error) {
+        console.error('Error running dynamic search:', error)
+        if (!cancelled) {
+          setGlossarySearchCards([])
+          setResearchSearchCards([])
+        }
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [searchQuery, viewMode])
+
   // Animations for search results (grid & list)
   const resultsContainerVariants = {
     hidden: { opacity: 0 },
@@ -242,45 +313,8 @@ export default function Resources({
               : card.image
         }))
 
-      // Search glossary terms and convert to resource cards for display
-      const glossaryMatches = searchGlossaryTerms(searchQuery)
-      const glossaryCards: ResourceCard[] = glossaryMatches.map((term) => ({
-        id: `glossary-${term.id}`,
-        title: term.term,
-        description:
-          term.definition.substring(0, 150) +
-          (term.definition.length > 150 ? '...' : ''),
-        image:
-          viewMode === 'list'
-            ? generateGlossaryTermImageForList(term.term)
-            : generateGlossaryTermImage(term.term),
-        link: term.link || '#',
-        tag: 'GLOSSARY TERM',
-        category: 'glossary',
-        content: term.definition
-      }))
-
-      // Search research papers and convert to resource cards for display
-      const researchMatches = searchResearchPapers(searchQuery)
-      const researchCards: ResourceCard[] = researchMatches.map((paper) => ({
-        id: `research-${paper.id}`,
-        title: paper.title,
-        description:
-          paper.abstract?.substring(0, 150) +
-            (paper.abstract && paper.abstract.length > 150 ? '...' : '') ||
-          `Research paper by ${paper.authors.join(', ')} (${paper.year})`,
-        image:
-          viewMode === 'list'
-            ? generateResearchImageForList(paper.title)
-            : generateResearchImage(paper.title),
-        link: paper.link,
-        tag: 'RESEARCH',
-        category: 'research',
-        content: paper.abstract || '',
-        tags: [paper.group, ...paper.authors]
-      }))
-
-      return [...matchingCards, ...glossaryCards, ...researchCards]
+      // Merge with async search results (glossary + research)
+      return [...matchingCards, ...glossarySearchCards, ...researchSearchCards]
     }
 
     // Otherwise, filter by current tab and optimize images for list view
@@ -295,7 +329,15 @@ export default function Resources({
               : generateResourceCardImage(card.title, card.category)
             : card.image
       }))
-  }, [resourceCards, allResourceCards, activeTab, searchQuery, viewMode])
+  }, [
+    resourceCards,
+    allResourceCards,
+    activeTab,
+    searchQuery,
+    viewMode,
+    glossarySearchCards,
+    researchSearchCards
+  ])
 
   // Show search results count when searching
   const searchResultsText = useMemo(() => {
@@ -372,7 +414,7 @@ export default function Resources({
                   <button
                     type="button"
                     onClick={() => setViewMode('grid')}
-                    className={`px-2 py-1 rounded-md border transition-colors ${
+                    className={`px-2 py-1 rounded-md border transition-colors cursor-pointer ${
                       viewMode === 'grid'
                         ? 'border-amber-700 text-amber-700 bg-amber-50'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -384,7 +426,7 @@ export default function Resources({
                   <button
                     type="button"
                     onClick={() => setViewMode('list')}
-                    className={`px-2 py-1 rounded-md border transition-colors ${
+                    className={`px-2 py-1 rounded-md border transition-colors cursor-pointer ${
                       viewMode === 'list'
                         ? 'border-amber-700 text-amber-700 bg-amber-50'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
