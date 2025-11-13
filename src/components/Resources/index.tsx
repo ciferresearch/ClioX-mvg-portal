@@ -16,13 +16,13 @@ import {
   generateResourceCardImageForList,
   generateResourceCardImage
 } from '@/utils/loadResources'
-// Glossary is loaded lazily to keep main bundle small
-const Glossary = dynamic(() => import('./Glossary'), { loading: () => null })
 import Research from './Research'
 import Academy from './Academy'
 import Events from './Events'
 import ResourceGridCard from './shared/ResourceGridCard'
 import ResourceArticles from './ResourceArticles'
+// Glossary is loaded lazily to keep main bundle small
+const Glossary = dynamic(() => import('./Glossary'), { loading: () => null })
 
 // Resource card item moved to separate component
 
