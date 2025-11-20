@@ -87,13 +87,15 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   const [selectedMonth, setSelectedMonth] = useState<string>('all-months')
   const [showInPerson, setShowInPerson] = useState(false)
   const [showOnline, setShowOnline] = useState(false)
-  const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past'>('upcoming')
+  const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>(
+    'all'
+  )
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(
     null
   )
   const [searchIdle, setSearchIdle] = useState(false)
   const [sortBy, setSortBy] = useState<SortBy>('date')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const handleSort = (column: SortBy) => {
     if (sortBy === column) {
@@ -118,15 +120,20 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
     const loadFromJson = async () => {
       try {
         // Use dynamic import so JSON is bundled and available client-side
-        const mod = await import('../../../content/resources/events/index.json')
+        const modEvents = await import(
+          '../../../content/resources/events/index.json'
+        )
+        const modPresentations = await import(
+          '../../../content/resources/research/presentations.json'
+        )
 
-        const dataModule = mod as unknown as
+        const dataModule = modEvents as unknown as
           | { default: { events?: EventsJsonItem[] } }
           | { events?: EventsJsonItem[] }
         const data: { events?: EventsJsonItem[] } =
           'default' in dataModule ? dataModule.default : dataModule
         const items: EventsJsonItem[] = data?.events || []
-        const mapped: Event[] = items
+        const mappedEvents: Event[] = items
           .map((it) => ({
             id: it.id,
             title: it.title,
@@ -140,7 +147,52 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
           }))
           // filter out invalid dates
           .filter((ev) => !isNaN(ev.date.getTime()))
-        if (mapped.length > 0) setEventsList(mapped)
+
+        // Map presentations into events list
+        const presModule = modPresentations as unknown as
+          | { default: { presentations?: any[] } }
+          | { presentations?: any[] }
+        const presentationsRaw: any[] =
+          ('default' in presModule ? presModule.default : presModule)
+            ?.presentations ?? []
+        const mappedPresentations: Event[] = (presentationsRaw as any[])
+          .map((p) => {
+            const dateStr: string | undefined = p.date
+            const date = dateStr ? new Date(dateStr) : null
+            if (!date || isNaN(date.getTime())) return null
+
+            const { city } = p
+            const { country } = p
+            const { eventName } = p
+            const isOnline = (city || '').toLowerCase() === 'online'
+            const location =
+              city && country
+                ? `${city}, ${country}`
+                : city || country || 'Online'
+
+            // Use presentation title prominently to distinguish entries
+            const title: string = p.title
+              ? `Presentation: ${p.title}${eventName ? ' @ ' + eventName : ''}`
+              : eventName || 'Presentation'
+
+            const description: string | undefined = eventName
+              ? `At ${eventName}${p.role ? ' • ' + p.role : ''}`
+              : p.role || undefined
+
+            return {
+              id: p.id,
+              title,
+              date,
+              location,
+              type: isOnline ? 'online' : 'in-person',
+              description,
+              link: p.link || undefined
+            } as Event
+          })
+          .filter((ev): ev is Event => !!ev)
+
+        const combined = [...mappedEvents, ...mappedPresentations]
+        if (combined.length > 0) setEventsList(combined)
       } catch (e) {
         // keep fallback sample events
       }
@@ -156,6 +208,7 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
       const isUpcoming = event.date >= now
       if (timeFilter === 'upcoming' && !isUpcoming) return false
       if (timeFilter === 'past' && isUpcoming) return false
+      // 'all' shows everything
 
       // Search filter
       if (searchTerm) {
@@ -345,10 +398,23 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
         <div className="flex mb-4">
           <button
             onClick={() => {
+              setTimeFilter('all')
+              setMapFocus(null)
+            }}
+            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
+              timeFilter === 'all'
+                ? 'bg-[var(--color-primary)] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => {
               setTimeFilter('upcoming')
               setMapFocus(null) // Reset map focus when switching filters
             }}
-            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
+            className={`px-6 py-2.5 text-base font-semibold transition-colors cursor-pointer duration-200 ${
               timeFilter === 'upcoming'
                 ? 'bg-[var(--color-primary)] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
