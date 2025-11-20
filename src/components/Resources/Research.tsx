@@ -13,7 +13,7 @@ import {
 import FeaturedResearchCard from './shared/FeaturedResearchCard'
 import CustomDropdown from './shared/CustomDropdown'
 import { ResearchTopicListEmbedded } from './ResearchTopicList'
-import Tooltip from '@/components/@shared/Chatbot/ui/Tooltip'
+import { LinkUnavailableHint } from './shared/LinkUnavailableHint'
 
 export default function Research(): ReactElement {
   const [sortBy, setSortBy] = useState<ResearchSortBy>('date-desc')
@@ -291,10 +291,7 @@ export default function Research(): ReactElement {
                                     </span>
                                   </a>
                                 ) : (
-                                  <Tooltip
-                                    label="Link unavailable"
-                                    placement="top"
-                                  >
+                                  <LinkUnavailableHint>
                                     <div className="flex w-full items-start gap-2 text-gray-900 rounded-md">
                                       <IconBrandLinkedin
                                         size={16}
@@ -313,7 +310,7 @@ export default function Research(): ReactElement {
                                         </span>
                                       </span>
                                     </div>
-                                  </Tooltip>
+                                  </LinkUnavailableHint>
                                 )
                               ) : hasLink ? (
                                 <a
@@ -360,10 +357,7 @@ export default function Research(): ReactElement {
                                   )}
                                 </a>
                               ) : (
-                                <Tooltip
-                                  label="Link unavailable"
-                                  placement="top"
-                                >
+                                <LinkUnavailableHint>
                                   <div className="block text-gray-900 leading-relaxed rounded-md">
                                     {topic.id === 'presentations' ? (
                                       <>
@@ -381,7 +375,7 @@ export default function Research(): ReactElement {
                                       </span>
                                     )}
                                   </div>
-                                </Tooltip>
+                                </LinkUnavailableHint>
                               )}
                             </li>
                           )
