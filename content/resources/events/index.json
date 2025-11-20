@@ -74,6 +74,28 @@
       "venueName": "Barcelona International Convention Centre",
       "speakers": ["TBA"],
       "status": "upcoming"
+    },
+    {
+      "id": "event-4",
+      "category": "events",
+      "tag": "EVENT",
+      "title": "IEEE Big Data Computational Arival Science",
+      "description": "IEEE Big Data Computational Arival Science conference.",
+      "image": "/content/resources/events/placeholder.jpg",
+      "link": "#",
+      "content": "ieee big data computational archival science",
+      "tags": ["IEEE", "Big Data", "Computational Archival Science"],
+      "eventDate": "2025-12-09",
+      "endDate": "2025-12-09",
+      "timezone": "UTC",
+      "location": "Online",
+      "eventType": "online",
+      "registrationUrl": "#",
+      "registrationRequired": false,
+      "price": "TBA",
+      "organizer": "IEEE",
+      "speakers": ["TBA"],
+      "status": "upcoming"
     }
   ]
 }

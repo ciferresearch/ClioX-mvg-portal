@@ -80,6 +80,13 @@ const months = [
 type SortBy = 'date' | 'title' | 'location'
 type SortDir = 'asc' | 'desc'
 
+// Parse date string (YYYY-MM-DD) as local date, not UTC
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  // month is 0-indexed in Date constructor
+  return new Date(year, month - 1, day)
+}
+
 export default function Events({ events = [] }: EventsProps): ReactElement {
   const [eventsList, setEventsList] = useState<Event[]>(events)
   const [searchTerm, setSearchTerm] = useState('')
@@ -88,7 +95,7 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   const [showInPerson, setShowInPerson] = useState(false)
   const [showOnline, setShowOnline] = useState(false)
   const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>(
-    'all'
+    'all' // Will be set based on available events
   )
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(
     null
@@ -123,9 +130,6 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
         const modEvents = await import(
           '../../../content/resources/events/index.json'
         )
-        const modPresentations = await import(
-          '../../../content/resources/research/presentations.json'
-        )
 
         const dataModule = modEvents as unknown as
           | { default: { events?: EventsJsonItem[] } }
@@ -137,7 +141,7 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
           .map((it) => ({
             id: it.id,
             title: it.title,
-            date: new Date(it.eventDate),
+            date: parseLocalDate(it.eventDate),
             location: it.location,
             type: it.eventType,
             description: it.description,
@@ -148,51 +152,29 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
           // filter out invalid dates
           .filter((ev) => !isNaN(ev.date.getTime()))
 
-        // Map presentations into events list
-        const presModule = modPresentations as unknown as
-          | { default: { presentations?: any[] } }
-          | { presentations?: any[] }
-        const presentationsRaw: any[] =
-          ('default' in presModule ? presModule.default : presModule)
-            ?.presentations ?? []
-        const mappedPresentations: Event[] = (presentationsRaw as any[])
-          .map((p) => {
-            const dateStr: string | undefined = p.date
-            const date = dateStr ? new Date(dateStr) : null
-            if (!date || isNaN(date.getTime())) return null
-
-            const { city } = p
-            const { country } = p
-            const { eventName } = p
-            const isOnline = (city || '').toLowerCase() === 'online'
-            const location =
-              city && country
-                ? `${city}, ${country}`
-                : city || country || 'Online'
-
-            // Use presentation title prominently to distinguish entries
-            const title: string = p.title
-              ? `Presentation: ${p.title}${eventName ? ' @ ' + eventName : ''}`
-              : eventName || 'Presentation'
-
-            const description: string | undefined = eventName
-              ? `At ${eventName}${p.role ? ' • ' + p.role : ''}`
-              : p.role || undefined
-
-            return {
-              id: p.id,
-              title,
-              date,
-              location,
-              type: isOnline ? 'online' : 'in-person',
-              description,
-              link: p.link || undefined
-            } as Event
+        if (mappedEvents.length > 0) {
+          setEventsList(mappedEvents)
+          // Set default filter: if there are upcoming events, default to 'upcoming', otherwise 'all'
+          const now = new Date()
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          )
+          const hasUpcoming = mappedEvents.some((ev) => {
+            const eventDate = new Date(
+              ev.date.getFullYear(),
+              ev.date.getMonth(),
+              ev.date.getDate()
+            )
+            return eventDate >= today
           })
-          .filter((ev): ev is Event => !!ev)
-
-        const combined = [...mappedEvents, ...mappedPresentations]
-        if (combined.length > 0) setEventsList(combined)
+          if (hasUpcoming) {
+            setTimeFilter('upcoming')
+          } else {
+            setTimeFilter('all')
+          }
+        }
       } catch (e) {
         // keep fallback sample events
       }
@@ -201,11 +183,18 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   }, [])
 
   const filteredEvents = useMemo(() => {
+    // Get today's date at midnight in local timezone for comparison
     const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     const filtered = eventsList.filter((event) => {
-      // Time filter
-      const isUpcoming = event.date >= now
+      // Compare dates at midnight (ignore time)
+      const eventDate = new Date(
+        event.date.getFullYear(),
+        event.date.getMonth(),
+        event.date.getDate()
+      )
+      const isUpcoming = eventDate >= today
       if (timeFilter === 'upcoming' && !isUpcoming) return false
       if (timeFilter === 'past' && isUpcoming) return false
       // 'all' shows everything
