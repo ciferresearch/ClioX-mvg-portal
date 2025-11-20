@@ -80,6 +80,13 @@ const months = [
 type SortBy = 'date' | 'title' | 'location'
 type SortDir = 'asc' | 'desc'
 
+// Parse date string (YYYY-MM-DD) as local date, not UTC
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  // month is 0-indexed in Date constructor
+  return new Date(year, month - 1, day)
+}
+
 export default function Events({ events = [] }: EventsProps): ReactElement {
   const [eventsList, setEventsList] = useState<Event[]>(events)
   const [searchTerm, setSearchTerm] = useState('')
@@ -87,13 +94,15 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   const [selectedMonth, setSelectedMonth] = useState<string>('all-months')
   const [showInPerson, setShowInPerson] = useState(false)
   const [showOnline, setShowOnline] = useState(false)
-  const [timeFilter, setTimeFilter] = useState<'upcoming' | 'past'>('upcoming')
+  const [timeFilter, setTimeFilter] = useState<'all' | 'upcoming' | 'past'>(
+    'all' // Will be set based on available events
+  )
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(
     null
   )
   const [searchIdle, setSearchIdle] = useState(false)
   const [sortBy, setSortBy] = useState<SortBy>('date')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const handleSort = (column: SortBy) => {
     if (sortBy === column) {
@@ -118,19 +127,21 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
     const loadFromJson = async () => {
       try {
         // Use dynamic import so JSON is bundled and available client-side
-        const mod = await import('../../../content/resources/events/index.json')
+        const modEvents = await import(
+          '../../../content/resources/events/index.json'
+        )
 
-        const dataModule = mod as unknown as
+        const dataModule = modEvents as unknown as
           | { default: { events?: EventsJsonItem[] } }
           | { events?: EventsJsonItem[] }
         const data: { events?: EventsJsonItem[] } =
           'default' in dataModule ? dataModule.default : dataModule
         const items: EventsJsonItem[] = data?.events || []
-        const mapped: Event[] = items
+        const mappedEvents: Event[] = items
           .map((it) => ({
             id: it.id,
             title: it.title,
-            date: new Date(it.eventDate),
+            date: parseLocalDate(it.eventDate),
             location: it.location,
             type: it.eventType,
             description: it.description,
@@ -140,7 +151,30 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
           }))
           // filter out invalid dates
           .filter((ev) => !isNaN(ev.date.getTime()))
-        if (mapped.length > 0) setEventsList(mapped)
+
+        if (mappedEvents.length > 0) {
+          setEventsList(mappedEvents)
+          // Set default filter: if there are upcoming events, default to 'upcoming', otherwise 'all'
+          const now = new Date()
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          )
+          const hasUpcoming = mappedEvents.some((ev) => {
+            const eventDate = new Date(
+              ev.date.getFullYear(),
+              ev.date.getMonth(),
+              ev.date.getDate()
+            )
+            return eventDate >= today
+          })
+          if (hasUpcoming) {
+            setTimeFilter('upcoming')
+          } else {
+            setTimeFilter('all')
+          }
+        }
       } catch (e) {
         // keep fallback sample events
       }
@@ -149,13 +183,21 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
   }, [])
 
   const filteredEvents = useMemo(() => {
+    // Get today's date at midnight in local timezone for comparison
     const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     const filtered = eventsList.filter((event) => {
-      // Time filter
-      const isUpcoming = event.date >= now
+      // Compare dates at midnight (ignore time)
+      const eventDate = new Date(
+        event.date.getFullYear(),
+        event.date.getMonth(),
+        event.date.getDate()
+      )
+      const isUpcoming = eventDate >= today
       if (timeFilter === 'upcoming' && !isUpcoming) return false
       if (timeFilter === 'past' && isUpcoming) return false
+      // 'all' shows everything
 
       // Search filter
       if (searchTerm) {
@@ -345,10 +387,23 @@ export default function Events({ events = [] }: EventsProps): ReactElement {
         <div className="flex mb-4">
           <button
             onClick={() => {
+              setTimeFilter('all')
+              setMapFocus(null)
+            }}
+            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
+              timeFilter === 'all'
+                ? 'bg-[var(--color-primary)] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => {
               setTimeFilter('upcoming')
               setMapFocus(null) // Reset map focus when switching filters
             }}
-            className={`px-6 py-2.5 text-base font-semibold rounded-l-md transition-colors cursor-pointer duration-200 ${
+            className={`px-6 py-2.5 text-base font-semibold transition-colors cursor-pointer duration-200 ${
               timeFilter === 'upcoming'
                 ? 'bg-[var(--color-primary)] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

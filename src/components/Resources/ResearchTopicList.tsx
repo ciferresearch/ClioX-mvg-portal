@@ -277,6 +277,10 @@ function ResearchTopicListView({
               >
                 {pageItems.map((paper) => {
                   const groupLabel = groupLabelMap[paper.group] ?? 'Research'
+                  const hasLink =
+                    typeof paper.link === 'string' &&
+                    paper.link.trim() !== '' &&
+                    paper.link.trim() !== '#'
                   return (
                     <motion.li
                       key={paper.id}
@@ -290,17 +294,25 @@ function ResearchTopicListView({
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-2 sm:flex-1 sm:min-w-0">
-                          <a
-                            href={paper.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex w-full items-center gap-2 text-base font-semibold text-slate-900 transition-colors hover:text-[color:var(--color-primary)]"
-                          >
-                            <span className="flex-1 min-w-0 break-words whitespace-normal">
-                              {paper.title}
-                            </span>
-                            <IconExternalLink className="h-4 w-4" />
-                          </a>
+                          {hasLink ? (
+                            <a
+                              href={paper.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex w-full items-center gap-2 text-base font-semibold text-slate-900 transition-colors hover:text-[color:var(--color-primary)]"
+                            >
+                              <span className="flex-1 min-w-0 break-words whitespace-normal">
+                                {paper.title}
+                              </span>
+                              <IconExternalLink className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <div className="inline-flex w-full items-center gap-2 text-base font-semibold text-slate-900">
+                              <span className="flex-1 min-w-0 break-words whitespace-normal">
+                                {paper.title}
+                              </span>
+                            </div>
+                          )}
                           {paper.group === 'presentations' ? (
                             <div className="text-sm text-slate-600">
                               {buildPresentationMeta(paper)}
@@ -326,17 +338,23 @@ function ResearchTopicListView({
                           <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-tight text-[color:var(--color-primary)] bg-[color:var(--button-secondary-background)]">
                             {groupLabel}
                           </span>
-                          <a
-                            href={paper.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 text-[color:var(--color-primary)] border-[color:var(--color-highlight)] bg-[color:var(--background-body-transparent)] hover:text-[color:var(--color-highlight)] hover:border-[color:var(--color-highlight)] whitespace-nowrap"
-                          >
-                            {paper.group === 'presentations'
-                              ? 'View presentation'
-                              : 'View paper'}
-                            <IconExternalLink className="h-4 w-4" />
-                          </a>
+                          {hasLink ? (
+                            <a
+                              href={paper.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-200 text-[color:var(--color-primary)] border-[color:var(--color-highlight)] bg-[color:var(--background-body-transparent)] hover:text-[color:var(--color-highlight)] hover:border-[color:var(--color-highlight)] whitespace-nowrap"
+                            >
+                              {paper.group === 'presentations'
+                                ? 'View presentation'
+                                : 'View paper'}
+                              <IconExternalLink className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-slate-400 border-slate-200 bg-[color:var(--background-body-transparent)] whitespace-nowrap cursor-default">
+                              Link coming soon
+                            </span>
+                          )}
                         </div>
                       </div>
                     </motion.li>

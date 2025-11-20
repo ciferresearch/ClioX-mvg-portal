@@ -36,6 +36,11 @@ export default function ResourceGridCard({
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  const hasLink =
+    typeof card.link === 'string' &&
+    card.link.trim() !== '' &&
+    card.link.trim() !== '#'
+
   return (
     <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col">
       <img
@@ -66,12 +71,18 @@ export default function ResourceGridCard({
           </p>
         </div>
         <div className={`mt-auto flex items-start py-2 ${footerHeightClass}`}>
-          <a
-            href={card.link}
-            className="text-[var(--color-primary)] font-semibold text-sm hover:underline hover:text-[#a25e3c] transition-colors duration-200"
-          >
-            {linkText}
-          </a>
+          {hasLink ? (
+            <a
+              href={card.link}
+              className="text-[var(--color-primary)] font-semibold text-sm hover:underline hover:text-[#a25e3c] transition-colors duration-200"
+            >
+              {linkText}
+            </a>
+          ) : (
+            <span className="text-gray-400 font-semibold text-sm">
+              Link coming soon
+            </span>
+          )}
         </div>
       </div>
     </div>
