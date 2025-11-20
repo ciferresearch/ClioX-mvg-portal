@@ -13,6 +13,7 @@ import {
 import FeaturedResearchCard from './shared/FeaturedResearchCard'
 import CustomDropdown from './shared/CustomDropdown'
 import { ResearchTopicListEmbedded } from './ResearchTopicList'
+import Tooltip from '@/components/@shared/Chatbot/ui/Tooltip'
 
 export default function Research(): ReactElement {
   const [sortBy, setSortBy] = useState<ResearchSortBy>('date-desc')
@@ -290,24 +291,29 @@ export default function Research(): ReactElement {
                                     </span>
                                   </a>
                                 ) : (
-                                  <div className="flex w-full items-start gap-2 text-gray-900 rounded-md">
-                                    <IconBrandLinkedin
-                                      size={16}
-                                      className="text-amber-700 opacity-80 self-start mt-[4px]"
-                                      aria-hidden="true"
-                                    />
-                                    <span
-                                      className="min-w-0 flex-1 leading-snug"
-                                      aria-label={paper.title}
-                                    >
-                                      <span className="text-sm md:text-base">
-                                        {paper.title}
+                                  <Tooltip
+                                    label="Link unavailable"
+                                    placement="top"
+                                  >
+                                    <div className="flex w-full items-start gap-2 text-gray-900 rounded-md">
+                                      <IconBrandLinkedin
+                                        size={16}
+                                        className="text-amber-700 opacity-80 self-start mt-[4px]"
+                                        aria-hidden="true"
+                                      />
+                                      <span
+                                        className="min-w-0 flex-1 leading-snug"
+                                        aria-label={paper.title}
+                                      >
+                                        <span className="text-sm md:text-base line-clamp-2">
+                                          {paper.title}
+                                        </span>
+                                        <span className="inline-flex items-baseline whitespace-nowrap text-xs text-gray-400 before:content-['·'] before:mx-1 before:text-current before:opacity-60">
+                                          {paper.year}
+                                        </span>
                                       </span>
-                                      <span className="inline-flex items-baseline whitespace-nowrap text-xs text-gray-400 before:content-['·'] before:mx-1 before:text-current before:opacity-60">
-                                        {paper.year}
-                                      </span>
-                                    </span>
-                                  </div>
+                                    </div>
+                                  </Tooltip>
                                 )
                               ) : hasLink ? (
                                 <a
@@ -354,23 +360,28 @@ export default function Research(): ReactElement {
                                   )}
                                 </a>
                               ) : (
-                                <div className="block text-gray-900 leading-relaxed rounded-md">
-                                  {topic.id === 'presentations' ? (
-                                    <>
-                                      <div className="truncate">
-                                        {paper.title}
-                                      </div>
-                                      <div className="text-gray-600 text-sm">
-                                        {buildPresentationMeta(paper)}
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <span>
-                                      {paper.authors.join(', ')} ({paper.year}).{' '}
-                                      {paper.title}
-                                    </span>
-                                  )}
-                                </div>
+                                <Tooltip
+                                  label="Link unavailable"
+                                  placement="top"
+                                >
+                                  <div className="block text-gray-900 leading-relaxed rounded-md">
+                                    {topic.id === 'presentations' ? (
+                                      <>
+                                        <div className="line-clamp-2">
+                                          {paper.title}
+                                        </div>
+                                        <div className="text-gray-600 text-sm">
+                                          {buildPresentationMeta(paper)}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <span className="line-clamp-2">
+                                        {paper.authors.join(', ')} ({paper.year}
+                                        ). {paper.title}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Tooltip>
                               )}
                             </li>
                           )
