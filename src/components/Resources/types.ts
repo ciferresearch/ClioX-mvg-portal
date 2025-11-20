@@ -23,6 +23,41 @@ export interface GlossaryTerm {
   link?: string
   letter: string
   source?: string
+  // Enhanced optional fields (from InterPARES JSON)
+  otherDefinitions?: Array<{
+    source?: string
+    sourceUrl?: string
+    definition: string
+  }>
+  relationships?: {
+    BT?: string[]
+    NT?: string[]
+    RT?: string[]
+    SEE?: string[]
+  }
+  relationshipsResolved?: {
+    BT?: Array<{ id: string; term: string; type?: 'broader' }>
+    NT?: Array<{ id: string; term: string; type?: 'narrower' }>
+    RT?: Array<{ id: string; term: string; type?: 'related' }>
+    SEE?: Array<{
+      id: string
+      term: string
+      type?: 'equivalent' | 'used_for' | 'see' | 'see_also' | 'abbr'
+    }>
+  }
+  otherLanguages?: Array<{
+    language: string
+    term: string
+  }>
+  citations?: Array<{
+    source?: string
+    sourceUrl?: string
+    citationId?: string
+    text?: string
+  }>
+  scopeNotes?: string[]
+  generalNotes?: string | null
+  redirectTo?: string | null
 }
 
 export interface GlossarySection {
