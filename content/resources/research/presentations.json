@@ -18,7 +18,7 @@
       "city": "Barcelona",
       "country": "Spain",
       "date": "2025-10-28",
-      "link": ""
+      "link": "https://icabarcelona2025.cat/programme/"
     },
     {
       "id": "cliox-ara-2025-bristol",
@@ -40,7 +40,7 @@
       "city": "Copenhagen",
       "country": "Denmark",
       "date": "2025-07-29",
-      "link": ""
+      "link": "https://journals.aom.org/doi/10.5465/AMPROC.2025.15697symposium"
     },
     {
       "id": "clio-x-lustre-glow-2025-manchester",
@@ -51,7 +51,7 @@
       "city": "Manchester",
       "country": "United Kingdom",
       "date": "2025-07-22",
-      "link": ""
+      "link": "https://lustre-network.net/clio-x-aweb3-solution-for-privacy-preserving-ai-access-to-digital-archives/"
     },
     {
       "id": "clio-x-interpares-2025-bologna",
@@ -73,7 +73,7 @@
       "city": "Marburg",
       "country": "Germany",
       "date": "2025-05-20",
-      "link": ""
+      "link": "https://www.archivschule.de/assets/Kolloquium/29/02_Marburg-Colloquium-Presentation_20May_2025.pdf"
     },
     {
       "id": "clio-x-iciam-2025-online-brazil",
@@ -84,7 +84,7 @@
       "city": "Online",
       "country": "Brazil",
       "date": "2025-10-16",
-      "link": ""
+      "link": "https://www.even3.com.br/vciaim-635073/"
     },
     {
       "id": "clio-x-interpares-2025-macerata",
@@ -95,7 +95,7 @@
       "city": "Macerata",
       "country": "Italy",
       "date": "2025-10-24",
-      "link": ""
+      "link": "https://arxivers.com/wp-content/uploads/2025/10/Programa_Symposium-Program-Macerata-2025-10-24-.pdf"
     }
   ]
 }

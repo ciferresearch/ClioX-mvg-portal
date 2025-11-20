@@ -570,12 +570,20 @@ export default function Resources({
                         {card.description}
                       </p>
                       <div className="mt-2">
-                        <a
-                          href={card.link}
-                          className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
-                        >
-                          Read more →
-                        </a>
+                        {typeof card.link === 'string' &&
+                        card.link.trim() !== '' &&
+                        card.link.trim() !== '#' ? (
+                          <a
+                            href={card.link}
+                            className="text-amber-700 font-semibold text-sm hover:underline hover:text-amber-800 transition-colors duration-200"
+                          >
+                            Read more →
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 font-semibold text-sm">
+                            Link coming soon
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
