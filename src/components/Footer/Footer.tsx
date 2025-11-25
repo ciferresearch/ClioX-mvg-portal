@@ -10,7 +10,8 @@ export default function Footer(): ReactElement {
         <Links />
         <div className="border-t border-gray-200 mt-8 pt-4 text-center md:text-left">
           <p className="text-xs opacity-80">
-            © {new Date().getFullYear()} ClioX. All rights reserved.
+            © {new Date().getFullYear()} Clio-X Data Solutions Limited. All
+            rights reserved.
           </p>
         </div>
       </Container>
