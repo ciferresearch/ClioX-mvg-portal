@@ -20,7 +20,7 @@ export function LinkUnavailableHint({
       setShowHint(true)
       const timer = setTimeout(() => {
         setShowHint(false)
-      }, 1000) // 1秒后消失
+      }, 1000)
 
       return () => clearTimeout(timer)
     } else {
