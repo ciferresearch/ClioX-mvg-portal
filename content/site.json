@@ -44,6 +44,10 @@
         {
           "name": "AI Chatbot Assistant (UdL)",
           "link": "/usecases/chatbotUdl"
+        },
+        {
+          "name": "AI Chatbot Assistant (ARST)",
+          "link": "/usecases/chatbotArst"
         }
       ]
     },
