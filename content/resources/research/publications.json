@@ -1,5 +1,15 @@
 [
   {
+    "id": "zhou-2025-index-aware-rag",
+    "title": "Index-Aware Knowledge Grounding of Retrieval-Augmented Generation in Conversational Search for Archival Diplomatics",
+    "authors": ["Zhou", "Li", "Lemieux"],
+    "year": 2025,
+    "link": "https://ai-collaboratory.net/wp-content/uploads/2025/11/S13210_6789.pdf",
+    "group": "methodology",
+    "topic": "publications",
+    "abstract": "This paper discusses a novel index-aware method of semantically grounding chunking in the preprocessing phase of a conversational search pipeline."
+  },
+  {
     "id": "cameron-2025-navigating",
     "title": "Navigating accountability: the role of paradata in AI documentation and governance",
     "authors": ["Cameron", "Franks", "Huvila", "Mooradian"],

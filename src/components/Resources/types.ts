@@ -103,6 +103,7 @@ export type ResearchGroup =
   | 'all'
   | 'privacy'
   | 'governance'
+  | 'methodology'
   | 'education'
   | 'presentations'
   | 'public-relations'
