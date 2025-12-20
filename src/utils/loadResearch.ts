@@ -222,6 +222,7 @@ export function getResearchGroups(): Array<{
     { value: 'all', label: 'All Topics' },
     { value: 'privacy', label: 'Privacy' },
     { value: 'governance', label: 'Governance' },
+    { value: 'methodology', label: 'Methodology' },
     { value: 'education', label: 'Education Modules' },
     { value: 'presentations', label: 'Presentations' },
     { value: 'public-relations', label: 'Public Relations' }
