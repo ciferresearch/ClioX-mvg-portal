@@ -1,35 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Resend } from 'resend'
-import * as fs from 'fs'
-import * as path from 'path'
+import getConfig from 'next/config'
 
-// Load environment variables from .env.local
-// (Workaround for Next.js 15 API routes not loading .env files properly)
-const projectRoot = __dirname.includes('.next')
-  ? __dirname.split('.next')[0].replace(/\/$/, '')
-  : path.resolve(__dirname, '../../../../..')
+// Get server-side runtime config from next.config.js
+const { serverRuntimeConfig } = getConfig() || {}
 
-const envLocalPath = path.join(projectRoot, '.env.local')
-
-try {
-  if (fs.existsSync(envLocalPath)) {
-    const content = fs.readFileSync(envLocalPath, 'utf8')
-    content.split('\n').forEach((line) => {
-      const trimmed = line.trim()
-      if (trimmed && !trimmed.startsWith('#')) {
-        const eqIndex = trimmed.indexOf('=')
-        if (eqIndex > 0) {
-          const key = trimmed.substring(0, eqIndex)
-          const value = trimmed.substring(eqIndex + 1)
-          if (!process.env[key]) {
-            process.env[key] = value
-          }
-        }
-      }
-    })
-  }
-} catch (e) {
-  console.error('Error loading .env.local:', e)
+// Helper to get config value from serverRuntimeConfig or process.env
+function getEnvVar(key: string): string | undefined {
+  return serverRuntimeConfig?.[key] || process.env[key]
 }
 
 interface ContactFormData {
@@ -55,7 +33,7 @@ export default async function handler(
     })
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY
+  const resendApiKey = getEnvVar('RESEND_API_KEY')
 
   if (!resendApiKey) {
     console.error('RESEND_API_KEY is not configured')
@@ -91,8 +69,9 @@ export default async function handler(
     // Send email to the team
     const { error } = await resend.emails.send({
       from:
-        process.env.RESEND_FROM_EMAIL || 'Clio-X Contact Form <info@cliox.org>',
-      to: process.env.CONTACT_EMAIL || 'info@cliox.org',
+        getEnvVar('RESEND_FROM_EMAIL') ||
+        'Clio-X Contact Form <info@cliox.org>',
+      to: getEnvVar('CONTACT_EMAIL') || 'info@cliox.org',
       replyTo: email,
       subject: `New Contact Form Message from ${name}`,
       html: `
