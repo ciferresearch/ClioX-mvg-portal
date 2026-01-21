@@ -6,6 +6,12 @@ module.exports = (phase, { defaultConfig }) => {
     env: {
       CHATBOT_API_URL: process.env.CHATBOT_API_URL
     },
+    // Server-only runtime config (not exposed to browser)
+    serverRuntimeConfig: {
+      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+      CONTACT_EMAIL: process.env.CONTACT_EMAIL
+    },
     webpack: (config, options) => {
       config.module.rules.push(
         {
