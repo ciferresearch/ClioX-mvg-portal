@@ -72,7 +72,7 @@ export default function URLInput({
             }}
             disabled={isButtonDisabled}
           >
-            {isLoading ? <Loader /> : submitText}
+            {isLoading ? <Loader white /> : submitText}
           </Button>
         )}
       </InputGroup>
