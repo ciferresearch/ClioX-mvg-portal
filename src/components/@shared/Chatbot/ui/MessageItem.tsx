@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import type { ChatMessage } from '../_types'
 import UserMessageActions from './UserMessageActions'
 import AssistantMessageActions from './AssistantMessageActions'
+import Markdown from '@shared/Markdown'
 
 function MessageItem({
   message,
@@ -95,8 +96,8 @@ function MessageItem({
           }`}
         >
           {!isEditing ? (
-            <div className="text-[16px] leading-relaxed whitespace-pre-wrap">
-              {message.content}
+            <div className="text-[16px] leading-relaxed">
+              <Markdown text={message.content} />
             </div>
           ) : (
             <div className="mt-1">
