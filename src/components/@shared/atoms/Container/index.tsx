@@ -7,17 +7,20 @@ const cx = classNames.bind(styles)
 export interface ContainerProps {
   children: ReactNode
   narrow?: boolean
+  wide?: boolean
   className?: string
 }
 
 export default function Container({
   children,
   narrow,
+  wide,
   className
 }: ContainerProps): ReactElement {
   const styleClasses = cx({
     container: true,
     narrow,
+    wide,
     [className]: className
   })
 

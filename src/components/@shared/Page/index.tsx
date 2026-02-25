@@ -14,6 +14,7 @@ export interface PageProps {
   noPageHeader?: boolean
   headerCenter?: boolean
   noContainer?: boolean
+  wideContainer?: boolean
 }
 
 export default function Page({
@@ -23,7 +24,8 @@ export default function Page({
   description,
   noPageHeader,
   headerCenter,
-  noContainer
+  noContainer,
+  wideContainer
 }: PageProps): ReactElement {
   const { allowExternalContent } = useUserPreferences()
 
@@ -60,7 +62,11 @@ export default function Page({
   return (
     <>
       <Seo title={title} description={description} uri={uri} />
-      {noContainer ? content : <Container>{content}</Container>}
+      {noContainer ? (
+        content
+      ) : (
+        <Container wide={wideContainer}>{content}</Container>
+      )}
     </>
   )
 }

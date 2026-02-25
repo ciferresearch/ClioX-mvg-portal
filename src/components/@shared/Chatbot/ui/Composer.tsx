@@ -56,6 +56,7 @@ function InputContainer({
   const anchorRef = useRef<HTMLDivElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const autoHideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [hintVisible, setHintVisible] = useState(false)
   const statusLabel = (s?: AssistantState) => {
     switch (s) {
@@ -122,10 +123,21 @@ function InputContainer({
     }
   }, [assistantStatus])
 
+  useEffect(() => {
+    if (inputMessage !== '') return
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const lineHeight = 24
+    const minHeight = lineHeight * 2
+    textarea.style.height = 'auto'
+    textarea.style.height = `${minHeight}px`
+  }, [inputMessage])
+
   return (
     <div className="bg-[#F8F7F5] rounded-2xl p-3 space-y-4 relative">
       <form onSubmit={onSubmit} className="space-y-4">
         <textarea
+          ref={textareaRef}
           value={inputMessage}
           onChange={onInputChange}
           onKeyDown={onKeyDown}
@@ -508,7 +520,7 @@ export default function Composer({
 
   if (variant === 'hero') {
     return (
-      <div className="px-6 w-[820px] flex items-center min-h-[700px]">
+      <div className="px-6 w-full max-w-[1200px] flex items-center min-h-[700px]">
         <div className="w-full relative">
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full text-center pointer-events-none select-none text-[28px] md:text-[40px] leading-tight font-serif text-[#2b2e3b] whitespace-nowrap">
             <span className="inline-block relative align-middle">

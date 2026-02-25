@@ -21,33 +21,12 @@
       "name": "Use Cases",
       "subItems": [
         {
-          "name": "Email Text Visual Analysis",
-          "link": "/usecases/textAnalysis"
+          "name": "Visual Analysis",
+          "link": "/usecases/visualizations"
         },
         {
-          "name": "Cameroon Gazette Visual Analysis",
-          "link": "/usecases/cameroonGazette"
-        },
-        {
-          "name": "AI Chatbot Assistant (Cameroon)",
-          "link": "/usecases/chatbotCameroon"
-        },
-        {
-          "name": "AI Chatbot Assistant (InterPARES) (deprecated)",
-          "link": "/usecases/chatbotIntepares",
-          "isLive": false
-        },
-        {
-          "name": "AI Chatbot Assistant (InterPARES)",
-          "link": "/usecases/chatbotInteparesGeneral"
-        },
-        {
-          "name": "AI Chatbot Assistant (UdL)",
-          "link": "/usecases/chatbotUdl"
-        },
-        {
-          "name": "AI Chatbot Assistant (ARST)",
-          "link": "/usecases/chatbotArst"
+          "name": "AI Chatbot Assistant",
+          "link": "/usecases/chatbot"
         }
       ]
     },
