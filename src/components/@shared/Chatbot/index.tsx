@@ -39,7 +39,7 @@ export default function ChatbotViz({
     if (inFlightRef.current) return
     inFlightRef.current = true
 
-    let nextDelay = 30000 // default cadence
+    let nextDelay = 3600000 // used only when follow-up checks are needed
 
     try {
       // Always verify backend health first
@@ -74,7 +74,6 @@ export default function ChatbotViz({
           30000
         )
       } else {
-        nextDelay = 30000
         processingBackoffMsRef.current = 2000
       }
     } catch (error: unknown) {
@@ -92,9 +91,14 @@ export default function ChatbotViz({
     } finally {
       inFlightRef.current = false
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      timeoutRef.current = setTimeout(() => {
-        pollOnce()
-      }, nextDelay)
+      const shouldScheduleFollowUp =
+        assistantStatusRef.current === 'uploading' ||
+        assistantStatusRef.current === 'processing'
+      if (shouldScheduleFollowUp) {
+        timeoutRef.current = setTimeout(() => {
+          pollOnce()
+        }, nextDelay)
+      }
     }
   }, [])
 

@@ -17,3 +17,7 @@
 .container.narrow {
   max-width: 62rem;
 }
+
+.container.wide {
+  max-width: 2200px;
+}
