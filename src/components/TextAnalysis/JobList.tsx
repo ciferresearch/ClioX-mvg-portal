@@ -24,7 +24,9 @@ export default function JobList(props: {
   setTextAnalysisData: (textAnalysisData: TextAnalysisUseCaseData[]) => void
 }): ReactElement {
   const { chainIds } = useUserPreferences()
-  const textAnalysisAlgoDids: string[] = Object.values(TEXT_ANALYSIS_ALGO_DIDS)
+  const textAnalysisAlgoDids: string[] = Object.values(
+    TEXT_ANALYSIS_ALGO_DIDS
+  ).flat()
 
   const { address: accountId } = useAccount()
   const { data: signer } = useSigner()

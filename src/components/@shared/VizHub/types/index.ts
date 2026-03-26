@@ -47,7 +47,7 @@ export interface UseCaseConfig {
   /**
    * Algorithm DIDs mapping for different chains
    */
-  algoDids: Record<number, string>
+  algoDids: Record<number, string | string[]>
 
   /**
    * Result ZIP file configuration
