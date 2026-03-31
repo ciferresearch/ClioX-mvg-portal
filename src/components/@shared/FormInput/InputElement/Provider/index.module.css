@@ -6,10 +6,107 @@
   font-family: var(--font-family-base);
   text-transform: none;
   font-weight: var(--font-weight-base);
-
-  /* take it out of layout so error messages 
-  are not pushed down */
   position: absolute;
   left: 0;
   bottom: -30%;
+}
+
+.trigger {
+  composes: select from '../index.module.css';
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+
+  /* hide the default CSS arrow from .select since we use our own chevron */
+  background-image: none;
+  padding-right: 2.5rem;
+}
+
+.trigger:focus {
+  border-color: var(--input-border-color);
+  outline: none;
+}
+
+.trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chevron {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--font-color-text);
+  transition: transform 0.2s ease-out;
+  pointer-events: none;
+}
+
+.chevronOpen {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  width: 100%;
+  margin-top: 0.25rem;
+  background: var(--background-content);
+  border: var(--input-border-size) solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 15rem;
+  overflow: auto;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: calc(var(--spacer) / 3) calc(var(--spacer) / 2);
+  text-align: left;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  color: var(--font-color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+
+.option:hover,
+.option:focus {
+  background-color: var(--background-highlight);
+  outline: none;
+}
+
+.optionSelected {
+  composes: option;
+  font-weight: var(--font-weight-bold);
+  background-color: var(--background-highlight);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.status {
+  font-size: var(--font-size-small);
+  font-family: var(--font-family-base);
+  min-height: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.statusValidating {
+  composes: status;
+  color: var(--font-color-text);
+  opacity: 0.7;
+}
+
+.statusConnected {
+  composes: status;
+  color: var(--brand-alert-green);
 }
