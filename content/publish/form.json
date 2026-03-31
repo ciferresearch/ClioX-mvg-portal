@@ -30,6 +30,12 @@
         "required": true
       },
       {
+        "name": "author",
+        "label": "Author",
+        "placeholder": "e.g. University of British Columbia",
+        "help": "The author or organization that created this asset."
+      },
+      {
         "name": "serviceCredential",
         "label": "Service Credential",
         "placeholder": "e.g. https://file.com/service-credential.json",
