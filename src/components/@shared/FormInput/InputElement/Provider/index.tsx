@@ -234,7 +234,11 @@ export default function CustomProvider(props: InputProps): ReactElement {
       {!isCustomMode && (
         <p
           className={
-            isLoading ? styles.statusValidating : styles.statusConnected
+            isLoading
+              ? styles.statusValidating
+              : field?.value?.valid && matchedProvider
+              ? styles.statusConnected
+              : styles.status
           }
         >
           {isLoading

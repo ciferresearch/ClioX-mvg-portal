@@ -8,8 +8,8 @@ import { FormPublishData } from '@components/Publish/_types'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 const SYMBOL_PRESETS = [
-  { label: 'GXAT', name: 'Access Token', symbol: 'GXAT' },
-  { label: 'CLIOX', name: 'Clio-X Access Token', symbol: 'CLIOX' }
+  { label: 'GXAT (Default)', name: 'Access Token', symbol: 'GXAT' },
+  { label: 'CLIOX', name: 'Access Token', symbol: 'CLIOX' }
 ]
 
 export default function Datatoken({
@@ -37,7 +37,9 @@ export default function Datatoken({
   useEffect(() => {
     const providerUrl = values?.services?.[0]?.providerUrl?.url || ''
     if (providerUrl.includes('agrospai.udl.cat')) {
-      helpers.setValue({ name: 'Clio-X Access Token', symbol: 'CLIOX' })
+      helpers.setValue({ name: 'Access Token', symbol: 'CLIOX' })
+    } else {
+      helpers.setValue({ name: 'Access Token', symbol: 'GXAT' })
     }
   }, [values?.services?.[0]?.providerUrl?.url])
 
