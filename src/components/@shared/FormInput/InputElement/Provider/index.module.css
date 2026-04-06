@@ -59,6 +59,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   max-height: 15rem;
   overflow: auto;
+  animation: dropdownIn 0.15s ease-out;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .option {
@@ -98,6 +110,22 @@
   font-family: var(--font-family-base);
   min-height: 1.25rem;
   margin-top: 0.25rem;
+}
+
+.customExpand {
+  margin-top: calc(var(--spacer) / 2);
+  animation: fadeSlideIn 0.2s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .statusValidating {

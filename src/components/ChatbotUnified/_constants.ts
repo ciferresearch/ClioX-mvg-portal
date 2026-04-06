@@ -4,11 +4,6 @@ import {
 } from '../ChatbotCameroon/_constants'
 
 import {
-  INTEPARES_CHATBOT_ALGO_DIDS,
-  CHATBOT_NAMESPACE as INTEPARES_NAMESPACE
-} from '../ChatbotIntepares/_constants'
-
-import {
   INTEPARES_GENERAL_CHATBOT_ALGO_DIDS,
   CHATBOT_NAMESPACE as INTEPARES_GENERAL_NAMESPACE
 } from '../ChatbotInteparesGeneral/_constants'
@@ -36,12 +31,6 @@ export const CHATBOT_PROJECTS: ChatbotProject[] = [
     name: 'Cameroon',
     namespace: CAMEROON_NAMESPACE,
     algoDidsByChain: CAMEROON_CHATBOT_ALGO_DIDS
-  },
-  {
-    id: 'intepares-deprecated',
-    name: 'InterPARES(deprecated)',
-    namespace: INTEPARES_NAMESPACE,
-    algoDidsByChain: INTEPARES_CHATBOT_ALGO_DIDS
   },
   {
     id: 'intepares',

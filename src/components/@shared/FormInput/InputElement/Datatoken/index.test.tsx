@@ -1,8 +1,16 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import Datatoken from './index'
-import { useField } from 'formik'
+import { useField, useFormikContext } from 'formik'
 
 jest.mock('formik')
+
+const mockFormikContext = {
+  values: { services: [{ providerUrl: { url: '' } }] },
+  setFieldValue: jest.fn(),
+  handleChange: jest.fn(),
+  handleBlur: jest.fn()
+}
+;(useFormikContext as jest.Mock).mockReturnValue(mockFormikContext)
 
 const props = {
   name: 'Datatoken',

@@ -26,6 +26,7 @@ export default function CustomProvider(props: InputProps): ReactElement {
   const [isLoading, setIsLoading] = useState(false)
   const [isCustomMode, setIsCustomMode] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [pendingSelection, setPendingSelection] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const chainId = chain?.id || 32457
@@ -119,12 +120,15 @@ export default function CustomProvider(props: InputProps): ReactElement {
 
     if (value === '__custom__') {
       setIsCustomMode(true)
+      setPendingSelection(null)
       helpers.setValue({ url: '', valid: false, custom: true })
       return
     }
 
     setIsCustomMode(false)
+    setPendingSelection(value)
     await validateProvider(value, false)
+    setPendingSelection(null)
   }
 
   function handleCustomFileInfoClose() {
@@ -168,7 +172,8 @@ export default function CustomProvider(props: InputProps): ReactElement {
 
   // ── Has providers: custom dropdown UI ──
 
-  const matchedProvider = providers.find((p) => p.url === field?.value?.url)
+  const activeUrl = pendingSelection || field?.value?.url
+  const matchedProvider = providers.find((p) => p.url === activeUrl)
   const displayLabel = isCustomMode
     ? 'Custom'
     : matchedProvider?.name || providers[0]?.name
@@ -180,7 +185,7 @@ export default function CustomProvider(props: InputProps): ReactElement {
 
   const currentValue = isCustomMode
     ? '__custom__'
-    : field?.value?.url || providers[0]?.url
+    : activeUrl || providers[0]?.url
 
   return (
     <>
@@ -229,7 +234,11 @@ export default function CustomProvider(props: InputProps): ReactElement {
       {!isCustomMode && (
         <p
           className={
-            isLoading ? styles.statusValidating : styles.statusConnected
+            isLoading
+              ? styles.statusValidating
+              : field?.value?.valid && matchedProvider
+              ? styles.statusConnected
+              : styles.status
           }
         >
           {isLoading
@@ -242,7 +251,7 @@ export default function CustomProvider(props: InputProps): ReactElement {
 
       {/* Custom mode */}
       {isCustomMode && (
-        <div style={{ marginTop: 'calc(var(--spacer) / 2)' }}>
+        <div className={styles.customExpand}>
           {field?.value?.valid ? (
             <FileInfo
               file={field.value}
