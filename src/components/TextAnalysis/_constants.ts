@@ -6,8 +6,7 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
 export const TEXT_ANALYSIS_ALGO_DIDS = {
   32456: [
     'did:op:b0f6cccf8a8c1094e3b29c537271f2dcf025249e8b9324ae93c6b79b20db723c',
-    'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651',
-    'did:op:e6481b5cebb39ef798ad7c6f26d6c5cdd4cc9a6f1ef0d7f62f2408e5186cf90a'
+    'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651'
   ]
 }
 
