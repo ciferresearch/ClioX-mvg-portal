@@ -9,6 +9,12 @@ export const TEXT_ANALYSIS_ALGO_DIDS = {
   ]
 }
 
+export const TEXT_ANALYSIS_DATASET_DIDS: Record<number, string[]> = {
+  32456: [
+    'did:op:c5cebd876a1c7fd5dc7bc6fc3b9ca96871214f1299b0aaf779febdb91d12ec2a'
+  ]
+}
+
 export const TEXT_ANALYSIS_USECASE_NAME = 'textAnalysises'
 
 export const TEXT_ANALYSIS_RESULT_ZIP = {

@@ -6,9 +6,11 @@ import { chatbotApi, KnowledgeStatus } from '../../../@utils/chatbot'
 
 export default function ChatbotViz({
   algoDidsByChain,
+  datasetDidsByChain,
   namespace
 }: {
   algoDidsByChain: Record<number, string | string[]>
+  datasetDidsByChain?: Record<number, string[]>
   namespace: string
 }): ReactElement {
   // Get chatbot data from IndexedDB through useUseCases hook
@@ -135,6 +137,7 @@ export default function ChatbotViz({
     <div className="flex flex-col gap-6">
       <JobList
         algoDidsByChain={algoDidsByChain}
+        datasetDidsByChain={datasetDidsByChain}
         namespace={namespace}
         setChatbotData={setChatbotData}
         onStatusChange={(s: AssistantState) => {
