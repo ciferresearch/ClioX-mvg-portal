@@ -107,8 +107,13 @@ export default function JobList(props: {
       const filtered = deduped.filter((job) => {
         if (!textAnalysisAlgoDids.includes(job.algoDID)) return false
         if (job.status !== 70) return false
+        // Dataset DID allowlist enforced per use case pairing. Jobs without
+        // an inputDID are intentionally excluded (fail-closed): if we cannot
+        // verify the dataset, we should not surface the job under this use
+        // case. NOTE: this will hide historical jobs that ran on a different
+        // dataset (e.g. before the algo+dataset pairing was enforced).
         if (textAnalysisDatasetDids.length > 0) {
-          const inputs = Array.isArray(job.inputDID) ? job.inputDID : []
+          const inputs = job.inputDID ?? []
           if (!inputs.some((did) => textAnalysisDatasetDids.includes(did))) {
             return false
           }

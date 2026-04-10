@@ -113,9 +113,11 @@ export default function JobList(props: {
         if (!chatbotAlgoDids.includes(job.algoDID)) return false
         if (job.status !== 70) return false
         // Optional dataset DID filter: only show jobs whose input dataset
-        // is in the allowlist for this use case.
+        // is in the allowlist for this use case. Jobs without an inputDID
+        // are intentionally excluded (fail-closed): if we cannot verify the
+        // dataset, we should not surface the job under this use case.
         if (chatbotDatasetDids.length > 0) {
-          const inputs = Array.isArray(job.inputDID) ? job.inputDID : []
+          const inputs = job.inputDID ?? []
           if (!inputs.some((did) => chatbotDatasetDids.includes(did))) {
             return false
           }
