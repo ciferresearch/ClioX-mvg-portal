@@ -16,11 +16,6 @@ import {
   CHATBOT_NAMESPACE as UDL_NAMESPACE
 } from '../ChatbotUdL/_constants'
 
-import {
-  ARST_CHATBOT_ALGO_DIDS,
-  CHATBOT_NAMESPACE as ARST_NAMESPACE
-} from '../ChatbotARST/_constants'
-
 export interface ChatbotProject {
   id: string
   name: string
@@ -50,11 +45,5 @@ export const CHATBOT_PROJECTS: ChatbotProject[] = [
     namespace: UDL_NAMESPACE,
     algoDidsByChain: UDL_CHATBOT_ALGO_DIDS,
     datasetDidsByChain: UDL_CHATBOT_DATASET_DIDS
-  },
-  {
-    id: 'arst',
-    name: 'ARST',
-    namespace: ARST_NAMESPACE,
-    algoDidsByChain: ARST_CHATBOT_ALGO_DIDS
   }
 ]
