@@ -17,7 +17,10 @@ import Accordion from '../@shared/Accordion'
 import Button from '../@shared/atoms/Button'
 import ComputeJobs, { GetCustomActions } from '../Profile/History/ComputeJobs'
 import styles from './JobList.module.css'
-import { TEXT_ANALYSIS_ALGO_DIDS } from './_constants'
+import {
+  TEXT_ANALYSIS_ALGO_DIDS,
+  TEXT_ANALYSIS_DATASET_DIDS
+} from './_constants'
 import { TextAnalysisResult } from './_types'
 
 export default function JobList(props: {
@@ -26,6 +29,9 @@ export default function JobList(props: {
   const { chainIds } = useUserPreferences()
   const textAnalysisAlgoDids: string[] = Object.values(
     TEXT_ANALYSIS_ALGO_DIDS
+  ).flat()
+  const textAnalysisDatasetDids: string[] = Object.values(
+    TEXT_ANALYSIS_DATASET_DIDS
   ).flat()
 
   const { address: accountId } = useAccount()
@@ -98,9 +104,22 @@ export default function JobList(props: {
       const deduped = Array.from(
         new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      const filtered = deduped.filter(
-        (job) => textAnalysisAlgoDids.includes(job.algoDID) && job.status === 70
-      )
+      const filtered = deduped.filter((job) => {
+        if (!textAnalysisAlgoDids.includes(job.algoDID)) return false
+        if (job.status !== 70) return false
+        // Dataset DID allowlist enforced per use case pairing. Jobs without
+        // an inputDID are intentionally excluded (fail-closed): if we cannot
+        // verify the dataset, we should not surface the job under this use
+        // case. NOTE: this will hide historical jobs that ran on a different
+        // dataset (e.g. before the algo+dataset pairing was enforced).
+        if (textAnalysisDatasetDids.length > 0) {
+          const inputs = job.inputDID ?? []
+          if (!inputs.some((did) => textAnalysisDatasetDids.includes(did))) {
+            return false
+          }
+        }
+        return true
+      })
       setJobs(filtered)
       setIsLoadingJobs(!loaded)
     } catch (error) {
@@ -110,6 +129,7 @@ export default function JobList(props: {
   }, [
     chainIds,
     textAnalysisAlgoDids,
+    textAnalysisDatasetDids,
     accountId,
     autoWallet,
     // resultFileName,

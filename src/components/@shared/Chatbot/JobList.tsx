@@ -33,6 +33,7 @@ export type AssistantState =
 
 export default function JobList(props: {
   algoDidsByChain: Record<number, string | string[]>
+  datasetDidsByChain?: Record<number, string[]>
   namespace: string
   setChatbotData: (chatbotData: ChatbotUseCaseData[]) => void
   onStatusChange?: (s: AssistantState) => void
@@ -42,6 +43,9 @@ export default function JobList(props: {
   const chatbotAlgoDids: string[] = (
     Object.values(props.algoDidsByChain) as (string | string[])[]
   ).flat()
+  const chatbotDatasetDids: string[] = props.datasetDidsByChain
+    ? Object.values(props.datasetDidsByChain).flat()
+    : []
 
   const { address: accountId } = useAccount()
   const { data: signer } = useSigner()
@@ -105,9 +109,21 @@ export default function JobList(props: {
       const deduped = Array.from(
         new Map(merged.map((j) => [j.jobId, j])).values()
       )
-      const filtered = deduped.filter(
-        (job) => chatbotAlgoDids.includes(job.algoDID) && job.status === 70
-      )
+      const filtered = deduped.filter((job) => {
+        if (!chatbotAlgoDids.includes(job.algoDID)) return false
+        if (job.status !== 70) return false
+        // Optional dataset DID filter: only show jobs whose input dataset
+        // is in the allowlist for this use case. Jobs without an inputDID
+        // are intentionally excluded (fail-closed): if we cannot verify the
+        // dataset, we should not surface the job under this use case.
+        if (chatbotDatasetDids.length > 0) {
+          const inputs = job.inputDID ?? []
+          if (!inputs.some((did) => chatbotDatasetDids.includes(did))) {
+            return false
+          }
+        }
+        return true
+      })
 
       setJobs(filtered)
       setIsLoadingJobs(!loaded)
@@ -115,7 +131,14 @@ export default function JobList(props: {
       LoggerInstance.error((error as Error).message)
       setIsLoadingJobs(false)
     }
-  }, [chainIds, chatbotAlgoDids, accountId, autoWallet, newCancelToken])
+  }, [
+    chainIds,
+    chatbotAlgoDids,
+    chatbotDatasetDids,
+    accountId,
+    autoWallet,
+    newCancelToken
+  ])
 
   useEffect(() => {
     fetchJobs()

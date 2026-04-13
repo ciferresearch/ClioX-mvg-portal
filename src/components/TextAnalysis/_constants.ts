@@ -5,9 +5,13 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
  */
 export const TEXT_ANALYSIS_ALGO_DIDS = {
   32456: [
-    'did:op:b0f6cccf8a8c1094e3b29c537271f2dcf025249e8b9324ae93c6b79b20db723c',
-    'did:op:9e5f592ef426caea54471829d11262171f207a608adb5cdd1d1046b50540e651',
     'did:op:735d46e04de418f8f671fe2bd6828c40490c99729c93d0c42c92bd5fe3d6bcb8'
+  ]
+}
+
+export const TEXT_ANALYSIS_DATASET_DIDS: Record<number, string[]> = {
+  32456: [
+    'did:op:c5cebd876a1c7fd5dc7bc6fc3b9ca96871214f1299b0aaf779febdb91d12ec2a'
   ]
 }
 
