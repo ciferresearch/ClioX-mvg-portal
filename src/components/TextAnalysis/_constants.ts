@@ -5,12 +5,20 @@ import type { UseCaseConfig } from '../@shared/VizHub/types'
  */
 export const TEXT_ANALYSIS_ALGO_DIDS = {
   32456: [
+    // "Text Analysis with Table" — live on Pontus-X
+    'did:op:b0f6cccf8a8c1094e3b29c537271f2dcf025249e8b9324ae93c6b79b20db723c',
+    // STALE: not found in Aquarius (404 as of 2026-05-26). Kept as a placeholder
+    // pending re-upload by Chris (back from SF). Matches no jobs until re-indexed.
     'did:op:735d46e04de418f8f671fe2bd6828c40490c99729c93d0c42c92bd5fe3d6bcb8'
   ]
 }
 
 export const TEXT_ANALYSIS_DATASET_DIDS: Record<number, string[]> = {
   32456: [
+    // "Enron dataset" — live on Pontus-X
+    'did:op:9def794e38f50bec2201533b0d7556034a9d1c0e19210c40388cf27a0e801ddb',
+    // STALE: not found in Aquarius (404 as of 2026-05-26). Kept as a placeholder
+    // pending re-upload by Chris (back from SF). Matches no jobs until re-indexed.
     'did:op:c5cebd876a1c7fd5dc7bc6fc3b9ca96871214f1299b0aaf779febdb91d12ec2a'
   ]
 }
