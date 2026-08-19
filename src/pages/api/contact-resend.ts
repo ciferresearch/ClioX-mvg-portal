@@ -71,7 +71,7 @@ export default async function handler(
       from:
         getEnvVar('RESEND_FROM_EMAIL') ||
         'Clio-X Contact Form <info@cliox.org>',
-      to: getEnvVar('CONTACT_EMAIL') || 'info@cliox.org',
+      to: getEnvVar('CONTACT_EMAIL') || 'v.lemieux@clioxdatasolutions.com',
       replyTo: email,
       subject: `New Contact Form Message from ${name}`,
       html: `
