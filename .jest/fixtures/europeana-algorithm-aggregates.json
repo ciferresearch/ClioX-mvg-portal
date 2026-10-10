@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "pages": [
+    {
+      "recordId": "/123/Archive",
+      "page": "page1",
+      "rights": "Public domain",
+      "title": "Archive",
+      "date": "1918-01-01",
+      "language": "en",
+      "wordCount": 1120,
+      "charCount": 8549,
+      "chunkCount": 1
+    }
+  ],
+  "pageCount": 1,
+  "wordCount": 1120,
+  "charCount": 8549,
+  "chunkCount": 1,
+  "topTerms": [
+    {
+      "term": "approaching",
+      "count": 80
+    },
+    {
+      "term": "daily",
+      "count": 80
+    },
+    {
+      "term": "describes",
+      "count": 80
+    },
+    {
+      "term": "harbour",
+      "count": 80
+    },
+    {
+      "term": "newspaper",
+      "count": 80
+    },
+    {
+      "term": "observation",
+      "count": 80
+    },
+    {
+      "term": "ostende",
+      "count": 80
+    },
+    {
+      "term": "people",
+      "count": 80
+    },
+    {
+      "term": "reading",
+      "count": 80
+    },
+    {
+      "term": "reports",
+      "count": 80
+    },
+    {
+      "term": "ships",
+      "count": 80
+    }
+  ],
+  "termPolicy": {
+    "minimumLetters": 4,
+    "minimumFrequency": 5,
+    "maximumTerms": 50,
+    "stopwordLanguages": ["de", "en", "fr"]
+  }
+}
