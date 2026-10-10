@@ -27,6 +27,10 @@
         {
           "name": "AI Chatbot Assistant",
           "link": "/usecases/chatbot"
+        },
+        {
+          "name": "Europeana Evidence Desk",
+          "link": "/usecases/europeana"
         }
       ]
     },

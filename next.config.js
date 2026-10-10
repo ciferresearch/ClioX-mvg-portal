@@ -3,6 +3,7 @@ module.exports = (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
+    // Kept as before: the existing /api/chatbot routes read this via build-time inlining.
     env: {
       CHATBOT_API_URL: process.env.CHATBOT_API_URL
     },
@@ -10,7 +11,13 @@ module.exports = (phase, { defaultConfig }) => {
     serverRuntimeConfig: {
       RESEND_API_KEY: process.env.RESEND_API_KEY,
       RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
-      CONTACT_EMAIL: process.env.CONTACT_EMAIL
+      CONTACT_EMAIL: process.env.CONTACT_EMAIL,
+      // Europeana use case (read through @utils/europeana/server-env)
+      CHATBOT_API_URL: process.env.CHATBOT_API_URL,
+      EUROPEANA_API_KEY: process.env.EUROPEANA_API_KEY,
+      EUROPEANA_CHATBOT_PORTAL_URL: process.env.EUROPEANA_CHATBOT_PORTAL_URL,
+      EUROPEANA_INGEST_PRIVATE_KEY_B64:
+        process.env.EUROPEANA_INGEST_PRIVATE_KEY_B64
     },
     webpack: (config, options) => {
       config.module.rules.push(

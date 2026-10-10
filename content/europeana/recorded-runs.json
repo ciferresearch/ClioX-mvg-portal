@@ -1,0 +1,157 @@
+{
+  "recordedAt": "2026-09-19T22:45:04.030Z",
+  "corpusVersion": "ba08b9939b205a8f",
+  "pageIds": [
+    "/9200338/BibliographicResource_3000094647100/40eaa4e",
+    "/9200338/BibliographicResource_3000094647100/6f7a428",
+    "/9200338/BibliographicResource_3000094647100/92c6ad1",
+    "/9200338/BibliographicResource_3000094647100/5d1d086",
+    "/9200338/BibliographicResource_3000094647100/42fac33",
+    "/9200338/BibliographicResource_3000094647100/d8d2f41",
+    "/9200338/BibliographicResource_3000094647100/b2a3619",
+    "/9200338/BibliographicResource_3000094647100/01eafd1",
+    "/9200338/BibliographicResource_3000094647100/89147a8",
+    "/9200338/BibliographicResource_3000094647100/b1473f9"
+  ],
+  "questions": [
+    {
+      "question": "Which two ports are named in the naval report about Ostende?",
+      "result": {
+        "answer": "The report names the ports of Ostende and Zeebrugge.",
+        "insufficientEvidence": false,
+        "evidence": [
+          {
+            "id": "/9200338/BibliographicResource_3000094647100/40eaa4e#char=2551,4267",
+            "pageId": "/9200338/BibliographicResource_3000094647100/40eaa4e",
+            "pageLabel": "p. 1",
+            "start": 2551,
+            "end": 4267,
+            "text": "VIS. Berlin, 2t. April. (Amtlich.) In der kacht vom 22. zum 2Z. April wurde ein grotz ange legte» und mit rücksichtslosem Einsatz geplantes Un ternehmen englischer Seestreitkräfte gegen unsere flandrischen Stützpunkte vereitelt. Nach heftiger Bc-, schießung von See au» drangen unter dem Schutz .eines dichten Schleiers von künstlichem Nebel kleine Kreuzer, begleitet von zahlreichen Zerstörern und Motorbooten, bei Ostende unb ZeeVrügge bis ««mittelbar unter die Küste vor, mit der Absicht, die dortigen Schleusen- und Hasenanlagen zu zerstören. Gleichzeitig sollten nach Aussage von Gefangenen eine Abteilung von vier Kompagnien Sresoldaten Myal Mariners) die Mole vonZeebrügge handstreichartig besetzen,,um alle auf ihr befindlichen Baulichkeiten, Geschütze und KriegSgerate sowie die im Hasen liegenden Fahrzeuge zu ver nichten. Nur etwa 40 von ihnen Haben die Mole betreten« Diese sind teils tot, teils lebend in unsere Hand gefallen. Auf de» schmalen hohen Mauern der Mole ist von beiden Selten mit äußerster Erbitterung gefochten worden. Von den am Angriff beteiligten Seestreitkräften sind die kleine» Kreuzer Iphigenie, Jntrepid, SiriuS und zwei andere gleicher Bauart, deren Namen unbekannt sind, dicht unter der Küste »ersenkt. Ferner/wurden 8 Zerstörer und eine größere Zahl von Torpedobooten durch unser Artilleriefcuer zum Sinken gebracht. Nur einzelne Leute der Besatzung konnten von uns gerettet werden. Außer einer durch Torpedotreffer verursachten Beschädigung der Mole sind unsere Hasenanlagen und Küstenbatterien »Sllig unversehrt. Lon nnscrcn Seestreit kräften erlitt nur ein TorpedSbvot Beschädigungen leichtester Art. Unsere Menschenverluste sind gering. Der Chef des Admiralstabes der Marine.",
+            "kind": "layout-block",
+            "annotationId": "https://data.europeana.eu/annotation/9200338/BibliographicResource_3000094647100/e3c7544b1fa90fa3e1538df71e2de06f",
+            "region": {
+              "x": 110,
+              "y": 1126,
+              "width": 566,
+              "height": 1076
+            }
+          }
+        ],
+        "candidateCount": 8,
+        "model": "Configured ClioX model",
+        "generatedAt": "2026-09-19T22:45:09.816Z",
+        "corpusVersion": "ba08b9939b205a8f",
+        "sessionCleared": true
+      }
+    },
+    {
+      "question": "Does the newspaper report that Freiherr von Richthofen survived or was killed?",
+      "result": {
+        "answer": "The newspaper reports that Freiherr von Richthofen was killed in action. [Source: e1] [Source: e2] [Source: e3]",
+        "insufficientEvidence": false,
+        "evidence": [
+          {
+            "id": "/9200338/BibliographicResource_3000094647100/40eaa4e#char=16219,17529",
+            "pageId": "/9200338/BibliographicResource_3000094647100/40eaa4e",
+            "pageLabel": "p. 1",
+            "start": 16219,
+            "end": 17529,
+            "text": "deutschen Reicks Richtung liegt darin, daß außer den Gefühlen und cherH dies auch der Völ?er unt wurzelt. lÄSbh. Der Tod des Freiherrn von Richlhosen. iEin Held des deutschen Volkes.) * ?ie deutsche Nation trauert um ihren Richt en! Er genoß ihre ganze Liebe und Bewun derung. Boelcke und er haben sich durch ihre wunderbaren Leistungen ein ewiges Gedächtnis gesichert. Und es ist eine merkwürdige Fügung, daß i gerade nach Erreichung der doppelten Zall von i-nej,en, die Boclcke erfochten hatte, vom x.o^e ereUt wurde. Mnnfred v. Richthofen hat n,cht nur unseren Feinden schweren Schien zugefügt, er hat, was mehr wiegt, den Geist unserer Kämpfer mit seinem herrlichen Scbwunge erfüllt und vor bildlich für alle gewirkt, die, nicht nur auf dem Gebiete 2es Flugwesens, ihr Herzblut dem Vater lande opfern. Rittmeister Frhr. Manfred v. Richthofen, der 2<! Aabre alt war, gehöi-te den Militscher Ulanen an. Eein Vater Albrecht Frhr. v. Richthofen lebt al» Major z. D. in Schweidnitz. Die Mutter ist eine geborene v. Schickfuß und Neudorff. Der Ehe sind vier juuder, eine Tochter und drei Söhne, ent sprossen. von denen unser Held der älteste ist. Er lxit eine Laufbahn hinter sich, wie sie im deutschen Heere in solch raschem Aufstieg selten anzutreffen Im November 1912 Osnzier geworden, wurde >, »)>) INI'? ^ ^",
+            "kind": "layout-block",
+            "annotationId": "https://data.europeana.eu/annotation/9200338/BibliographicResource_3000094647100/9c6be0018c1a53f560333ee7c1928123",
+            "region": {
+              "x": 1821,
+              "y": 1857,
+              "width": 557,
+              "height": 779
+            }
+          },
+          {
+            "id": "/9200338/BibliographicResource_3000094647100/40eaa4e#char=4268,5351",
+            "pageId": "/9200338/BibliographicResource_3000094647100/40eaa4e",
+            "pageLabel": "p. 1",
+            "start": 4268,
+            "end": 5351,
+            "text": "VIS. Große» Hauptquartier, S4. April. Deutscher Heeresbericht. «eftliche» «ri<«»scha»»l«tz. Auf den Schlachtfeldern an der Lys und an der Tomme blieb die Gefechtstätigkeit auf örtliche Kampfhandlungen beschränkt. Nördlich von Aaikeul erstürmten wir die Höhen von Bleugelhock und nahmen hier Franzosen gefangen. Westlich von Bailleul wiesen wir englische Angriffe ab. Starke Lirstötze des Feindes nordwestlich von Acthune wurden in unseren vordersten Linien zum Scheitern gebracht. Borfeldkämpfe an vielen Stellen der übrigen Front brachten Gefangene ei«. Rittmeister Freiherr von Richthofen ist von der Verfolgung eines Gegners über dem Schlachtfeld an der Somme nicht zurückgekehrt. '.'!n>1> i ü Nischen Berichten ist er gefallen. Oste». Finnland. Die unter den» Befehl des Gencral Grafen »in der Goltz stehenden Truppen haben die Eisen bahnknotenpunkte Nyringe und Buchtmacki ge kommen und nördlich von Lahti die Verbindung mit ber finnische» Armee hergestellt. Ukraine. I» der Krim haben Truppen des General Kosch »imfcriopol erreicht. Der Erste Generalquartiermelster. Ludendoff.",
+            "kind": "layout-block",
+            "annotationId": "https://data.europeana.eu/annotation/9200338/BibliographicResource_3000094647100/961027b90cd646e6f4b58e6d0a7e0192",
+            "region": {
+              "x": 115,
+              "y": 2208,
+              "width": 551,
+              "height": 765
+            }
+          },
+          {
+            "id": "/9200338/BibliographicResource_3000094647100/6f7a428#char=0,2042",
+            "pageId": "/9200338/BibliographicResource_3000094647100/6f7a428",
+            "pageLabel": "p. 2",
+            "start": 0,
+            "end": 2042,
+            "text": "Seite 2\nGeusrcl-Auzeiger für Hamburg-Altona von, Mittwoch, den SÄ. April ISIS\nS!r. «Z\nKämpfenden zu erkennen. Aber dann, sah man Siichtl,osei>, der n»r 1Z0 Fuß über der Erde flog und dessen <5!ulnenfl dann herabstürzte. Als man den Leichnam aufliob, entdeckte man» daß er i n die Seite, in die Nähe deSHerzcnS, «e-trsffen war. VVl'l!, Amsterdam, 23. April. Reuters ?e^'.^rstatter an der Front telegraphiert: ^Ti^ciiVi'unq des Barons von R'ichtVopen war sehr ^eindvucksvcl!. Der s-eialle»« Flieger wurde auf einem hübschen 'inen Kirchhof, nicht weit von der Stelle an der er ui^d.rgel'raclst war, beerdigt. Eine ^Abteilung der könia-Iichcn Luftstreitkräfte erwies ihm !dje Ehren. (Ämtlich- Meldung des Wolffschcn Bureaus.) Berlin, den 23. April. Aus AuUisi des Heldentodes des Rittmeisters Freiberrn v. Nichtbosen erließ der Kommandierende ^ GeTieral folgenden Siachruf im Verordnungsblatt fiir Luftstveitträste: Unserem Rittmeister L«iherrn von Richthofen! Rittmeister Manfred Freiherr von Richihofcn ist von der Verfolgung eines Gegners nicht zurück gekehrt. Er ist gefallen! Die Armee verlor einen rastlosen und verehrten Helfer. Die Jagdflieger ^verloren ihren fortreißenden und geliebten Führer. ! Er bleibt ein H e l d d e S d e u t s ch e n Volkes, für das er kämpfte und für das er starb. Sein Tod ist eine tiefe Wunde für sein Geschwader und fiir die gesamten Luftstreitkräfte. Der Wille, durch« ;den er siegte, mit dem er führte und de» er vererbte, !wird die Wunde heilen. Der kommandierende General der Luftstreitkräfte von Hoeppner.\nEreignisse zur See.\nGefecht in der deutschen Bucht. — Verlustreicher Angriff auf Oftende nnd Zeebrügge. — „Sieg\" über deutsche Fischersahrzeuge. VV1\"K. Berlin, 23. April. (Amtlich.) Eine unserer Patrouillen sties, am 20. April, nachmittags, !im Grenzgebiet der deutschen Bucht nördlich von Terschelliüg auf leichte feindliche Streitkräfte, die lnach kurzem Feuergefecht sich mit höchster Fahrt !zuriiit/,!?ien. Der Feind erhielt mehrere Treffer. jNnfere Streitkräfte haben keine Beschädigungen und",
+            "kind": "text-window"
+          }
+        ],
+        "candidateCount": 8,
+        "model": "Configured ClioX model",
+        "generatedAt": "2026-09-19T22:45:15.887Z",
+        "corpusVersion": "ba08b9939b205a8f",
+        "sessionCleared": true
+      }
+    },
+    {
+      "question": "What was the exact Apple stock price in September 2026?",
+      "result": {
+        "answer": "I cannot find any information about Apple stock price in September2026 in the provided documents.",
+        "insufficientEvidence": true,
+        "evidence": [],
+        "candidateCount": 8,
+        "model": "Configured ClioX model",
+        "generatedAt": "2026-09-19T22:45:21.425Z",
+        "corpusVersion": "ba08b9939b205a8f",
+        "sessionCleared": true
+      }
+    }
+  ],
+  "analysis": {
+    "spanIds": [
+      "/9200338/BibliographicResource_3000094647100/40eaa4e#char=2551,4267",
+      "/9200338/BibliographicResource_3000094647100/6f7a428#char=0,2042",
+      "/9200338/BibliographicResource_3000094647100/92c6ad1#char=0,2348"
+    ],
+    "result": {
+      "labels": [
+        {
+          "spanId": "/9200338/BibliographicResource_3000094647100/40eaa4e#char=2551,4267",
+          "label": "neutral",
+          "explanation": "The report presents factual information about the encounter with some positive remarks about German outcomes but contains no overtly emotional language or condemnation, resulting in an overall neutral tone.",
+          "toneTarget": "German naval forces",
+          "humanReviewed": false,
+          "origin": "model"
+        },
+        {
+          "spanId": "/9200338/BibliographicResource_3000094647100/6f7a428#char=0,2042",
+          "label": "mixed",
+          "explanation": "The text simultaneously praises the German ace Richthofen and mourns his death (positive tone) while describing the enemy and the circumstances of the attack (negative tone), yielding a mixed overall tone.",
+          "toneTarget": "German forces and enemy",
+          "humanReviewed": false,
+          "origin": "model"
+        },
+        {
+          "spanId": "/9200338/BibliographicResource_3000094647100/92c6ad1#char=0,2348",
+          "label": "neutral",
+          "explanation": "The passage reports on supply and administrative issues without emotive or evaluative language, indicating a neutral tone.",
+          "toneTarget": "German agricultural policy",
+          "humanReviewed": false,
+          "origin": "model"
+        }
+      ],
+      "candidateCount": 3,
+      "model": "Configured ClioX model",
+      "generatedAt": "2026-09-19T22:45:30.426Z",
+      "corpusVersion": "ba08b9939b205a8f",
+      "sessionCleared": true
+    }
+  },
+  "note": "Real service responses. Structural/source-integrity checks passed; semantic accuracy and tone labels are not validated by this test."
+}

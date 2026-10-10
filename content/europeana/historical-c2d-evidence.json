@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "jobId": "8bb87108a2ae4b0a82f30eabf8d1130c",
+  "provider": "https://provider.agrospai.udl.cat",
+  "chain": "Pontus-X Devnet",
+  "chainId": 32456,
+  "providerStatus": "Job finished",
+  "providerStatusCode": 70,
+  "startedAt": "2026-07-27T17:54:53.842120-07:00",
+  "finishedAt": "2026-07-27T18:06:06.241020-07:00",
+  "dateLabel": "27 July 2026",
+  "timeLabel": "17:54:53–18:06:06 PDT · America/Vancouver",
+  "algorithmSeconds": 61.581,
+  "jobSeconds": 672.399,
+  "dataset": {
+    "name": "UdL Budget Presentations 2020-2025",
+    "did": "did:op:cabf2569d3cc36aac7bd642d817fb79558026ce85a9b90000b3267b35c3894aa"
+  },
+  "algorithm": {
+    "name": "ClioX | UdL Budget data PDF Extraction & Preprocessing",
+    "did": "did:op:5404dfc36448fb76f2bca918a05c67edb2f2d852e205862abbba2463b5916eba"
+  },
+  "scope": "This is a historical UdL budget run. It is separate from the current Europeana workflow and does not demonstrate that Europeana is connected to C2D.",
+  "input": {
+    "archiveBytes": 3021699,
+    "pdfs": 6,
+    "ocrPages": 41
+  },
+  "output": {
+    "filename": "structured_output.json",
+    "records": 348,
+    "uniqueRecords": 114,
+    "duplicateRecords": 234,
+    "uniqueRecordsWithoutPage": 76,
+    "contentType": "Readable OCR text in structured chunks; no embedding or vector field."
+  },
+  "steps": [
+    {
+      "id": "configure",
+      "label": "01 / Configure",
+      "title": "Inputs reached the compute workspace",
+      "description": "The configuration log identifies the dataset and algorithm, reports both downloads complete, then records this job at status 30.",
+      "excerpts": [
+        {
+          "file": "configure.log",
+          "line": 20,
+          "text": "Downloaded OK"
+        },
+        {
+          "file": "configure.log",
+          "line": 38,
+          "text": "Downloaded OK"
+        },
+        {
+          "file": "configure.log",
+          "line": 40,
+          "text": "Updated 8bb87108a2ae4b0a82f30eabf8d1130c with status 30"
+        }
+      ]
+    },
+    {
+      "id": "process",
+      "label": "02 / Process",
+      "title": "Six PDFs passed through OCR and chunking",
+      "description": "The algorithm reports CPU execution and 41 OCR pages across six PDFs. It reports six successful PDFs and zero failed PDFs.",
+      "excerpts": [
+        {
+          "file": "algorithm.log",
+          "line": 21,
+          "text": "2026-07-28 01:04:35,721 [MainThread] [INFO]  Using device: cpu"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 44,
+          "text": "📋 Found 6 PDF files in zip"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 337,
+          "text": "   ✅ Successfully processed: 6 PDFs"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 338,
+          "text": "   ❌ Failed to process: 0 PDFs"
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "label": "03 / Save & inspect",
+      "title": "A text output was saved and reviewed",
+      "description": "The log reports saving structured_output.json. Its actual contents confirm 348 records with 114 distinct records and 234 extra exact copies.",
+      "excerpts": [
+        {
+          "file": "algorithm.log",
+          "line": 324,
+          "text": "🔄 Processing 114 chunk files"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 325,
+          "text": "📊 Loaded 234 existing chunks"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 328,
+          "text": "📋 Total chunks in output: 348"
+        },
+        {
+          "file": "algorithm.log",
+          "line": 346,
+          "text": "2026-07-28 01:05:37,301 [MainThread] [INFO]  Saved structured PDF output to /data/outputs/structured_output.json"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "name": "configure.log",
+      "bytes": 2533,
+      "sha256": "9ba145927903943a5439ba09360e26ed04f5d02ca709d5aabc029e64f33e67e5"
+    },
+    {
+      "name": "algorithm.log",
+      "bytes": 20127,
+      "sha256": "919c7b12fda0e91d5c70fd0ce1664916a57e0df0e0f7ef0e786aa377c807e41a"
+    },
+    {
+      "name": "structured_output.json",
+      "bytes": 345855,
+      "sha256": "e76bb172825d52cfe716ed71ff88de26712dd34b5c8ccee54053cae1bbf6e06f"
+    }
+  ],
+  "sources": [
+    {
+      "year": 2021,
+      "temporarySource": "tmpiiz2nwdy.pdf",
+      "uniqueRecords": 14,
+      "records": 84,
+      "copiesPerRecord": 6
+    },
+    {
+      "year": 2020,
+      "temporarySource": "tmp1wqaf8js.pdf",
+      "uniqueRecords": 12,
+      "records": 60,
+      "copiesPerRecord": 5
+    },
+    {
+      "year": 2022,
+      "temporarySource": "tmp4p76_bls.pdf",
+      "uniqueRecords": 15,
+      "records": 60,
+      "copiesPerRecord": 4
+    },
+    {
+      "year": 2023,
+      "temporarySource": "tmpn5v8r0jw.pdf",
+      "uniqueRecords": 24,
+      "records": 72,
+      "copiesPerRecord": 3
+    },
+    {
+      "year": 2024,
+      "temporarySource": "tmpzidehe6z.pdf",
+      "uniqueRecords": 23,
+      "records": 46,
+      "copiesPerRecord": 2
+    },
+    {
+      "year": 2025,
+      "temporarySource": "tmp902n65jg.pdf",
+      "uniqueRecords": 26,
+      "records": 26,
+      "copiesPerRecord": 1
+    }
+  ],
+  "limits": [
+    "No evidence establishes container isolation, input or intermediate-file deletion, or the complete outbound network activity.",
+    "All six PDF sources are identifiable through the logs. OCR accuracy and complete source-text fidelity were not independently verified.",
+    "The output contains readable source text. It does not demonstrate a policy that returns only analytical summaries."
+  ],
+  "association": "The output JSON has no job ID. Its association with this run uses the supplied files, matching result filename and byte size, the configuration job ID, and the algorithm input/output logs.",
+  "warning": "A NumPy compatibility warning was logged; execution continued to the reported output.",
+  "evidenceSources": [
+    "review.json",
+    "output-review.json",
+    "udl-budget-historical-job-status.json"
+  ]
+}
