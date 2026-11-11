@@ -3,6 +3,7 @@ import {
   escapeEsReservedCharacters,
   generateBaseQuery,
   getAsset,
+  getOceanNodeAssets,
   getFilterTerm,
   parseFilters,
   queryMetadata
@@ -226,9 +227,73 @@ export async function getResults(
     showSaas
   )
 
-  const queryResult = await queryMetadata(searchQuery, cancelToken)
+  const pageSize = Number(offset) || 21
+  const pageNumber = Number(page) || 1
+  searchQuery.from = 0
+  searchQuery.size = pageNumber * pageSize
+
+  const [queryResult, nodeAssets] = await Promise.all([
+    queryMetadata(searchQuery, cancelToken),
+    getOceanNodeAssets(cancelToken)
+  ])
+
+  const matches = nodeAssets.filter((asset) => {
+    if (!chainIds.includes(asset.chainId)) return false
+    if (owner && asset.nft?.owner?.toLowerCase() !== owner.toLowerCase())
+      return false
+    if (tags && !asset.metadata.tags?.includes(tags)) return false
+    if (serviceType && sanitizedServiceType) {
+      const types = Array.isArray(sanitizedServiceType)
+        ? sanitizedServiceType
+        : [sanitizedServiceType]
+      if (!types.includes(asset.metadata.type)) return false
+    }
+    if (accessType) {
+      const types = Array.isArray(accessType) ? accessType : [accessType]
+      if (!asset.services.some((service) => types.includes(service.type)))
+        return false
+    }
+    if (text) {
+      const haystack = [
+        asset.id,
+        asset.metadata.name,
+        asset.metadata.description,
+        asset.metadata.author,
+        asset.nft?.owner,
+        ...(asset.metadata.tags || [])
+      ]
+        .join(' ')
+        .toLowerCase()
+      if (!haystack.includes(text.trim().toLowerCase())) return false
+    }
+    return true
+  })
+
+  const legacyIds = new Set(queryResult?.results?.map((asset) => asset.id))
+  const newAssets = matches.filter((asset) => !legacyIds.has(asset.id))
+  if (newAssets.length) {
+    const results = [...newAssets, ...(queryResult?.results || [])]
+    return {
+      results: results.slice(
+        (pageNumber - 1) * pageSize,
+        pageNumber * pageSize
+      ),
+      page: pageNumber,
+      totalResults: (queryResult?.totalResults || 0) + newAssets.length,
+      totalPages: Math.ceil(
+        ((queryResult?.totalResults || 0) + newAssets.length) / pageSize
+      ),
+      aggregations: queryResult?.aggregations || []
+    }
+  }
 
   // update queryResult to workaround the wrong return datatype of totalPages and totalResults
+  if (queryResult)
+    queryResult.results = queryResult.results.slice(
+      (pageNumber - 1) * pageSize,
+      pageNumber * pageSize
+    )
+  if (queryResult) queryResult.page = pageNumber
   return queryResult?.results?.length === 0
     ? {
         ...queryResult,

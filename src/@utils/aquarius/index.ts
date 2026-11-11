@@ -294,62 +294,76 @@ export async function queryMetadata(
 }
 
 type OceanNodeSearchResult = {
+  found?: number
   hits?: Array<{ document?: Asset }>
 }
 
-/**
- * Ocean Node currently returns one Typesense result per supported DDO schema.
- * Its generic schemas do not expose the owner field as a server-side facet, so
- * filter the small Node result set client-side. This keeps new Node-indexed
- * publications visible while the legacy Aquarius remains the history source.
- */
-async function getOceanNodePublishedAssets(
-  accountId: string,
-  chainIds: number[],
-  cancelToken: CancelToken
+function normalizeOceanNodeAsset(asset: Asset): Asset {
+  const indexed = (
+    asset as Asset & {
+      indexedMetadata?: {
+        nft?: Asset['nft']
+        purgatory?: Asset['purgatory']
+        event?: Asset['event']
+        stats?: Array<{
+          orders?: number
+          prices?: Array<{ price?: string; token?: string }>
+        }>
+      }
+    }
+  ).indexedMetadata
+  if (!indexed) return asset
+  const tokenStats = indexed.stats?.[0]
+  return {
+    ...asset,
+    nft: indexed.nft || asset.nft,
+    event: indexed.event || asset.event,
+    purgatory: indexed.purgatory ||
+      asset.purgatory || { state: false, reason: '' },
+    stats: asset.stats || {
+      orders: tokenStats?.orders || 0,
+      price: {
+        value: Number(tokenStats?.prices?.[0]?.price || 0),
+        tokenAddress: tokenStats?.prices?.[0]?.token,
+        tokenSymbol: tokenStats?.prices?.[0]?.price === '0' ? 'FREE' : undefined
+      },
+      allocated: 0
+    }
+  }
+}
+
+export async function getOceanNodeAssets(
+  cancelToken?: CancelToken
 ): Promise<Asset[]> {
   if (!metadataEncryptionNodeUrl) return []
 
   try {
-    const response = await axios.post<OceanNodeSearchResult[]>(
-      `${metadataEncryptionNodeUrl.replace(
-        /\/$/,
-        ''
-      )}/api/aquarius/assets/metadata/query`,
-      { q: '*', filter_by: '', num_hits: 250, start: 0 },
-      { cancelToken }
-    )
-
     const seen = new Set<string>()
-    return (response.data || [])
-      .flatMap((result) => result.hits || [])
-      .map((hit) => hit.document)
-      .filter((asset): asset is Asset => Boolean(asset?.id))
-      .filter((asset) => {
-        const owner = (
-          asset as Asset & {
-            indexedMetadata?: { nft?: { owner?: string } }
-          }
-        ).indexedMetadata?.nft?.owner
-        return owner?.toLowerCase() === accountId.toLowerCase()
-      })
-      .filter((asset) => chainIds.includes(asset.chainId))
-      .filter((asset) => {
-        if (seen.has(asset.id)) return false
-        seen.add(asset.id)
-        return true
-      })
-      .sort((a, b) => {
-        const aCreated = Date.parse(a.metadata.created || '') || 0
-        const bCreated = Date.parse(b.metadata.created || '') || 0
-        return bCreated - aCreated
-      })
+    const assets: Asset[] = []
+    for (let page = 1; page <= 100; page++) {
+      const response = await axios.post<OceanNodeSearchResult[]>(
+        `${metadataEncryptionNodeUrl.replace(
+          /\/$/,
+          ''
+        )}/api/aquarius/assets/metadata/query`,
+        { q: '*', filter_by: '', page },
+        { cancelToken }
+      )
+      const groups = response.data || []
+      for (const group of groups) {
+        for (const hit of group.hits || []) {
+          if (!hit.document?.id || seen.has(hit.document.id)) continue
+          seen.add(hit.document.id)
+          assets.push(normalizeOceanNodeAsset(hit.document))
+        }
+      }
+      if (groups.every((group) => page * 250 >= (group.found || 0))) break
+    }
+    return assets
   } catch (error) {
     if (axios.isCancel(error)) throw error
     // The legacy Aquarius result remains usable if Node is temporarily down.
-    LoggerInstance.error(
-      `Could not retrieve Node-published assets: ${error.message}`
-    )
+    LoggerInstance.error(`Could not retrieve Node assets: ${error.message}`)
     return []
   }
 }
@@ -378,7 +392,7 @@ export async function getAsset(
           cancelToken
         })
         if (response?.status === 200 && response.data)
-          return { ...response.data }
+          return normalizeOceanNodeAsset(response.data)
       } catch (error) {
         if (axios.isCancel(error)) throw error
         // A 404 from the new Node is expected for a historical asset. Try the
@@ -540,17 +554,57 @@ export async function getPublishedAssets(
   const query = generateBaseQuery(baseQueryParams)
 
   try {
-    const [legacyResult, nodeAssets] = await Promise.all([
+    query.from = 0
+    query.size = (Number(page) || 1) * 9
+    const [legacyResult, allNodeAssets] = await Promise.all([
       queryMetadata(query, cancelToken),
-      getOceanNodePublishedAssets(accountId, chainIds, cancelToken)
+      getOceanNodeAssets(cancelToken)
     ])
 
-    if (!legacyResult || nodeAssets.length === 0) return legacyResult
+    const nodeAssets = allNodeAssets
+      .filter(
+        (asset) => asset.nft?.owner?.toLowerCase() === accountId.toLowerCase()
+      )
+      .filter((asset) => chainIds.includes(asset.chainId))
+      .sort(
+        (a, b) =>
+          Date.parse(b.metadata.created || '') -
+          Date.parse(a.metadata.created || '')
+      )
+
+    if (nodeAssets.length === 0) {
+      if (legacyResult) {
+        legacyResult.results = legacyResult.results.slice(
+          ((Number(page) || 1) - 1) * 9,
+          (Number(page) || 1) * 9
+        )
+        legacyResult.page = Number(page) || 1
+      }
+      return legacyResult
+    }
+    if (!legacyResult)
+      return {
+        results: nodeAssets.slice(
+          ((Number(page) || 1) - 1) * 9,
+          (Number(page) || 1) * 9
+        ),
+        page: Number(page) || 1,
+        totalResults: nodeAssets.length,
+        totalPages: Math.ceil(nodeAssets.length / 9),
+        aggregations: []
+      }
 
     const legacyAssets = legacyResult.results || []
     const legacyIds = new Set(legacyAssets.map((asset) => asset.id))
     const newNodeAssets = nodeAssets.filter((asset) => !legacyIds.has(asset.id))
-    if (newNodeAssets.length === 0) return legacyResult
+    if (newNodeAssets.length === 0) {
+      legacyResult.results = legacyAssets.slice(
+        ((Number(page) || 1) - 1) * 9,
+        (Number(page) || 1) * 9
+      )
+      legacyResult.page = Number(page) || 1
+      return legacyResult
+    }
 
     const pageSize = 9
     const currentPage = Number(page) || 1
