@@ -330,6 +330,22 @@ export async function createTokensAndPricing(
   config: Config,
   nftFactory: NftFactory
 ) {
+  if (!nftFactory)
+    throw new Error(
+      'NFT factory is not ready. Please reconnect your wallet and try again.'
+    )
+
+  const baseToken = values.pricing?.baseToken
+  const feeToken =
+    process.env.NEXT_PUBLIC_OCEAN_TOKEN_ADDRESS ||
+    baseToken?.address ||
+    config?.oceanTokenAddress
+
+  if (!feeToken)
+    throw new Error(
+      'Pricing token is still loading. Please return to Pricing, wait a moment, and try again.'
+    )
+
   const nftCreateData: NftCreateData = generateNftCreateData(
     values.metadata.nft,
     accountId,
@@ -342,9 +358,7 @@ export async function createTokensAndPricing(
     minter: accountId,
     paymentCollector: accountId,
     mpFeeAddress: marketFeeAddress,
-    feeToken:
-      process.env.NEXT_PUBLIC_OCEAN_TOKEN_ADDRESS ||
-      values.pricing.baseToken.address,
+    feeToken,
     feeAmount: publisherMarketOrderFee,
     // max number
     cap: '115792089237316195423570985008687907853269984665640564039457',
@@ -358,16 +372,21 @@ export async function createTokensAndPricing(
 
   switch (values.pricing.type) {
     case 'fixed': {
+      if (!baseToken?.address)
+        throw new Error(
+          'Select a pricing token before creating a fixed-price asset.'
+        )
+
       const freParams: FreCreationParams = {
         fixedRateAddress: config.fixedRateExchangeAddress,
         baseTokenAddress: process.env.NEXT_PUBLIC_OCEAN_TOKEN_ADDRESS
           ? process.env.NEXT_PUBLIC_OCEAN_TOKEN_ADDRESS
-          : values.pricing.baseToken.address,
+          : baseToken.address,
         owner: accountId,
         marketFeeCollector: marketFeeAddress,
         baseTokenDecimals: process.env.NEXT_PUBLIC_OCEAN_TOKEN_ADDRESS
           ? 18
-          : values.pricing.baseToken.decimals,
+          : baseToken.decimals,
         datatokenDecimals: 18,
         fixedRate: values.pricing.price.toString(),
         marketFee: publisherMarketFixedSwapFee,
