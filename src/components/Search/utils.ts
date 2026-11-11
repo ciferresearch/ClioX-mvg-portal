@@ -2,6 +2,7 @@ import { LoggerInstance } from '@oceanprotocol/lib'
 import {
   escapeEsReservedCharacters,
   generateBaseQuery,
+  getAsset,
   getFilterTerm,
   parseFilters,
   queryMetadata
@@ -15,6 +16,13 @@ import {
   SortTermOptions
 } from '../../@types/aquarius/SearchQuery'
 import { filterSets, getInitialFilters } from './Filter'
+
+function getExactDid(text?: string): string | undefined {
+  const value = text?.trim()
+  if (!value) return
+  if (value.startsWith('did:op:')) return value
+  if (/^[a-fA-F0-9]{64}$/.test(value)) return `did:op:${value}`
+}
 
 export function updateQueryStringParameter(
   uri: string,
@@ -186,6 +194,22 @@ export async function getResults(
       : serviceType === FilterByTypeOptions.Saas
       ? undefined
       : serviceType
+
+  // A newly published asset may be available from the Clio-X Ocean Node before
+  // it appears in the legacy Aquarius search index. Resolve an exact DID (or
+  // its 64-character hash) directly before falling back to a text search.
+  const exactDid = getExactDid(text)
+  if (exactDid) {
+    const asset = await getAsset(exactDid, cancelToken)
+    if (asset)
+      return {
+        results: [asset],
+        page: 1,
+        totalPages: 1,
+        totalResults: 1,
+        aggregations: []
+      }
+  }
 
   const searchQuery = getSearchQuery(
     chainIds,
