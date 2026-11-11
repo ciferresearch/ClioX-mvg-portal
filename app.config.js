@@ -29,6 +29,13 @@ module.exports = {
 
   customProviderUrl: process.env.NEXT_PUBLIC_PROVIDER_URL,
 
+  // Keep the legacy Provider used for data-file encryption and C2D separate
+  // from the Ocean Node that encrypts/decrypts the on-chain DDO metadata.
+  defaultComputeProviderUrl:
+    process.env.NEXT_PUBLIC_DEFAULT_COMPUTE_PROVIDER_URL,
+  metadataEncryptionNodeUrl:
+    process.env.NEXT_PUBLIC_METADATA_ENCRYPTION_NODE_URL,
+
   infuraProjectId: process.env.NEXT_PUBLIC_INFURA_PROJECT_ID || 'xxx',
 
   defaultDatatokenTemplateIndex: 2,

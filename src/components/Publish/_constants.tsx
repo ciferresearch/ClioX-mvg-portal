@@ -1,6 +1,7 @@
 import {
   allowFixedPricing,
   customProviderUrl,
+  defaultComputeProviderUrl,
   defaultTokenSymbol,
   assetTitlePrefix
 } from '../../../app.config'
@@ -104,7 +105,7 @@ export const initialValues: FormPublishData = {
       dataTokenOptions: { name: '', symbol: '' },
       access: 'compute',
       providerUrl: {
-        url: customProviderUrl,
+        url: defaultComputeProviderUrl || customProviderUrl,
         valid: true,
         custom: false
       },

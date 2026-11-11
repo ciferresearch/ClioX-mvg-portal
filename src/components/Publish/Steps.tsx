@@ -5,6 +5,7 @@ import { FormPublishData, PublishFeedback } from './_types'
 import { getOceanConfig } from '@utils/ocean'
 import { useAccount, useNetwork } from 'wagmi'
 import { useMarketMetadata } from '@context/MarketMetadata'
+import { defaultComputeProviderUrl } from '../../../app.config'
 
 export function Steps({
   feedback
@@ -51,7 +52,7 @@ export function Steps({
     const config = getOceanConfig(values.user.chainId)
     if (config) {
       setFieldValue('services[0].providerUrl', {
-        url: config.providerUri,
+        url: defaultComputeProviderUrl || config.providerUri,
         valid: true,
         custom: false
       })

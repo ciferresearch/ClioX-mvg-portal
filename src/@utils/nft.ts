@@ -10,7 +10,7 @@ import {
   getErrorMessage
 } from '@oceanprotocol/lib'
 import { SvgWaves } from './SvgWaves'
-import { customProviderUrl } from '../../app.config'
+import { customProviderUrl, metadataEncryptionNodeUrl } from '../../app.config'
 import { Signer, ethers } from 'ethers'
 import { toast } from 'react-toastify'
 
@@ -132,7 +132,9 @@ export async function setNftMetadata(
     encryptedDdo = await ProviderInstance.encrypt(
       asset,
       asset.chainId,
-      customProviderUrl || asset.services[0].serviceEndpoint,
+      metadataEncryptionNodeUrl ||
+        customProviderUrl ||
+        asset.services[0].serviceEndpoint,
       signal
     )
   } catch (err) {
@@ -152,7 +154,7 @@ export async function setNftMetadata(
     asset.nftAddress,
     accountId,
     0,
-    asset.services[0].serviceEndpoint,
+    metadataEncryptionNodeUrl || asset.services[0].serviceEndpoint,
     '',
     flags,
     encryptedDdo,
@@ -174,7 +176,9 @@ export async function setNFTMetadataAndTokenURI(
     encryptedDdo = await ProviderInstance.encrypt(
       asset,
       asset.chainId,
-      customProviderUrl || asset.services[0].serviceEndpoint,
+      metadataEncryptionNodeUrl ||
+        customProviderUrl ||
+        asset.services[0].serviceEndpoint,
       signal
     )
   } catch (err) {
@@ -217,7 +221,8 @@ export async function setNFTMetadataAndTokenURI(
 
   const metadataAndTokenURI: MetadataAndTokenURI = {
     metaDataState: 0,
-    metaDataDecryptorUrl: asset.services[0].serviceEndpoint,
+    metaDataDecryptorUrl:
+      metadataEncryptionNodeUrl || asset.services[0].serviceEndpoint,
     metaDataDecryptorAddress: '',
     flags,
     data: encryptedDdo,
