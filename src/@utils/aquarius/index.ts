@@ -2,7 +2,11 @@ import { Asset, LoggerInstance } from '@oceanprotocol/lib'
 import { AssetSelectionAsset } from '@shared/FormInput/InputElement/AssetSelection'
 import axios, { CancelToken, AxiosResponse } from 'axios'
 import { OrdersData_orders as OrdersData } from '../../@types/subgraph/OrdersData'
-import { metadataCacheUri, allowDynamicPricing } from '../../../app.config'
+import {
+  metadataCacheUri,
+  allowDynamicPricing,
+  metadataEncryptionNodeUrl
+} from '../../../app.config'
 import {
   FilterByTypeOptions,
   SortDirectionOptions,
@@ -293,17 +297,33 @@ export async function getAsset(
   did: string,
   cancelToken: CancelToken
 ): Promise<Asset> {
+  if (!isValidDid(did)) return
+
+  // New assets are indexed by the Clio-X Ocean Node. Keep the legacy Aquarius
+  // lookup as a fallback while historical assets are migrated incrementally.
+  const assetEndpoints = [
+    metadataEncryptionNodeUrl &&
+      `${metadataEncryptionNodeUrl.replace(
+        /\/$/,
+        ''
+      )}/api/aquarius/assets/ddo/${did}`,
+    `${metadataCacheUri}/api/aquarius/assets/ddo/${did}`
+  ].filter(Boolean)
+
   try {
-    if (!isValidDid(did)) return
-
-    const response: AxiosResponse<Asset> = await axios.get(
-      `${metadataCacheUri}/api/aquarius/assets/ddo/${did}`,
-      { cancelToken }
-    )
-    if (!response || response.status !== 200 || !response.data) return
-
-    const data = { ...response.data }
-    return data
+    for (const endpoint of assetEndpoints) {
+      try {
+        const response: AxiosResponse<Asset> = await axios.get(endpoint, {
+          cancelToken
+        })
+        if (response?.status === 200 && response.data)
+          return { ...response.data }
+      } catch (error) {
+        if (axios.isCancel(error)) throw error
+        // A 404 from the new Node is expected for a historical asset. Try the
+        // next configured cache before reporting an error to the user.
+      }
+    }
   } catch (error) {
     if (axios.isCancel(error)) {
       LoggerInstance.log(error.message)
