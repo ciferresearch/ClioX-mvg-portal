@@ -293,6 +293,67 @@ export async function queryMetadata(
   }
 }
 
+type OceanNodeSearchResult = {
+  hits?: Array<{ document?: Asset }>
+}
+
+/**
+ * Ocean Node currently returns one Typesense result per supported DDO schema.
+ * Its generic schemas do not expose the owner field as a server-side facet, so
+ * filter the small Node result set client-side. This keeps new Node-indexed
+ * publications visible while the legacy Aquarius remains the history source.
+ */
+async function getOceanNodePublishedAssets(
+  accountId: string,
+  chainIds: number[],
+  cancelToken: CancelToken
+): Promise<Asset[]> {
+  if (!metadataEncryptionNodeUrl) return []
+
+  try {
+    const response = await axios.post<OceanNodeSearchResult[]>(
+      `${metadataEncryptionNodeUrl.replace(
+        /\/$/,
+        ''
+      )}/api/aquarius/assets/metadata/query`,
+      { q: '*', filter_by: '', num_hits: 250, start: 0 },
+      { cancelToken }
+    )
+
+    const seen = new Set<string>()
+    return (response.data || [])
+      .flatMap((result) => result.hits || [])
+      .map((hit) => hit.document)
+      .filter((asset): asset is Asset => Boolean(asset?.id))
+      .filter((asset) => {
+        const owner = (
+          asset as Asset & {
+            indexedMetadata?: { nft?: { owner?: string } }
+          }
+        ).indexedMetadata?.nft?.owner
+        return owner?.toLowerCase() === accountId.toLowerCase()
+      })
+      .filter((asset) => chainIds.includes(asset.chainId))
+      .filter((asset) => {
+        if (seen.has(asset.id)) return false
+        seen.add(asset.id)
+        return true
+      })
+      .sort((a, b) => {
+        const aCreated = Date.parse(a.metadata.created || '') || 0
+        const bCreated = Date.parse(b.metadata.created || '') || 0
+        return bCreated - aCreated
+      })
+  } catch (error) {
+    if (axios.isCancel(error)) throw error
+    // The legacy Aquarius result remains usable if Node is temporarily down.
+    LoggerInstance.error(
+      `Could not retrieve Node-published assets: ${error.message}`
+    )
+    return []
+  }
+}
+
 export async function getAsset(
   did: string,
   cancelToken: CancelToken
@@ -479,8 +540,33 @@ export async function getPublishedAssets(
   const query = generateBaseQuery(baseQueryParams)
 
   try {
-    const result = await queryMetadata(query, cancelToken)
-    return result
+    const [legacyResult, nodeAssets] = await Promise.all([
+      queryMetadata(query, cancelToken),
+      getOceanNodePublishedAssets(accountId, chainIds, cancelToken)
+    ])
+
+    if (!legacyResult || nodeAssets.length === 0) return legacyResult
+
+    const legacyAssets = legacyResult.results || []
+    const legacyIds = new Set(legacyAssets.map((asset) => asset.id))
+    const newNodeAssets = nodeAssets.filter((asset) => !legacyIds.has(asset.id))
+    if (newNodeAssets.length === 0) return legacyResult
+
+    const pageSize = 9
+    const currentPage = Number(page) || 1
+    const allVisibleAssets = [...newNodeAssets, ...legacyAssets]
+    const totalResults = legacyResult.totalResults + newNodeAssets.length
+
+    return {
+      ...legacyResult,
+      results: allVisibleAssets.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+      ),
+      page: currentPage,
+      totalResults,
+      totalPages: Math.ceil(totalResults / pageSize)
+    }
   } catch (error) {
     if (axios.isCancel(error)) {
       LoggerInstance.log(error.message)
