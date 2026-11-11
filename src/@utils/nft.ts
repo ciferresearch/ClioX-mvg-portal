@@ -13,6 +13,7 @@ import { SvgWaves } from './SvgWaves'
 import { customProviderUrl, metadataEncryptionNodeUrl } from '../../app.config'
 import { Signer, ethers } from 'ethers'
 import { toast } from 'react-toastify'
+import { encryptDdoWithOceanNode } from './oceanNode'
 
 // https://docs.opensea.io/docs/metadata-standards
 export interface NftMetadata {
@@ -129,14 +130,19 @@ export async function setNftMetadata(
 ): Promise<ethers.providers.TransactionResponse> {
   let encryptedDdo
   try {
-    encryptedDdo = await ProviderInstance.encrypt(
-      asset,
-      asset.chainId,
-      metadataEncryptionNodeUrl ||
-        customProviderUrl ||
-        asset.services[0].serviceEndpoint,
-      signal
-    )
+    encryptedDdo = metadataEncryptionNodeUrl
+      ? await encryptDdoWithOceanNode(
+          asset,
+          metadataEncryptionNodeUrl,
+          signer,
+          signal
+        )
+      : await ProviderInstance.encrypt(
+          asset,
+          asset.chainId,
+          customProviderUrl || asset.services[0].serviceEndpoint,
+          signal
+        )
   } catch (err) {
     const message = getErrorMessage(err.message)
     LoggerInstance.error('[Encrypt Data] Error:', message)
@@ -173,14 +179,19 @@ export async function setNFTMetadataAndTokenURI(
 ): Promise<ethers.providers.TransactionResponse> {
   let encryptedDdo
   try {
-    encryptedDdo = await ProviderInstance.encrypt(
-      asset,
-      asset.chainId,
-      metadataEncryptionNodeUrl ||
-        customProviderUrl ||
-        asset.services[0].serviceEndpoint,
-      signal
-    )
+    encryptedDdo = metadataEncryptionNodeUrl
+      ? await encryptDdoWithOceanNode(
+          asset,
+          metadataEncryptionNodeUrl,
+          signer,
+          signal
+        )
+      : await ProviderInstance.encrypt(
+          asset,
+          asset.chainId,
+          customProviderUrl || asset.services[0].serviceEndpoint,
+          signal
+        )
   } catch (err) {
     const message = getErrorMessage(err.message)
     LoggerInstance.error('[Encrypt Data] Error:', message)

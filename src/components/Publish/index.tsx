@@ -23,6 +23,7 @@ import { getOceanConfig } from '@utils/ocean'
 import { validationSchema } from './_validation'
 import { useAbortController } from '@hooks/useAbortController'
 import { setNFTMetadataAndTokenURI } from '@utils/nft'
+import { encryptDdoWithOceanNode } from '@utils/oceanNode'
 import {
   customProviderUrl,
   metadataEncryptionNodeUrl
@@ -160,14 +161,19 @@ export default function PublishPage({
 
       let ddoEncrypted: string
       try {
-        ddoEncrypted = await ProviderInstance.encrypt(
-          ddo,
-          ddo.chainId,
-          metadataEncryptionNodeUrl ||
-            customProviderUrl ||
-            values.services[0].providerUrl.url,
-          newAbortController()
-        )
+        ddoEncrypted = metadataEncryptionNodeUrl
+          ? await encryptDdoWithOceanNode(
+              ddo,
+              metadataEncryptionNodeUrl,
+              signerToUse,
+              newAbortController()
+            )
+          : await ProviderInstance.encrypt(
+              ddo,
+              ddo.chainId,
+              customProviderUrl || values.services[0].providerUrl.url,
+              newAbortController()
+            )
       } catch (error) {
         const message = getErrorMessage(error.message)
         LoggerInstance.error('[Provider Encrypt] Error:', message)
