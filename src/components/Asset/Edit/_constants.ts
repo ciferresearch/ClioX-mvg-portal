@@ -52,14 +52,25 @@ export function getInitialValues(
   }
 }
 
-export function getComputeSettingsInitialValues({
-  publisherTrustedAlgorithms,
-  publisherTrustedAlgorithmPublishers
-}: ServiceComputeOptions): ComputeEditForm {
-  const allowAllPublishedAlgorithms = publisherTrustedAlgorithms === null
+export function getComputeSettingsInitialValues(
+  {
+    publisherTrustedAlgorithms,
+    publisherTrustedAlgorithmPublishers
+  }: ServiceComputeOptions,
+  chainId?: number
+): ComputeEditForm {
+  const allowAllPublishedAlgorithms =
+    chainId === 11155420
+      ? publisherTrustedAlgorithms?.some(
+          (algo) =>
+            algo.did === '*' &&
+            algo.filesChecksum === '*' &&
+            algo.containerSectionChecksum === '*'
+        ) || false
+      : publisherTrustedAlgorithms === null
   const publisherTrustedAlgorithmsForForm = allowAllPublishedAlgorithms
     ? null
-    : publisherTrustedAlgorithms.map((algo) => algo.did)
+    : (publisherTrustedAlgorithms || []).map((algo) => algo.did)
 
   return {
     allowAllPublishedAlgorithms,

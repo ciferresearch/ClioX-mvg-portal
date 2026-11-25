@@ -397,6 +397,15 @@ export async function createTrustedAlgorithmList(
     cancelToken
   )
 
+  if (
+    assetChainId === 11155420 &&
+    selectedAlgorithms.some(
+      (did) => !selectedAssets?.some((asset) => asset.id === did)
+    )
+  )
+    throw new Error(
+      'Some selected algorithms could not be retrieved. Compute permissions were not changed.'
+    )
   if (!selectedAssets || selectedAssets.length === 0) return []
 
   for (const selectedAlgorithm of selectedAssets) {
@@ -406,13 +415,24 @@ export async function createTrustedAlgorithmList(
       selectedAlgorithm?.services?.[0]?.serviceEndpoint,
       true
     )
+    if (
+      assetChainId === 11155420 &&
+      (!filesChecksum?.length ||
+        filesChecksum.some((file) => !file.valid || !file.checksum))
+    )
+      throw new Error(
+        `Could not verify algorithm files for ${selectedAlgorithm.id}. Compute permissions were not changed.`
+      )
     const containerChecksum =
       selectedAlgorithm.metadata.algorithm.container.entrypoint +
       selectedAlgorithm.metadata.algorithm.container.checksum
     const trustedAlgorithm = {
       did: selectedAlgorithm.id,
       containerSectionChecksum: getHash(containerChecksum),
-      filesChecksum: filesChecksum?.[0]?.checksum
+      filesChecksum:
+        assetChainId === 11155420
+          ? filesChecksum.map((file) => file.checksum).join('')
+          : filesChecksum?.[0]?.checksum
     }
     trustedAlgorithms.push(trustedAlgorithm)
   }
@@ -426,7 +446,9 @@ export async function transformComputeFormToServiceComputeOptions(
   cancelToken: CancelToken
 ): Promise<ServiceComputeOptions> {
   const publisherTrustedAlgorithms = values.allowAllPublishedAlgorithms
-    ? null
+    ? assetChainId === 11155420
+      ? [{ did: '*', filesChecksum: '*', containerSectionChecksum: '*' }]
+      : null
     : await createTrustedAlgorithmList(
         values.publisherTrustedAlgorithms,
         assetChainId,
@@ -436,7 +458,10 @@ export async function transformComputeFormToServiceComputeOptions(
   // TODO: add support for selecting trusted publishers and transforming here.
   // This only deals with basics so we don't accidentially allow all accounts
   // to be trusted.
-  const publisherTrustedAlgorithmPublishers: string[] = []
+  const publisherTrustedAlgorithmPublishers: string[] =
+    assetChainId === 11155420
+      ? currentOptions.publisherTrustedAlgorithmPublishers || []
+      : []
 
   const privacy: ServiceComputeOptions = {
     ...currentOptions,

@@ -1,0 +1,25 @@
+.compute fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.compute input,
+.compute select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  font: inherit;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.jobId {
+  overflow-wrap: anywhere;
+}

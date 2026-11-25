@@ -1,5 +1,6 @@
 import { ReactElement, useState, useEffect } from 'react'
 import Compute from './Compute'
+import NodeCompute from './NodeCompute'
 import Download from './Download'
 import { FileInfo, LoggerInstance, Datatoken } from '@oceanprotocol/lib'
 import { compareAsBN } from '@utils/numbers'
@@ -186,10 +187,18 @@ export default function AssetActions({
   return (
     <div className={styles.actions}>
       {asset.chainId === 11155420 ? (
-        <p>
-          This OP Sepolia asset is available for publishing and metadata tests.
-          Compute ordering on this network is not enabled yet.
-        </p>
+        process.env.NEXT_PUBLIC_ENABLE_OP_SEPOLIA === 'true' && isCompute ? (
+          <NodeCompute
+            asset={asset}
+            accountId={accountIdToUse}
+            signer={signerToUse}
+          />
+        ) : (
+          <p>
+            Compute is available for OP Sepolia compute assets in the enabled
+            test environment.
+          </p>
+        )
       ) : isCompute ? (
         <Compute
           accountId={accountIdToUse}

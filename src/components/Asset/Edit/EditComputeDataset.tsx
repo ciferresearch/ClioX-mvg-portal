@@ -57,6 +57,7 @@ export default function EditComputeDataset({
   async function handleSubmit(values: ComputeEditForm, resetForm: () => void) {
     try {
       if (
+        asset.chainId !== 11155420 &&
         asset?.accessDetails?.type === 'free' &&
         asset?.accessDetails?.isPurchasable
       ) {
@@ -93,7 +94,21 @@ export default function EditComputeDataset({
 
       const updatedAsset: Asset = {
         ...asset,
+        metadata:
+          asset.chainId === 11155420
+            ? { ...asset.metadata, updated: new Date().toISOString() }
+            : asset.metadata,
         services: [updatedService]
+      }
+
+      if (asset.chainId === 11155420) {
+        const indexedAsset = updatedAsset as AssetExtended & {
+          indexedMetadata?: unknown
+        }
+        delete indexedAsset.accessDetails
+        delete indexedAsset.indexedMetadata
+        delete indexedAsset.datatokens
+        delete indexedAsset.stats
       }
 
       // TODO: revert to setMetadata function
@@ -119,7 +134,10 @@ export default function EditComputeDataset({
         return
       } else {
         await setMetadataTx.wait()
-        if (asset.accessDetails.type === 'free') {
+        if (
+          asset.chainId !== 11155420 &&
+          asset.accessDetails?.type === 'free'
+        ) {
           const tx = await setMinterToDispenser(
             signerToUse,
             asset?.accessDetails?.datatoken?.address,
@@ -141,7 +159,8 @@ export default function EditComputeDataset({
   return (
     <Formik
       initialValues={getComputeSettingsInitialValues(
-        getServiceByName(asset, 'compute')?.compute
+        getServiceByName(asset, 'compute')?.compute,
+        asset.chainId
       )}
       validationSchema={computeSettingsValidationSchema}
       onSubmit={async (values, { resetForm }) => {

@@ -36,7 +36,7 @@ export default function Edit({ uri }: { uri: string }): ReactElement {
       content: <EditMetadata asset={asset} />
     },
     ...[
-      isCompute && !isNodeMetadataEdit && asset?.metadata.type !== 'algorithm'
+      isCompute && asset?.metadata.type !== 'algorithm'
         ? {
             title: 'Edit Compute Settings',
             content: <EditComputeDataset asset={asset} />

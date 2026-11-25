@@ -165,8 +165,8 @@ function AssetProvider({
   // -----------------------------------
   const fetchAccessDetails = useCallback(async (): Promise<void> => {
     if (!asset?.chainId || !asset?.services?.length) return
-    // OP Sepolia metadata editing does not use legacy subgraph order/pricing data.
-    // Compute ordering remains disabled for this opt-in publishing integration.
+    // OP Sepolia uses the Node compute flow and indexed pricing, rather than
+    // the legacy subgraph order/pricing integration used by other networks.
     if (asset.chainId === 11155420) return
 
     const accessDetails = await getAccessDetails(
