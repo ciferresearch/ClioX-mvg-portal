@@ -2,6 +2,42 @@
 // see: https://github.com/oceanprotocol/ocean.js/blob/e07a7cb6ecea12b39ed96f994b4abe37806799a1/src/utils/ConfigHelper.ts#L8
 
 const chains = [
+  ...(process.env.NEXT_PUBLIC_ENABLE_OP_SEPOLIA === 'true'
+    ? [
+        {
+          chainId: 11155420,
+          isDefault: true,
+          isCustom: true,
+          network: 'optimism_sepolia',
+          oceanTokenSymbol: 'OCEAN',
+          oceanTokenAddress: '0xf26c6C93f9f1d725e149d95f8E7B2334a406aD10',
+          nftFactoryAddress: '0xDEfD0018969cd2d4E648209F876ADe184815f038',
+          fixedRateExchangeAddress:
+            '0x69B6E54Ad2b3c2801d11d8Ad56ea1d892555b776',
+          dispenserAddress: '0x30E4CC2C7A9c6aA2b2Ce93586E3Df24a3A00bcDD',
+          opfCommunityFeeCollector:
+            '0xF6410bf5d773C7a41ebFf972f38e7463FA242477',
+          startBlock: 3867703,
+          transactionBlockTimeout: 50,
+          transactionConfirmationBlocks: 1,
+          transactionPollingTimeout: 750,
+          gasFeeMultiplier: 1.1,
+          providerUri: 'https://ocean-node.agrospai.udl.cat',
+          providerAddress: '0x94549951623DD6c3265DBbB1b032d6cF48Ba7811',
+          providers: [
+            {
+              name: 'AgrospAI Ocean Node',
+              url: 'https://ocean-node.agrospai.udl.cat',
+              address: '0x94549951623DD6c3265DBbB1b032d6cF48Ba7811'
+            }
+          ],
+          nodeUri:
+            process.env.NEXT_PUBLIC_OP_SEPOLIA_RPC_URL ||
+            'https://sepolia.optimism.io',
+          explorerUri: 'https://sepolia-optimism.etherscan.io'
+        }
+      ]
+    : []),
   {
     chainId: 32456,
     isDefault: true,

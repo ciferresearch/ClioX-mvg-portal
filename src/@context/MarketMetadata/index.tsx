@@ -38,6 +38,8 @@ function MarketMetadataProvider({
     async function getOpcData() {
       const opcData = []
       for (let i = 0; i < appConfig.chainIdsSupported.length; i++) {
+        // Node-native OP Sepolia has no legacy Ocean subgraph configured.
+        if (appConfig.chainIdsSupported[i] === 11155420) continue
         const response: OperationResult<OpcQuery> = await fetchData(
           opcQuery,
           null,
@@ -67,7 +69,8 @@ function MarketMetadataProvider({
       if (!opcFees) return '0'
 
       const opc = opcFees.filter((x) => x.chainId === chainId)[0]
-      const isTokenApproved = opc.approvedTokens.includes(tokenAddress)
+      if (!opc) return '0'
+      const isTokenApproved = opc.approvedTokens?.includes(tokenAddress)
       return isTokenApproved ? opc.swapApprovedFee : opc.swapNotApprovedFee
     },
     [opcFees]

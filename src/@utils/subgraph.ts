@@ -172,6 +172,7 @@ export async function getUserTokenOrders(
 export async function getOpcsApprovedTokens(
   chainId: number
 ): Promise<TokenInfo[]> {
+  if (chainId === 11155420) return []
   const context = getQueryContext(chainId)
 
   try {

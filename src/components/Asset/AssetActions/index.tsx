@@ -185,7 +185,12 @@ export default function AssetActions({
 
   return (
     <div className={styles.actions}>
-      {isCompute ? (
+      {asset.chainId === 11155420 ? (
+        <p>
+          This OP Sepolia asset is available for publishing and metadata tests.
+          Compute ordering on this network is not enabled yet.
+        </p>
+      ) : isCompute ? (
         <Compute
           accountId={accountIdToUse}
           signer={signerToUse}

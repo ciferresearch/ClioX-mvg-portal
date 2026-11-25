@@ -37,13 +37,15 @@ import {
   complianceUri,
   allowedGaiaXRegistryDomains,
   assetTitlePrefix,
-  assetTitleSeparator
+  assetTitleSeparator,
+  metadataEncryptionNodeUrl
 } from '../../../app.config'
 import { sanitizeUrl } from '@utils/url'
 import { getContainerChecksum } from '@utils/docker'
 import axios from 'axios'
 import { ServiceCredential } from 'src/@types/gaia-x/2210/ServiceCredential'
 import { parseEther } from 'ethers/lib/utils'
+import { Signer } from 'ethers'
 
 function getUrlFileExtension(fileUrl: string): string {
   const splittedFileUrl = fileUrl.split('.')
@@ -158,7 +160,8 @@ export async function transformPublishFormToDdo(
   // Those 2 are only passed during actual publishing process
   // so we can always assume if they are not passed, we are on preview.
   datatokenAddress?: string,
-  nftAddress?: string
+  nftAddress?: string,
+  signer?: Signer
 ): Promise<DDO> {
   const { metadata, services, policies, user } = values
   const { chainId, accountId } = user
@@ -277,7 +280,7 @@ export async function transformPublishFormToDdo(
     !isPreview &&
     files?.length &&
     (files[0].valid || files[0].type === 'saas') &&
-    (await getEncryptedFiles(file, chainId, providerUrl.url))
+    (await getEncryptedFiles(file, chainId, providerUrl.url, signer))
 
   const newService: Service = {
     id: getHash(datatokenAddress + filesEncrypted),
@@ -330,6 +333,25 @@ export async function createTokensAndPricing(
   config: Config,
   nftFactory: NftFactory
 ) {
+  if (values.user.chainId === 11155420) {
+    if (values.pricing.type !== 'free')
+      throw new Error(
+        'OP Sepolia integration currently supports Free test assets only.'
+      )
+    const url = new URL(metadataEncryptionNodeUrl || '')
+    if (
+      url.protocol !== 'https:' ||
+      ['localhost', '127.0.0.1'].includes(url.hostname)
+    )
+      throw new Error(
+        'Configure a public HTTPS Clio-X test Node URL before publishing.'
+      )
+    const status = await axios.get(url.toString(), { timeout: 15000 })
+    if (!status.data.chainIds?.map(String).includes('11155420'))
+      throw new Error(
+        'The Clio-X metadata Node does not support OP Sepolia (11155420).'
+      )
+  }
   if (!nftFactory)
     throw new Error(
       'NFT factory is not ready. Please reconnect your wallet and try again.'

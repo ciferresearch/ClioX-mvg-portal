@@ -21,6 +21,10 @@ export default function PricingFields(): ReactElement {
   const { pricing } = values
   const { type } = pricing
 
+  useEffect(() => {
+    if (chain?.id === 11155420) setFieldValue('pricing.type', 'free')
+  }, [chain?.id, setFieldValue])
+
   const defaultBaseToken =
     approvedBaseTokens?.find((token) =>
       token.name.toLowerCase().includes(defaultTokenSymbol.toLowerCase())
@@ -56,7 +60,7 @@ export default function PricingFields(): ReactElement {
 
   const updateTabs = useCallback(() => {
     return [
-      allowFixedPricing === 'true'
+      allowFixedPricing === 'true' && chain?.id !== 11155420
         ? {
             title: content.create.fixed.title,
             content: (
@@ -75,7 +79,7 @@ export default function PricingFields(): ReactElement {
           }
         : undefined
     ].filter((tab) => tab !== undefined)
-  }, [allowFixedPricing, allowFreePricing, approvedBaseTokens])
+  }, [allowFixedPricing, allowFreePricing, approvedBaseTokens, chain?.id])
 
   const [tabs, setTabs] = useState(updateTabs())
   const [tabIndex, setTabIndex] = useState(type === 'free' ? 1 : 0)
@@ -88,7 +92,7 @@ export default function PricingFields(): ReactElement {
     <Tabs
       items={tabs}
       handleTabChange={handleTabChange}
-      selectedIndex={tabIndex}
+      selectedIndex={chain?.id === 11155420 ? 0 : tabIndex}
       onIndexSelected={setTabIndex}
       className={styles.pricing}
       showRadio

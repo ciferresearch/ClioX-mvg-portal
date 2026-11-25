@@ -151,7 +151,8 @@ export default function PublishPage({
       const ddo = await transformPublishFormToDdo(
         values,
         datatokenAddress,
-        erc721Address
+        erc721Address,
+        signerToUse
       )
 
       if (!ddo) throw new Error('No DDO received. Please try again.')

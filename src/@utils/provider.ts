@@ -23,6 +23,24 @@ import { Signer } from 'ethers'
 import { getValidUntilTime } from './compute'
 import { toast } from 'react-toastify'
 import { OCEAN_ERROR_STATES } from '../@constants/errors'
+import { encryptDdoWithOceanNode } from './oceanNode'
+
+function isAgrospaiNode(url: string): boolean {
+  return url?.replace(/\/$/, '') === 'https://ocean-node.agrospai.udl.cat'
+}
+
+async function nodeFileInfo(url: string, body: object): Promise<FileInfo[]> {
+  const response = await fetch(
+    `${url.replace(/\/$/, '')}/api/services/fileInfo`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }
+  )
+  if (!response.ok) throw new Error(await response.text())
+  return response.json()
+}
 
 export async function initializeProviderForCompute(
   dataset: AssetExtended,
@@ -74,9 +92,13 @@ export async function initializeProviderForCompute(
 export async function getEncryptedFiles(
   files: any,
   chainId: number,
-  providerUrl: string
+  providerUrl: string,
+  signer?: Signer
 ): Promise<string> {
   try {
+    if (chainId === 11155420) {
+      return await encryptDdoWithOceanNode(files, providerUrl, signer)
+    }
     // https://github.com/oceanprotocol/provider/blob/v4main/API.md#encrypt-endpoint
     const response = await ProviderInstance.encrypt(files, chainId, providerUrl)
     return response
@@ -94,6 +116,12 @@ export async function getFileDidInfo(
   withChecksum = false
 ): Promise<FileInfo[]> {
   try {
+    if (isAgrospaiNode(providerUrl))
+      return await nodeFileInfo(providerUrl, {
+        did,
+        serviceId,
+        checksum: withChecksum
+      })
     const response = await ProviderInstance.checkDidFiles(
       did,
       serviceId,
@@ -120,6 +148,22 @@ export async function getFileInfo(
   method?: string,
   withChecksum = false
 ): Promise<FileInfo[]> {
+  if (isAgrospaiNode(providerUrl)) {
+    const body =
+      storageType === 'ipfs'
+        ? { type: 'ipfs', hash: file }
+        : storageType === 'arweave'
+        ? { type: 'arweave', transactionId: file }
+        : {
+            type: storageType || 'url',
+            url: file,
+            method: method || 'GET',
+            headers: Object.fromEntries(
+              (headers || []).map(({ key, value }) => [key, value])
+            )
+          }
+    return nodeFileInfo(providerUrl, { ...body, checksum: withChecksum })
+  }
   let response
   const headersProvider = {}
   if (headers?.length > 0) {
@@ -274,6 +318,17 @@ export async function getComputeEnvironments(
   chainId: number
 ): Promise<ComputeEnvironment[]> {
   try {
+    if (isAgrospaiNode(providerUrl)) {
+      const response = await fetch(
+        `${providerUrl.replace(
+          /\/$/,
+          ''
+        )}/api/services/computeEnvironments?chainId=${chainId}`
+      )
+      if (!response.ok)
+        throw new Error('Could not retrieve Node compute environments')
+      return response.json()
+    }
     const response = await ProviderInstance.getComputeEnvironments(providerUrl)
     const computeEnvs = Array.isArray(response) ? response : response[chainId]
 

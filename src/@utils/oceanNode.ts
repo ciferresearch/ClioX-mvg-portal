@@ -1,4 +1,3 @@
-import { DDO } from '@oceanprotocol/lib'
 import { ethers, Signer } from 'ethers'
 
 /**
@@ -6,7 +5,7 @@ import { ethers, Signer } from 'ethers'
  * intentionally different from the legacy Provider `/encrypt` endpoint.
  */
 export async function encryptDdoWithOceanNode(
-  ddo: DDO,
+  ddo: unknown,
   nodeUrl: string,
   signer: Signer,
   signal?: AbortSignal
