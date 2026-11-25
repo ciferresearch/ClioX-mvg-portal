@@ -12,7 +12,13 @@ const dataset =
   'did:op:3cbc47bc5c9e1e36a2b17ac438127b97c432d7e428fc9f4d54daba875db24c8a'
 const algorithm =
   'did:op:cbc28a62a872e0c6a259befec693068733ca46dec5f2f6503403640e3e032811'
-async function main() {
+async function loadAdapter() {
+  const validation = {}
+  const validationCode = ts.transpileModule(
+    await fs.readFile(path.join(root, 'src/@utils/nodeFileInfo.ts'), 'utf8'),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS } }
+  ).outputText
+  new Function('require', 'exports', validationCode)(require, validation)
   const code = ts.transpileModule(
     await fs.readFile(path.join(root, 'src/@utils/nodeCompute.ts'), 'utf8'),
     {
@@ -20,7 +26,14 @@ async function main() {
     }
   ).outputText
   const adapter = {}
-  new Function('require', 'exports', code)(require, adapter)
+  new Function('require', 'exports', code)(
+    (name) => (name === './nodeFileInfo' ? validation : require(name)),
+    adapter
+  )
+  return adapter
+}
+async function main() {
+  const adapter = await loadAdapter()
   const environments = await adapter.getNodeEnvironments()
   const env = environments.find(
     (e) => !e.free.access?.addresses?.length && !e.free.access?.accessLists

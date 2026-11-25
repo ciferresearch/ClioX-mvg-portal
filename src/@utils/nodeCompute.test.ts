@@ -109,6 +109,31 @@ test('rejects missing indexes before starting a job', async () => {
   ).toBe(false)
 })
 
+test('blocks an empty download even when the Node incorrectly reports valid:true', async () => {
+  const original = fetchMock.getMockImplementation()
+  fetchMock.mockImplementation((url, ...args) =>
+    url.endsWith('/fileInfo')
+      ? Promise.resolve({
+          ok: true,
+          json: async () => [
+            {
+              valid: true,
+              contentLength: '0',
+              checksum:
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+            }
+          ]
+        })
+      : original(url, ...args)
+  )
+  await expect(
+    prepareNodeCompute(datasetDid, algorithmDid, environment.id, 60)
+  ).rejects.toThrow('zero bytes')
+  expect(
+    fetchMock.mock.calls.some(([url]) => url.endsWith('/freeCompute'))
+  ).toBe(false)
+})
+
 test('does not consume assets with unknown or paid pricing through freeCompute', async () => {
   const paid = asset('dataset')
   paid.indexedMetadata.stats[0].prices = [{ type: 'fixedrate', price: '1' }]

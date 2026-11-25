@@ -1,4 +1,5 @@
 import { Signer, utils } from 'ethers'
+import { assertNodeFileInfo } from './nodeFileInfo'
 
 export const AGROSPAI_NODE = 'https://ocean-node.agrospai.udl.cat'
 export const OP_SEPOLIA = 11155420
@@ -196,12 +197,11 @@ export async function prepareNodeCompute(
         })
       })
       const files = await response.json()
-      if (
-        !Array.isArray(files) ||
-        !files.length ||
-        files.some((file) => file.valid !== true)
-      )
-        throw new Error(`${asset.id}: file validation failed.`)
+      try {
+        assertNodeFileInfo(files)
+      } catch (e) {
+        throw new Error(`${asset.id}: ${e.message}`)
+      }
     })
   )
   const trusted = datasetService.compute

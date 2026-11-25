@@ -24,6 +24,7 @@ import { getValidUntilTime } from './compute'
 import { toast } from 'react-toastify'
 import { OCEAN_ERROR_STATES } from '../@constants/errors'
 import { encryptDdoWithOceanNode } from './oceanNode'
+import { assertNodeFileInfo } from './nodeFileInfo'
 
 function isAgrospaiNode(url: string): boolean {
   return url?.replace(/\/$/, '') === 'https://ocean-node.agrospai.udl.cat'
@@ -39,7 +40,9 @@ async function nodeFileInfo(url: string, body: object): Promise<FileInfo[]> {
     }
   )
   if (!response.ok) throw new Error(await response.text())
-  return response.json()
+  const files = await response.json()
+  assertNodeFileInfo(files)
+  return files
 }
 
 export async function initializeProviderForCompute(

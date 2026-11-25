@@ -169,6 +169,10 @@ export default function Edit({
           asset.services[0].serviceEndpoint,
           signerToUse
         )
+        if (!filesEncrypted)
+          throw new Error(
+            'File encryption failed. Asset metadata was not updated.'
+          )
         updatedFiles = filesEncrypted
 
         values.files[0].type === 'saas'
