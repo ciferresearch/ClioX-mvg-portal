@@ -15,6 +15,7 @@ export default function Edit({ uri }: { uri: string }): ReactElement {
   const [isCompute, setIsCompute] = useState(false)
   const [pageTitle, setPageTitle] = useState<string>('')
   const [tabIndex, setTabIndex] = useState(0)
+  const isNodeMetadataEdit = asset?.chainId === 11155420
 
   useEffect(() => {
     if (!asset) return
@@ -35,7 +36,7 @@ export default function Edit({ uri }: { uri: string }): ReactElement {
       content: <EditMetadata asset={asset} />
     },
     ...[
-      isCompute && asset?.metadata.type !== 'algorithm'
+      isCompute && !isNodeMetadataEdit && asset?.metadata.type !== 'algorithm'
         ? {
             title: 'Edit Compute Settings',
             content: <EditComputeDataset asset={asset} />
@@ -46,7 +47,9 @@ export default function Edit({ uri }: { uri: string }): ReactElement {
 
   return (
     <Page title={pageTitle} description={contentPage.description} uri={uri}>
-      {!asset?.accessDetails ? (
+      {!asset && error ? (
+        <Alert title="Could not load asset" text={error} state="error" />
+      ) : !asset || (!isNodeMetadataEdit && !asset.accessDetails) ? (
         <Loader />
       ) : !isOwner ? (
         <Alert

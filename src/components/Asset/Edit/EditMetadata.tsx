@@ -206,6 +206,7 @@ export default function Edit({
       }
 
       if (
+        asset.chainId !== 11155420 &&
         asset?.accessDetails?.type === 'free' &&
         asset?.accessDetails?.isPurchasable
       ) {
@@ -222,6 +223,9 @@ export default function Edit({
       delete (updatedAsset as AssetExtended).accessDetails
       delete (updatedAsset as AssetExtended).datatokens
       delete (updatedAsset as AssetExtended).stats
+      // Node's indexed fields are cache data, not publisher-authored DDO data.
+      delete (updatedAsset as Asset & { indexedMetadata?: unknown })
+        .indexedMetadata
       // TODO: revert to setMetadata function
       const setMetadataTx = await setNFTMetadataAndTokenURI(
         updatedAsset,
@@ -266,7 +270,7 @@ export default function Edit({
 
       LoggerInstance.log('[edit] setMetadata result', setMetadataTx)
 
-      if (asset.accessDetails.type === 'free') {
+      if (asset.chainId !== 11155420 && asset.accessDetails?.type === 'free') {
         const tx = await setMinterToDispenser(
           signerToUse,
           asset?.accessDetails?.datatoken?.address,

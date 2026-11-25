@@ -165,6 +165,9 @@ function AssetProvider({
   // -----------------------------------
   const fetchAccessDetails = useCallback(async (): Promise<void> => {
     if (!asset?.chainId || !asset?.services?.length) return
+    // OP Sepolia metadata editing does not use legacy subgraph order/pricing data.
+    // Compute ordering remains disabled for this opt-in publishing integration.
+    if (asset.chainId === 11155420) return
 
     const accessDetails = await getAccessDetails(
       asset.chainId,
