@@ -191,6 +191,11 @@ test('submits the deployed Node signature and payload and never calls legacy com
   )
   expect(body.datasets).toEqual(plan.datasets)
   expect(body.payment).toBeUndefined()
+  expect(body.metadata.cliox).toEqual({
+    chainId: 11155420,
+    datasetDids: [datasetDid],
+    algorithmDid
+  })
 })
 
 test('rejects the wrong wallet network before signing or submitting', async () => {

@@ -66,14 +66,29 @@ export interface NodeJob {
   owner?: string
   environment?: string
   dateCreated?: string
+  dateFinished?: string
+  inputDID?: string[] | null
+  algoDID?: string | null
+  agreementId?: string
+  payment?: { chainId?: number | string }
+  metadata?: {
+    cliox?: { chainId?: number; datasetDids?: string[]; algorithmDid?: string }
+  }
   terminationDetails?: { exitCode?: number }
-  results?: { index: number; type: string }[]
+  results?: {
+    index: number
+    type: string
+    filename?: string
+    filesize?: number
+  }[]
 }
 
 const failures = [2, 11, 13, 14, 21, 22, 31, 32, 33, 41, 42, 61, 62]
-export const isNodeJobTerminal = (job: NodeJob): boolean =>
+export const isNodeJobTerminal = (job: Pick<NodeJob, 'status'>): boolean =>
   [...failures, 70, 71].includes(job.status)
-export const isNodeJobSuccessful = (job: NodeJob): boolean =>
+export const isNodeJobSuccessful = (
+  job: Pick<NodeJob, 'status' | 'terminationDetails'>
+): boolean =>
   [70, 71].includes(job.status) && job.terminationDetails?.exitCode === 0
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
@@ -264,6 +279,17 @@ export async function startNodeCompute(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...plan,
+        // Keep references in the Node's own job record, even when legacy
+        // inputDID/algoDID fields are absent for free-compute jobs.
+        metadata: {
+          cliox: {
+            chainId: OP_SEPOLIA,
+            datasetDids: plan.datasets
+              .map((input) => input.documentId)
+              .filter(Boolean),
+            algorithmDid: plan.algorithm.documentId
+          }
+        },
         ...(await signedCommand(signer, 'freeStartCompute'))
       })
     })

@@ -30,6 +30,7 @@ import { ComputeEditForm } from '../components/Asset/Edit/_types'
 import { getFileDidInfo } from './provider'
 import { toast } from 'react-toastify'
 import { getNodeComputeAsset } from './nodeCompute'
+import { getNodeComputeHistory } from './nodeComputeHistory'
 
 const getComputeOrders = gql`
   query ComputeOrders($user: String!) {
@@ -315,7 +316,7 @@ export function filterForUniqueJobs(
   })
 }
 
-export async function getComputeJobs(
+async function getLegacyComputeJobs(
   chainIds: number[],
   accountId: string,
   asset?: AssetExtended,
@@ -379,6 +380,58 @@ export async function getComputeJobs(
   computeResult.isLoaded = true
 
   return computeResult
+}
+
+export async function getComputeJobs(
+  chainIds: number[],
+  accountId: string,
+  asset?: AssetExtended,
+  cancelToken?: CancelToken
+): Promise<ComputeResults> {
+  if (!accountId) return { computeJobs: [], isLoaded: true }
+  const selectedChains = asset ? [asset.chainId] : chainIds
+  const legacyChains = selectedChains.filter((id) => id !== 11155420)
+  const tasks: { name: string; promise: Promise<ComputeJobMetaData[]> }[] = []
+  if (legacyChains.length)
+    tasks.push({
+      name: 'Legacy compute history',
+      promise: getLegacyComputeJobs(
+        legacyChains,
+        accountId,
+        asset,
+        cancelToken
+      ).then((result) => result?.computeJobs || [])
+    })
+  if (
+    process.env.NEXT_PUBLIC_ENABLE_OP_SEPOLIA === 'true' &&
+    selectedChains.includes(11155420)
+  )
+    tasks.push({
+      name: 'AgrospAI compute history',
+      promise: getNodeComputeHistory(accountId, asset?.id, cancelToken)
+    })
+  const results = await Promise.allSettled(tasks.map((task) => task.promise))
+  const jobs: ComputeJobMetaData[] = []
+  const errors: string[] = []
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') jobs.push(...result.value)
+    else
+      errors.push(
+        `${tasks[index].name}: ${result.reason?.message || 'request failed'}`
+      )
+  })
+  const unique = [
+    ...new Map(
+      jobs.map((job) => [`${job.providerUrl}:${job.jobId}`, job])
+    ).values()
+  ]
+  return {
+    computeJobs: unique.sort(
+      (a, b) => Number(b.dateCreated) - Number(a.dateCreated)
+    ),
+    isLoaded: true,
+    error: errors.length ? errors.join('; ') : undefined
+  }
 }
 
 export async function createTrustedAlgorithmList(

@@ -3,7 +3,7 @@ import Time from '@shared/atoms/Time'
 import Button from '@shared/atoms/Button'
 import Modal from '@shared/atoms/Modal'
 import External from '@images/external.svg'
-import { getAsset } from '@utils/aquarius'
+import { getAsset, getOceanNodeAsset } from '@utils/aquarius'
 import Results from './Results'
 import styles from './Details.module.css'
 import { useCancelToken } from '@hooks/useCancelToken'
@@ -23,17 +23,19 @@ function Asset({
     <div className={styles.asset}>
       <h3 className={styles.assetTitle}>
         {title}{' '}
-        <a
-          className={styles.assetLink}
-          href={`/asset/${did}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <External />
-        </a>
+        {did && (
+          <a
+            className={styles.assetLink}
+            href={`/asset/${did}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <External />
+          </a>
+        )}
       </h3>
       <p className={styles.assetMeta}>
-        <span className={styles.assetMeta}> {`${symbol} | `}</span>
+        {symbol && <span className={styles.assetMeta}> {`${symbol} | `}</span>}
         <code className={styles.assetMeta}>{did}</code>
       </p>
     </div>
@@ -50,22 +52,44 @@ function DetailsAssets({ job }: { job: ComputeJobMetaData }) {
   useEffect(() => {
     async function getAlgoMetadata() {
       if (!job.algoDID) return
-      const ddo = await getAsset(job.algoDID, newCancelToken())
+      const ddo = job.isOceanNodeJob
+        ? await getOceanNodeAsset(job.algoDID, newCancelToken()).catch(
+            () => undefined
+          )
+        : await getAsset(job.algoDID, newCancelToken())
       if (!ddo) return
       setAlgoDtSymbol(ddo.datatokens?.[0]?.symbol)
       setAlgoName(ddo.metadata?.name)
     }
     getAlgoMetadata()
-  }, [appConfig.metadataCacheUri, job.algoDID, newCancelToken])
+  }, [
+    appConfig.metadataCacheUri,
+    job.algoDID,
+    job.isOceanNodeJob,
+    newCancelToken
+  ])
 
   return (
     <>
-      <Asset
-        title={job.assetName}
-        symbol={job.assetDtSymbol}
-        did={job.inputDID?.[0] ?? ''}
-      />
-      <Asset title={algoName} symbol={algoDtSymbol} did={job.algoDID} />
+      {job.inputDID?.[0] ? (
+        <Asset
+          title={job.assetName}
+          symbol={job.assetDtSymbol}
+          did={job.inputDID?.[0] ?? ''}
+        />
+      ) : (
+        <p>
+          The compute node did not report a dataset DID for this job. Its logs
+          and results are still available below.
+        </p>
+      )}
+      {job.algoDID && (
+        <Asset
+          title={algoName || job.algoDID}
+          symbol={algoDtSymbol}
+          did={job.algoDID}
+        />
+      )}
     </>
   )
 }

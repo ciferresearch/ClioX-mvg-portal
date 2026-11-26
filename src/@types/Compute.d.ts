@@ -5,6 +5,8 @@ import { OrdersData_orders_datatoken as OrdersDatatoken } from '../@types/subgra
 // ambiant types despite the above imports
 declare global {
   interface ComputeJobMetaData extends ComputeJob {
+    isOceanNodeJob?: boolean
+    terminationDetails?: { exitCode?: number }
     assetName: string
     assetDtSymbol: string
     networkId: number
@@ -27,6 +29,7 @@ declare global {
   interface ComputeResults {
     computeJobs: ComputeJobMetaData[]
     isLoaded: boolean
+    error?: string
   }
 
   interface totalPriceMap {

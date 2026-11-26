@@ -1,5 +1,4 @@
 import {
-  ComputeResultType,
   downloadFileBrowser,
   getErrorMessage,
   LoggerInstance,
@@ -17,13 +16,13 @@ import { useAccount, useSigner } from 'wagmi'
 import { toast } from 'react-toastify'
 import { prettySize } from '@components/@shared/FormInput/InputElement/FilesInput/utils'
 import { useAutomation } from '../../../../@context/Automation/AutomationProvider'
+import { getNodeResult, isNodeJobTerminal } from '@utils/nodeCompute'
 
 export default function Results({
   job
 }: {
   job: ComputeJobMetaData
 }): ReactElement {
-  const providerInstance = new Provider()
   const { address: accountId } = useAccount()
   const { autoWallet } = useAutomation()
   const { data: signer } = useSigner()
@@ -31,20 +30,24 @@ export default function Results({
   const [datasetProvider, setDatasetProvider] = useState<string>()
   const newCancelToken = useCancelToken()
 
-  const isFinished = job.dateFinished !== null
+  const isFinished = job.isOceanNodeJob
+    ? isNodeJobTerminal(job) || job.results?.length > 0
+    : job.dateFinished !== null
 
   useEffect(() => {
     async function getAssetMetadata() {
+      if (job.isOceanNodeJob) {
+        setDatasetProvider(job.providerUrl)
+        return
+      }
+      if (!job.inputDID?.[0]) return
       const ddo = await getAsset(job.inputDID[0], newCancelToken())
-      setDatasetProvider(ddo.services[0].serviceEndpoint)
+      setDatasetProvider(ddo?.services[0]?.serviceEndpoint || job.providerUrl)
     }
     getAssetMetadata()
-  }, [job.inputDID, newCancelToken])
+  }, [job.inputDID, job.isOceanNodeJob, job.providerUrl, newCancelToken])
 
-  function getDownloadButtonValue(
-    type: ComputeResultType,
-    name: string
-  ): string {
+  function getDownloadButtonValue(type: string, name: string): string {
     let buttonName
     switch (type) {
       case 'output':
@@ -53,7 +56,11 @@ export default function Results({
       case 'algorithmLog':
         buttonName = 'ALGORITHM LOGS'
         break
+      case 'imageLog':
+        buttonName = 'IMAGE LOGS'
+        break
       case 'configrationLog':
+      case 'configurationLog':
         buttonName = 'CONFIGURATION LOGS'
         break
       case 'publishLog':
@@ -75,6 +82,24 @@ export default function Results({
         : signer
 
     try {
+      if (!signerToUse)
+        throw new Error('Connect the wallet that owns this compute job.')
+      if (job.isOceanNodeJob) {
+        const blob = await getNodeResult(job.jobId, resultIndex, signerToUse)
+        const result = job.results.find(
+          (item, index) =>
+            ((item as typeof item & { index?: number }).index ?? index) ===
+            resultIndex
+        )
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = result?.filename || `result-${resultIndex}`
+        link.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        return
+      }
+      const providerInstance = new Provider()
       const jobResult = await providerInstance.getComputeResultUrl(
         datasetProvider,
         signerToUse,
@@ -104,7 +129,10 @@ export default function Results({
                     size="small"
                     className={styles.downloadButton}
                     onClick={() => {
-                      downloadResults(i)
+                      downloadResults(
+                        (jobResult as typeof jobResult & { index?: number })
+                          .index ?? i
+                      )
                     }}
                     download
                   >
@@ -122,7 +150,11 @@ export default function Results({
       ) : (
         <p> Waiting for results...</p>
       )}
-      <FormHelp className={styles.help}>{content.compute.storage}</FormHelp>
+      <FormHelp className={styles.help}>
+        {job.isOceanNodeJob
+          ? 'Result availability is controlled by the compute node. Download the files you need before they expire.'
+          : content.compute.storage}
+      </FormHelp>
     </div>
   )
 }

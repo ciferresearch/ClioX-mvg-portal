@@ -17,9 +17,12 @@ export function Status({ children }: { children: string }): ReactElement {
 const columns: TableOceanColumn<ComputeJobMetaData>[] = [
   {
     name: 'Dataset',
-    selector: (row) => (
-      <AssetListTitle did={row.inputDID[0]} title={row.assetName} />
-    ),
+    selector: (row) =>
+      row.inputDID?.[0] ? (
+        <AssetListTitle did={row.inputDID[0]} title={row.assetName} />
+      ) : (
+        <span>{row.assetName}</span>
+      ),
     wrap: true,
     allowOverflow: true,
     grow: 2,
@@ -27,7 +30,12 @@ const columns: TableOceanColumn<ComputeJobMetaData>[] = [
   },
   {
     name: 'Network',
-    selector: (row) => <NetworkName networkId={row.networkId} />
+    selector: (row) =>
+      row.networkId ? (
+        <NetworkName networkId={row.networkId} />
+      ) : (
+        <span>Not reported</span>
+      )
   },
   {
     name: 'Provider',
