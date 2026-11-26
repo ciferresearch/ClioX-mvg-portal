@@ -18,7 +18,8 @@ import {
   queryMetadata,
   getFilterTerm,
   generateBaseQuery,
-  getAssetsFromDids
+  getAssetsFromDids,
+  getOceanNodeAsset
 } from './aquarius'
 import { fetchDataForMultipleChains } from './subgraph'
 import { getServiceById, getServiceByName } from './ddo'
@@ -392,30 +393,52 @@ export async function createTrustedAlgorithmList(
   if (!selectedAlgorithms || selectedAlgorithms.length === 0)
     return trustedAlgorithms
 
-  const selectedAssets = await getAssetsFromDids(
-    selectedAlgorithms,
-    [assetChainId],
-    cancelToken
-  )
-
-  if (
-    assetChainId === 11155420 &&
-    selectedAlgorithms.some(
-      (did) => !selectedAssets?.some((asset) => asset.id === did)
-    )
-  )
-    throw new Error(
-      'Some selected algorithms could not be retrieved. Compute permissions were not changed.'
-    )
+  // OP Sepolia permissions must not depend on the legacy Aquarius search cache.
+  // Read DDOs directly from ClioX; the compute provider is checked separately.
+  const selectedAssets =
+    assetChainId === 11155420
+      ? await Promise.all(
+          selectedAlgorithms.map((did) => getOceanNodeAsset(did, cancelToken))
+        )
+      : await getAssetsFromDids(selectedAlgorithms, [assetChainId], cancelToken)
   if (!selectedAssets || selectedAssets.length === 0) return []
 
   for (const selectedAlgorithm of selectedAssets) {
     // The checksums and container must describe the same provider's current DDO,
     // particularly just after an algorithm image update is indexed.
-    const verifiedAlgorithm =
-      assetChainId === 11155420
-        ? await getNodeComputeAsset(selectedAlgorithm.id)
-        : selectedAlgorithm
+    const verifiedAlgorithm = selectedAlgorithm
+    if (
+      assetChainId === 11155420 &&
+      (verifiedAlgorithm.metadata.type !== 'algorithm' ||
+        !verifiedAlgorithm.metadata.algorithm?.container?.entrypoint ||
+        !verifiedAlgorithm.metadata.algorithm.container.checksum)
+    )
+      throw new Error(
+        `${verifiedAlgorithm.id}: the Node did not return a complete algorithm asset. Permissions were not changed.`
+      )
+    if (assetChainId === 11155420) {
+      if (verifiedAlgorithm.chainId !== assetChainId)
+        throw new Error(
+          `${verifiedAlgorithm.id}: select an OP Sepolia algorithm.`
+        )
+      const providerAsset = await getNodeComputeAsset(verifiedAlgorithm.id)
+      const localService = verifiedAlgorithm.services[0]
+      const providerService = providerAsset.services.find(
+        (service) => service.id === localService.id
+      )
+      const localContainer = verifiedAlgorithm.metadata.algorithm.container
+      const providerContainer = providerAsset.metadata.algorithm?.container
+      if (
+        !providerService ||
+        providerService.files !== localService.files ||
+        ['entrypoint', 'checksum', 'image', 'tag'].some(
+          (key) => localContainer[key] !== providerContainer?.[key]
+        )
+      )
+        throw new Error(
+          `${verifiedAlgorithm.id}: ClioX and AgrospAI have not synchronized the algorithm update. Wait for indexing before saving permissions; no transaction was sent.`
+        )
+    }
     const filesChecksum = await getFileDidInfo(
       verifiedAlgorithm?.id,
       verifiedAlgorithm?.services?.[0].id,

@@ -9,6 +9,7 @@ export interface NodeComputeService {
   type: string
   serviceEndpoint: string
   datatokenAddress: string
+  files?: string
   compute?: {
     publisherTrustedAlgorithms?: {
       did: string
@@ -25,7 +26,14 @@ export interface NodeComputeAsset {
   metadata: {
     type: string
     name: string
-    algorithm?: { container: { entrypoint: string; checksum: string } }
+    algorithm?: {
+      container: {
+        entrypoint: string
+        checksum: string
+        image?: string
+        tag?: string
+      }
+    }
   }
   services: NodeComputeService[]
   indexedMetadata?: {

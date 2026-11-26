@@ -3,14 +3,17 @@ import {
   addNodeTrustedAlgorithm,
   transformComputeFormToServiceComputeOptions
 } from './compute'
-import { getAssetsFromDids } from './aquarius'
+import { getAssetsFromDids, getOceanNodeAsset } from './aquarius'
 import { getFileDidInfo } from './provider'
 import { getNodeComputeAsset } from './nodeCompute'
 import { getComputeSettingsInitialValues } from '../components/Asset/Edit/_constants'
 import { ComputeEditForm } from '../components/Asset/Edit/_types'
 import { ServiceComputeOptions, getHash } from '@oceanprotocol/lib'
 
-jest.mock('./aquarius', () => ({ getAssetsFromDids: jest.fn() }))
+jest.mock('./aquarius', () => ({
+  getAssetsFromDids: jest.fn(),
+  getOceanNodeAsset: jest.fn()
+}))
 jest.mock('./provider', () => ({ getFileDidInfo: jest.fn() }))
 jest.mock('./subgraph', () => ({}))
 jest.mock('./assetConvertor', () => ({}))
@@ -27,17 +30,25 @@ const form = {
 } as ComputeEditForm
 beforeEach(() => {
   jest.clearAllMocks()
-  ;(getNodeComputeAsset as jest.Mock).mockImplementation(async (id) => ({
+  const indexedAlgorithm = async (id) => ({
     id,
+    chainId: 11155420,
     services: [
-      { id: 'svc', serviceEndpoint: 'https://ocean-node.agrospai.udl.cat' }
+      {
+        id: 'svc',
+        files: 'same-encrypted-files',
+        serviceEndpoint: 'https://ocean-node.agrospai.udl.cat'
+      }
     ],
     metadata: {
+      type: 'algorithm',
       algorithm: {
         container: { entrypoint: 'python $ALGO', checksum: 'sha256:current' }
       }
     }
-  }))
+  })
+  ;(getNodeComputeAsset as jest.Mock).mockImplementation(indexedAlgorithm)
+  ;(getOceanNodeAsset as jest.Mock).mockImplementation(indexedAlgorithm)
 })
 
 test('encodes explicit allow-all selection using Node wildcard checksums, preserving publisher permissions', async () => {
@@ -97,13 +108,91 @@ test('aggregates every algorithm file checksum as the Node does', async () => {
     undefined
   )
   expect(result[0].filesChecksum).toBe('firstsecond')
+  expect(getAssetsFromDids).not.toHaveBeenCalled()
+  expect(getOceanNodeAsset).toHaveBeenCalledWith('did:op:test', undefined)
+  expect(getNodeComputeAsset).toHaveBeenCalledWith('did:op:test')
 })
 
 test('does not save permissions when an algorithm cannot be resolved', async () => {
-  ;(getAssetsFromDids as jest.Mock).mockResolvedValue([])
+  ;(getOceanNodeAsset as jest.Mock).mockRejectedValueOnce(
+    new Error('Node DDO not found')
+  )
   await expect(
     createTrustedAlgorithmList(['did:op:missing'], 11155420, undefined)
-  ).rejects.toThrow('could not be retrieved')
+  ).rejects.toThrow('Node DDO not found')
+  expect(getAssetsFromDids).not.toHaveBeenCalled()
+  expect(getFileDidInfo).not.toHaveBeenCalled()
+  expect(getNodeComputeAsset).not.toHaveBeenCalled()
+})
+
+test('resolves Node permissions even when the legacy cache contains no assets', async () => {
+  ;(getAssetsFromDids as jest.Mock).mockResolvedValue([])
+  ;(getFileDidInfo as jest.Mock).mockResolvedValue([
+    { valid: true, checksum: 'verified' }
+  ])
+  await expect(
+    createTrustedAlgorithmList(['did:op:test'], 11155420, undefined)
+  ).resolves.toMatchObject([{ did: 'did:op:test', filesChecksum: 'verified' }])
+  expect(getAssetsFromDids).not.toHaveBeenCalled()
+})
+
+test('rejects a dataset DID before calculating algorithm permissions', async () => {
+  ;(getOceanNodeAsset as jest.Mock).mockResolvedValueOnce({
+    id: 'did:op:dataset',
+    metadata: { type: 'dataset' }
+  })
+  await expect(
+    createTrustedAlgorithmList(['did:op:dataset'], 11155420, undefined)
+  ).rejects.toThrow('complete algorithm asset')
+  expect(getFileDidInfo).not.toHaveBeenCalled()
+})
+
+test('preserves legacy cache resolution on Pontus-X', async () => {
+  ;(getAssetsFromDids as jest.Mock).mockResolvedValue([
+    {
+      id: 'did:op:legacy',
+      services: [{ id: 'svc', serviceEndpoint: 'https://legacy.example' }],
+      metadata: {
+        algorithm: {
+          container: { entrypoint: 'python main.py', checksum: 'sha256:old' }
+        }
+      }
+    }
+  ])
+  ;(getFileDidInfo as jest.Mock).mockResolvedValue([
+    { valid: true, checksum: 'first' },
+    { valid: true, checksum: 'second' }
+  ])
+  const result = await createTrustedAlgorithmList(
+    ['did:op:legacy'],
+    32456,
+    undefined
+  )
+  expect(result[0].filesChecksum).toBe('first')
+  expect(getAssetsFromDids).toHaveBeenCalledWith(
+    ['did:op:legacy'],
+    [32456],
+    undefined
+  )
+  expect(getNodeComputeAsset).not.toHaveBeenCalled()
+  expect(getOceanNodeAsset).not.toHaveBeenCalled()
+})
+
+test('blocks unsynchronized Node revisions before a permission update', async () => {
+  ;(getNodeComputeAsset as jest.Mock).mockResolvedValueOnce({
+    id: 'did:op:test',
+    services: [{ id: 'svc', files: 'older-ciphertext' }],
+    metadata: {
+      type: 'algorithm',
+      algorithm: {
+        container: { entrypoint: 'python $ALGO', checksum: 'sha256:current' }
+      }
+    }
+  })
+  await expect(
+    createTrustedAlgorithmList(['did:op:test'], 11155420, undefined)
+  ).rejects.toThrow('have not synchronized')
+  expect(getFileDidInfo).not.toHaveBeenCalled()
 })
 
 test('adds a verified algorithm without deleting other permissions', async () => {

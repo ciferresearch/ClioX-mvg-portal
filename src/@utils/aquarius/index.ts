@@ -368,6 +368,26 @@ export async function getOceanNodeAssets(
   }
 }
 
+/** Strict lookup on the configured ClioX Node; no legacy cache fallback. */
+export async function getOceanNodeAsset(
+  did: string,
+  cancelToken?: CancelToken
+): Promise<Asset> {
+  if (!isValidDid(did)) throw new Error('Enter a complete asset DID.')
+  if (!metadataEncryptionNodeUrl)
+    throw new Error('The ClioX metadata Node URL is not configured.')
+  const response = await axios.get<Asset>(
+    `${metadataEncryptionNodeUrl.replace(
+      /\/$/,
+      ''
+    )}/api/aquarius/assets/ddo/${did}`,
+    { cancelToken }
+  )
+  if (response.status !== 200 || response.data?.id !== did)
+    throw new Error(`${did}: ClioX Node did not return the requested asset.`)
+  return normalizeOceanNodeAsset(response.data)
+}
+
 export async function getAsset(
   did: string,
   cancelToken: CancelToken
