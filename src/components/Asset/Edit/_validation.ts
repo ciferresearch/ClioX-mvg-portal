@@ -5,6 +5,27 @@ import { testLinks } from '@utils/yup'
 import { validationConsumerParameters } from '@shared/FormInput/InputElement/ConsumerParameters/_validation'
 
 export const validationSchema = Yup.object().shape({
+  nodeAlgorithmImage: Yup.string().trim().min(1, 'Enter an image name.'),
+  nodeAlgorithmTag: Yup.string().trim().min(1, 'Enter an image tag.'),
+  nodeAlgorithmChecksum: Yup.string()
+    .trim()
+    .matches(
+      /^sha256:[a-f0-9]{64}$/i,
+      'Enter the image SHA-256 digest, including sha256:.'
+    ),
+  nodeTrustedAlgorithmDid: Yup.string()
+    .trim()
+    .matches(/^did:op:[a-f0-9]{64}$/i, {
+      message: 'Enter a complete algorithm DID.',
+      excludeEmptyString: true
+    }),
+  nodeAlgorithmEntrypoint: Yup.string()
+    .trim()
+    .test(
+      'nonempty-command',
+      'Enter an algorithm command.',
+      (value) => value === undefined || value.length > 0
+    ),
   name: Yup.string()
     .min(4, (param) => `Title must be at least ${param.min} characters`)
     .required('Required'),

@@ -107,6 +107,53 @@ export default function FormEditMetadata({
         name="files"
       />
 
+      {asset.chainId === 11155420 &&
+        isComputeDataset &&
+        asset.metadata.type === 'dataset' && (
+          <Field
+            name="nodeTrustedAlgorithmDid"
+            component={Input}
+            type="text"
+            label="Trust an algorithm DID (optional)"
+            placeholder="did:op:…"
+            help="Allow this algorithm to compute on your dataset. Its current file checksums are verified before saving. The permission and file URL are saved together in one metadata transaction; existing permissions are preserved."
+          />
+        )}
+
+      {asset.chainId === 11155420 && asset.metadata.type === 'algorithm' && (
+        <>
+          <Field
+            name="nodeAlgorithmImage"
+            component={Input}
+            type="text"
+            label="Algorithm image"
+            help="Docker image repository used for compute."
+          />
+          <Field
+            name="nodeAlgorithmTag"
+            component={Input}
+            type="text"
+            label="Algorithm image tag"
+            help="Use a separate test tag to preserve existing deployed versions."
+          />
+          <Field
+            name="nodeAlgorithmChecksum"
+            component={Input}
+            type="text"
+            label="Algorithm image digest"
+            placeholder="sha256:…"
+            help="Registry digest of the image, not the local Docker image ID."
+          />
+          <Field
+            name="nodeAlgorithmEntrypoint"
+            component={Input}
+            type="text"
+            label="Algorithm command"
+            help="Use python $ALGO to execute the algorithm file downloaded from the file URL. An absolute command such as python /algorithm/src/main.py executes the file already inside the Docker image."
+          />
+        </>
+      )}
+
       <Field
         {...getFieldContent('links', data)}
         component={Input}

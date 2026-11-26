@@ -13,10 +13,28 @@ export function getInitialValues(
   credentials: Credentials,
   price: string,
   paymentCollector: string,
-  assetState: string
+  assetState: string,
+  chainId?: number
 ): Partial<MetadataEditForm> {
   return {
     name: metadata?.name,
+    nodeTrustedAlgorithmDid: chainId === 11155420 ? '' : undefined,
+    nodeAlgorithmEntrypoint:
+      chainId === 11155420 && metadata?.type === 'algorithm'
+        ? metadata.algorithm?.container?.entrypoint
+        : undefined,
+    nodeAlgorithmImage:
+      chainId === 11155420 && metadata?.type === 'algorithm'
+        ? metadata.algorithm?.container?.image
+        : undefined,
+    nodeAlgorithmTag:
+      chainId === 11155420 && metadata?.type === 'algorithm'
+        ? metadata.algorithm?.container?.tag
+        : undefined,
+    nodeAlgorithmChecksum:
+      chainId === 11155420 && metadata?.type === 'algorithm'
+        ? metadata.algorithm?.container?.checksum
+        : undefined,
     description: metadata?.description,
     price,
     links: [{ url: '', type: 'url' }],

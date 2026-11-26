@@ -28,6 +28,7 @@ import { transformAssetToAssetSelection } from './assetConvertor'
 import { ComputeEditForm } from '../components/Asset/Edit/_types'
 import { getFileDidInfo } from './provider'
 import { toast } from 'react-toastify'
+import { getNodeComputeAsset } from './nodeCompute'
 
 const getComputeOrders = gql`
   query ComputeOrders($user: String!) {
@@ -409,10 +410,16 @@ export async function createTrustedAlgorithmList(
   if (!selectedAssets || selectedAssets.length === 0) return []
 
   for (const selectedAlgorithm of selectedAssets) {
+    // The checksums and container must describe the same provider's current DDO,
+    // particularly just after an algorithm image update is indexed.
+    const verifiedAlgorithm =
+      assetChainId === 11155420
+        ? await getNodeComputeAsset(selectedAlgorithm.id)
+        : selectedAlgorithm
     const filesChecksum = await getFileDidInfo(
-      selectedAlgorithm?.id,
-      selectedAlgorithm?.services?.[0].id,
-      selectedAlgorithm?.services?.[0]?.serviceEndpoint,
+      verifiedAlgorithm?.id,
+      verifiedAlgorithm?.services?.[0].id,
+      verifiedAlgorithm?.services?.[0]?.serviceEndpoint,
       true
     )
     if (
@@ -424,8 +431,8 @@ export async function createTrustedAlgorithmList(
         `Could not verify algorithm files for ${selectedAlgorithm.id}. Compute permissions were not changed.`
       )
     const containerChecksum =
-      selectedAlgorithm.metadata.algorithm.container.entrypoint +
-      selectedAlgorithm.metadata.algorithm.container.checksum
+      verifiedAlgorithm.metadata.algorithm.container.entrypoint +
+      verifiedAlgorithm.metadata.algorithm.container.checksum
     const trustedAlgorithm = {
       did: selectedAlgorithm.id,
       containerSectionChecksum: getHash(containerChecksum),
@@ -470,4 +477,29 @@ export async function transformComputeFormToServiceComputeOptions(
   }
 
   return privacy
+}
+
+export async function addNodeTrustedAlgorithm(
+  currentOptions: ServiceComputeOptions,
+  did: string,
+  cancelToken: CancelToken
+): Promise<ServiceComputeOptions> {
+  const permissions = await createTrustedAlgorithmList(
+    [did],
+    11155420,
+    cancelToken
+  )
+  if (permissions.length !== 1)
+    throw new Error(
+      'The selected algorithm could not be verified. Permissions were not changed.'
+    )
+  return {
+    ...currentOptions,
+    publisherTrustedAlgorithms: [
+      ...(currentOptions?.publisherTrustedAlgorithms || []).filter(
+        (entry) => entry.did !== did
+      ),
+      permissions[0]
+    ]
+  }
 }

@@ -1,0 +1,14 @@
+{
+  "purpose": "Independent no-classifier preview image; production tags remain unchanged",
+  "baseImage": "chriswch/text-analysis@sha256:7fe0f99c4f471651e2d96c1fd9493a59d8509f61a4bfc43120a39a338c2fe757",
+  "implementationSource": "https://raw.githubusercontent.com/ciferresearch/ClioX/refs/heads/algo/text-analysis-viz-hub/core_components/algo/text_analysis%20-%20no%20clasifier/algorithm/src/implementation/algorithm.py",
+  "upstreamImplementationSha256": "8108e42389aaf2227a69cd7e1e33c8a0d734ce8e817da61a29ce0c80bcfc0e23",
+  "implementationChanges": "Trailing whitespace removed; classification behavior is the upstream no-classifier version",
+  "runtimeChanges": [
+    "Read numbered Ocean Node input directories while retaining DID associations",
+    "Use the bundled Public Suffix List snapshot without runtime HTTP requests",
+    "Preinstall spaCy and NLTK language resources",
+    "Propagate execution errors and reject empty analysis results"
+  ],
+  "datasetIncludedInImage": false
+}

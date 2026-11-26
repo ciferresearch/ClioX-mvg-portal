@@ -22,7 +22,11 @@ export interface NodeComputeService {
 export interface NodeComputeAsset {
   id: string
   chainId: number
-  metadata: { type: string; name: string }
+  metadata: {
+    type: string
+    name: string
+    algorithm?: { container: { entrypoint: string; checksum: string } }
+  }
   services: NodeComputeService[]
   indexedMetadata?: {
     nft?: { state: number; owner?: string }

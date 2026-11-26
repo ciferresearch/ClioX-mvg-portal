@@ -100,6 +100,13 @@ export async function getEncryptedFiles(
 ): Promise<string> {
   try {
     if (chainId === 11155420) {
+      if (!Array.isArray(files?.files) || !files.files.length)
+        throw new Error('No files were supplied for encryption.')
+      // Recheck the normalized request immediately before signing encryption.
+      // A stale Formik valid flag must not authorize an unavailable source.
+      await Promise.all(
+        files.files.map((file) => nodeFileInfo(providerUrl, file))
+      )
       return await encryptDdoWithOceanNode(files, providerUrl, signer)
     }
     // https://github.com/oceanprotocol/provider/blob/v4main/API.md#encrypt-endpoint

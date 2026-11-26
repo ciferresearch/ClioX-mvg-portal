@@ -11,6 +11,11 @@ export interface MetadataEditForm {
   timeout: string
   paymentCollector: string
   price?: string
+  nodeTrustedAlgorithmDid?: string
+  nodeAlgorithmEntrypoint?: string
+  nodeAlgorithmImage?: string
+  nodeAlgorithmTag?: string
+  nodeAlgorithmChecksum?: string
   files: FileInfo[]
   links?: FileInfo[]
   author?: string

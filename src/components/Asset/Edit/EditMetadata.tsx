@@ -5,6 +5,9 @@ import {
 import { useAsset } from '@context/Asset'
 import { useUserPreferences } from '@context/UserPreferences'
 import { useAbortController } from '@hooks/useAbortController'
+import { useCancelToken } from '@hooks/useCancelToken'
+import { addNodeTrustedAlgorithm } from '@utils/compute'
+import { updateNodeAlgorithmContainer } from '@utils/nodeAlgorithm'
 import {
   Asset,
   Datatoken,
@@ -47,6 +50,7 @@ export default function Edit({
   const provider = useProvider()
   const { data: signer, refetch: refetchSigner } = useSigner()
   const newAbortController = useAbortController()
+  const newCancelToken = useCancelToken()
 
   const [success, setSuccess] = useState<string>()
   const [paymentCollector, setPaymentCollector] = useState<string>()
@@ -117,11 +121,26 @@ export default function Edit({
     resetForm: () => void
   ) {
     try {
+      const trustedDid =
+        asset.chainId === 11155420 && asset.metadata.type === 'dataset'
+          ? values.nodeTrustedAlgorithmDid?.trim()
+          : undefined
+      const computeOptions = trustedDid
+        ? await addNodeTrustedAlgorithm(
+            asset.services[0].compute,
+            trustedDid,
+            newCancelToken()
+          )
+        : asset.services[0].compute
       let updatedFiles = asset.services[0].files
       const linksTransformed = values.links?.length &&
         values.links[0].valid && [sanitizeUrl(values.links[0].url)]
       const updatedMetadata: Metadata = {
         ...asset.metadata,
+        updated:
+          asset.chainId === 11155420
+            ? new Date().toISOString()
+            : asset.metadata.updated,
         name: values.name,
         description: values.description,
         links: linksTransformed,
@@ -135,10 +154,19 @@ export default function Edit({
       }
 
       if (asset.metadata.type === 'algorithm') {
-        updatedMetadata.algorithm.consumerParameters =
-          !values.usesConsumerParameters
+        updatedMetadata.algorithm = {
+          ...asset.metadata.algorithm,
+          container:
+            asset.chainId === 11155420
+              ? updateNodeAlgorithmContainer(
+                  asset.metadata.algorithm.container,
+                  values
+                )
+              : { ...asset.metadata.algorithm.container },
+          consumerParameters: !values.usesConsumerParameters
             ? undefined
             : transformConsumerParameters(values.consumerParameters)
+        }
       }
 
       asset?.accessDetails?.type === 'fixed' &&
@@ -188,6 +216,7 @@ export default function Edit({
         timeout: mapTimeoutStringToSeconds(values.timeout),
         files: updatedFiles
       }
+      if (trustedDid) updatedService.compute = computeOptions
       if (values?.service?.consumerParameters) {
         updatedService.consumerParameters = transformConsumerParameters(
           values.service.consumerParameters
@@ -302,7 +331,8 @@ export default function Edit({
         asset?.credentials,
         asset?.accessDetails?.price || '0',
         paymentCollector,
-        assetState
+        assetState,
+        asset.chainId
       )}
       validationSchema={validationSchema}
       onSubmit={async (values, { resetForm }) => {
