@@ -19,12 +19,22 @@ export async function getNodeComputeHistory(
       job,
       datasets: (Array.isArray(job.inputDID) && job.inputDID.length
         ? job.inputDID
+        : typeof job.metadata?.clioxDatasetDids === 'string'
+        ? job.metadata.clioxDatasetDids.split(',')
         : Array.isArray(job.metadata?.cliox?.datasetDids)
         ? job.metadata.cliox.datasetDids
         : []
       ).filter((did) => /^did:op:[a-f0-9]{64}$/i.test(did)),
-      algorithm: job.algoDID || job.metadata?.cliox?.algorithmDid,
-      chainId: Number(job.metadata?.cliox?.chainId || job.payment?.chainId || 0)
+      algorithm:
+        job.algoDID ||
+        job.metadata?.clioxAlgorithmDid ||
+        job.metadata?.cliox?.algorithmDid,
+      chainId: Number(
+        job.metadata?.clioxChainId ||
+          job.metadata?.cliox?.chainId ||
+          job.payment?.chainId ||
+          0
+      )
     }))
     .filter(
       (entry) =>

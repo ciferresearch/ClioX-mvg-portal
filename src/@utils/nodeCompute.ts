@@ -72,6 +72,9 @@ export interface NodeJob {
   agreementId?: string
   payment?: { chainId?: number | string }
   metadata?: {
+    clioxChainId?: number
+    clioxDatasetDids?: string
+    clioxAlgorithmDid?: string
     cliox?: { chainId?: number; datasetDids?: string[]; algorithmDid?: string }
   }
   terminationDetails?: { exitCode?: number }
@@ -282,13 +285,12 @@ export async function startNodeCompute(
         // Keep references in the Node's own job record, even when legacy
         // inputDID/algoDID fields are absent for free-compute jobs.
         metadata: {
-          cliox: {
-            chainId: OP_SEPOLIA,
-            datasetDids: plan.datasets
-              .map((input) => input.documentId)
-              .filter(Boolean),
-            algorithmDid: plan.algorithm.documentId
-          }
+          clioxChainId: OP_SEPOLIA,
+          clioxDatasetDids: plan.datasets
+            .map((input) => input.documentId)
+            .filter(Boolean)
+            .join(','),
+          clioxAlgorithmDid: plan.algorithm.documentId || ''
         },
         ...(await signedCommand(signer, 'freeStartCompute'))
       })

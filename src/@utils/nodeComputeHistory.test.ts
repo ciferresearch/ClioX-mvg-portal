@@ -56,11 +56,9 @@ test('enriches references through ClioX once per dataset and retains jobs when m
       status: 40,
       statusText: 'Running',
       metadata: {
-        cliox: {
-          chainId: 11155420,
-          datasetDids: [did],
-          algorithmDid: 'did:op:algorithm'
-        }
+        clioxChainId: 11155420,
+        clioxDatasetDids: did,
+        clioxAlgorithmDid: 'did:op:algorithm'
       }
     }))
   )
